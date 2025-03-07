@@ -1,0 +1,11 @@
+{{
+
+  order = order | json
+}}
+
+{
+  
+"name": {{ order.customer.displayName | json }},
+"email": {{ order.customer.email | json }},
+"mobile": {{ order.phone | json }},
+}
