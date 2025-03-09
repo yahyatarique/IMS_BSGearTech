@@ -44,8 +44,6 @@ export const LoginPage = ({
     }
   };
 
-  const arr = { id: 1, name: "John" };
-
   return (
     <Row
       marginY="32"
@@ -76,7 +74,6 @@ export const LoginPage = ({
           }}
         />
         <Logo wordmark={false} size="l" />
-        {(arr && arr?.id) ?? "Then" + "Else"}
         <Heading
           as="h3"
           variant="display-default-s"
