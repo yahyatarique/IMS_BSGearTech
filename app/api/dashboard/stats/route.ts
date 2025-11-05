@@ -1,13 +1,21 @@
 import { NextRequest } from 'next/server';
 import { testConnection } from '@/db/connection';
-import { Buyer, Orders } from '@/db/models';
+import { Buyer, OrderProfile, Orders } from '@/db/models';
 import { errorResponse, sendResponse } from '@/utils/api-response';
 import { Op } from 'sequelize';
+import { DashboardStatsQuerySchema } from '@/schemas/dashboard.schema';
 
 export async function GET(request: NextRequest) {
   try {
     // Ensure database connection
     await testConnection();
+
+    const query = Object.fromEntries(request.nextUrl.searchParams.entries());
+    const parsedQuery = DashboardStatsQuerySchema.safeParse(query);
+
+    if (!parsedQuery.success) {
+      return errorResponse('Invalid query parameters', 400, parsedQuery.error.flatten());
+    }
 
     // Get current date and first day of current month
     const now = new Date();
@@ -69,12 +77,28 @@ export async function GET(request: NextRequest) {
       ? (currentMonthBuyers > 0 ? 100 : 0)
       : ((currentMonthBuyers - previousMonthBuyers) / previousMonthBuyers) * 100;
 
-    // Total Products (this would need a Products table - for now returning mock data)
-    // TODO: Replace with actual Products/Inventory model when available
-    const totalProducts = 856;
-    const currentMonthProducts = 12;
-    const previousMonthProducts = 15;
-    const productsPercentageChange = ((currentMonthProducts - previousMonthProducts) / previousMonthProducts) * 100;
+    // Total Products (calculated from order profiles activity)
+    const [totalProducts, currentMonthProducts, previousMonthProducts] = await Promise.all([
+      OrderProfile.count(),
+      OrderProfile.count({
+        where: {
+          created_at: {
+            [Op.gte]: currentMonthStart
+          }
+        }
+      }),
+      OrderProfile.count({
+        where: {
+          created_at: {
+            [Op.between]: [previousMonthStart, previousMonthEnd]
+          }
+        }
+      })
+    ]);
+
+    const productsPercentageChange = previousMonthProducts === 0
+      ? (currentMonthProducts > 0 ? 100 : 0)
+      : ((currentMonthProducts - previousMonthProducts) / previousMonthProducts) * 100;
 
     const stats = {
       orders: {

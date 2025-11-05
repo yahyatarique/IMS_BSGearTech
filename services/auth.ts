@@ -1,3 +1,4 @@
+import { AxiosResponse } from "axios";
 import axiosInstance from "../axios";
 import { CreateUserInput, LoginInput, LoginRes, UpdateUserInput } from "./types/auth.api.type";
 
@@ -12,9 +13,9 @@ export const endpoints = {
   me: `${BASE_URL}/me`,
 }
 
-export const login = async (payload: LoginInput): LoginRes => {
+export const login = async (payload: LoginInput): Promise<AxiosResponse<LoginRes>> => {
   try {
-    const res = await axiosInstance.post(endpoints.login, payload, {
+    const res: AxiosResponse<LoginRes> = await axiosInstance.post(endpoints.login, payload, {
       withCredentials: false
     });
     return res;
