@@ -58,3 +58,51 @@ export type DashboardRecentBuyersResponse = BaseResponse<DashboardRecentBuyersDa
 export type DashboardRecentBuyersQuery = {
   limit?: number;
 };
+
+export type DashboardMaterialStatus = 'in-stock' | 'low-stock' | 'out-of-stock';
+
+export type DashboardMaterial = {
+  id: string;
+  name: string;
+  material: string;
+  type: string;
+  stock: number;
+  unit: string;
+  reorderLevel: number;
+  status: DashboardMaterialStatus;
+  profileCount: number;
+  averageRate: number;
+  minRate: number;
+  maxRate: number;
+};
+
+export type DashboardMaterialsData = DashboardMaterial[];
+
+export type DashboardMaterialsResponse = BaseResponse<DashboardMaterialsData>;
+
+export type DashboardMaterialsQuery = {
+  limit?: number;
+};
+
+export type DashboardProfileType = {
+  id: string;
+  name: string;
+  specification: string;
+  material: string;
+  type: string;
+  materialRate: number;
+  inStock: number;
+  reserved: number;
+  available: number;
+  burningWastagePercent: number;
+  heatTreatmentRate: number;
+  heatTreatmentInefficacyPercent: number;
+};
+
+export type DashboardProfileTypesData = DashboardProfileType[];
+
+export type DashboardProfileTypesResponse = BaseResponse<DashboardProfileTypesData>;
+
+export type DashboardProfileTypesQuery = {
+  limit?: number;
+};
