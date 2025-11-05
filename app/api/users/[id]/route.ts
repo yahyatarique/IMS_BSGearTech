@@ -13,6 +13,7 @@ import {
   handleRouteError,
   HttpError,
 } from '../_utils';
+import {z} from 'zod';
 
 function parseUserId(params: { id: string }) {
   const result = UserIdParamSchema.safeParse(params);
@@ -23,7 +24,8 @@ function parseUserId(params: { id: string }) {
   return result.data.id;
 }
 
-export async function GET(request: NextRequest, context: { params: { id: string } }) {
+//get user info
+export async function GET(request: NextRequest,  context: {params: Promise<{id: string}>}) {
   try {
     await testConnection();
     await authorizeAdmin(request);
@@ -44,17 +46,19 @@ export async function GET(request: NextRequest, context: { params: { id: string 
   }
 }
 
-export async function PATCH(request: NextRequest, context: { params: { id: string } }) {
+//update user info
+export async function PATCH(request: NextRequest,  context: {params: Promise<{id: string}>}) {
   try {
     await testConnection();
     const adminContext = await authorizeAdmin(request);
-    const userId = parseUserId(context.params);
+    const params =  await context.params;
+    const userId = parseUserId(params);
 
     const body = await request.json();
     const parsedBody = UpdateUserSchema.safeParse(body);
 
     if (!parsedBody.success) {
-      throw new HttpError(400, 'Invalid request data', parsedBody.error.flatten());
+      throw new HttpError(400, 'Invalid request data', z.treeifyError(parsedBody.error));
     }
 
     const updates = parsedBody.data;
@@ -144,11 +148,13 @@ export async function PATCH(request: NextRequest, context: { params: { id: strin
   }
 }
 
-export async function DELETE(request: NextRequest, context: { params: { id: string } }) {
+//delete user account
+export async function DELETE(request: NextRequest, context: {params: Promise<{id: string}>}) {
   try {
     await testConnection();
     const adminContext = await authorizeAdmin(request);
-    const userId = parseUserId(context.params);
+    const params = await context.params;
+    const userId = parseUserId(params);
 
     const transaction = await sequelize.transaction();
 

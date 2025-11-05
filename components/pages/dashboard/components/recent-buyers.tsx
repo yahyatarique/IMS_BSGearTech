@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Users, Mail, Phone, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { DashboardCard } from '@/components/dashboard/dashboard-card';
+import { DashboardCard } from '@/components/pages/dashboard/components/dashboard-card';
 import { fetchRecentBuyers } from '@/services/dashboard';
 import { cn } from '@/lib/utils';
 

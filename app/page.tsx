@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
-import StatsSection from '@/components/dashboard/stats-section';
-import StatsSectionSkeleton from '@/components/dashboard/stats-section-skeleton';
-import { StatsSectionBoundary } from '@/components/dashboard/stats-section-boundary';
+import StatsSection from '@/components/pages/dashboard/components/stats-section';
+import StatsSectionSkeleton from '@/components/pages/dashboard/components/stats-section-skeleton';
+import { StatsSectionBoundary } from '@/components/pages/dashboard/components/stats-section-boundary';
 import RecentOrders from '@/components/pages/dashboard/components/recent-orders';
 import RecentOrdersSkeleton from '@/components/pages/dashboard/components/recent-orders-skeleton';
 import { RecentOrdersBoundary } from '@/components/pages/dashboard/components/recent-orders-boundary';

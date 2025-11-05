@@ -1,6 +1,6 @@
 import { ShoppingCart, Users, Package } from 'lucide-react';
 import { fetchDashboardStats } from '@/services/dashboard';
-import { DashboardCard } from '@/components/dashboard/dashboard-card';
+import { DashboardCard } from '@/components/pages/dashboard/components/dashboard-card';
 
 const numberFormatter = new Intl.NumberFormat('en-IN');
 

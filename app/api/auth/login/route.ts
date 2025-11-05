@@ -1,4 +1,4 @@
-import { NextRequest, } from 'next/server';
+import { NextRequest } from 'next/server';
 import { SignJWT } from 'jose';
 import { LoginSchema } from '@/schemas/user.schema';
 import { testConnection } from '@/db/connection';
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     // Note: rolePermissions table has been removed
     // User roles are managed using enums from src/enums/userRoles.ts
     const user = await User.findOne({
-      where: { username },
+      where: { username }
     });
 
     if (!user) {
@@ -34,14 +34,16 @@ export async function POST(request: NextRequest) {
       return errorResponse('Invalid Password', 401);
     }
 
-  // Generate tokens
-  const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-  const refreshSecret = new TextEncoder().encode(process.env.REFRESH_TOKEN_SECRET);
-  const userId = String(user.dataValues.id);
+    // Generate tokens
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+    const refreshSecret = new TextEncoder().encode(process.env.REFRESH_TOKEN_SECRET);
+    const userId = String(user.dataValues.id);
+    const role = user.dataValues.role as UserType['role'];
 
     // Access token (15 minutes)
     const accessToken = await new SignJWT({
       userId,
+      role
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
@@ -53,7 +55,8 @@ export async function POST(request: NextRequest) {
     const refreshTokenExpiry = rememberMe ? '30d' : '7d';
     const refreshToken = await new SignJWT({
       userId,
-      type: 'refresh',
+      role,
+      type: 'refresh'
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
@@ -69,6 +72,7 @@ export async function POST(request: NextRequest) {
       first_name: user.dataValues.first_name,
       last_name: user.dataValues.last_name,
       created_at: user.dataValues.created_at.toISOString(),
+      status: user.dataValues.status
     };
 
     // Create response with user data only (tokens will be in cookies)
@@ -81,7 +85,7 @@ export async function POST(request: NextRequest) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 15 * 60, // 15 minutes in seconds
-      path: '/',
+      path: '/'
     });
 
     // Refresh token - long lived (7 days or 30 days if "remember me")
@@ -91,7 +95,7 @@ export async function POST(request: NextRequest) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: refreshTokenMaxAge, // 7 or 30 days in seconds
-      path: '/',
+      path: '/'
     });
 
     return response;

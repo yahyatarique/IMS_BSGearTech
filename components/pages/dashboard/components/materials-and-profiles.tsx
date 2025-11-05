@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Package, Layers } from 'lucide-react'
-import { DashboardCard } from '@/components/dashboard/dashboard-card'
+import { DashboardCard } from '@/components/pages/dashboard/components/dashboard-card'
 import { Badge } from '@/components/ui/badge'
 import { fetchDashboardMaterials, fetchDashboardProfileTypes } from '@/services/dashboard'
 import { cn } from '@/lib/utils'

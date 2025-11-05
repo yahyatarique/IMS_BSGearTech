@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { ShoppingCart, Clock, CheckCircle2, XCircle, PauseCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { fetchRecentOrders } from '@/services/dashboard';
-import { DashboardCard } from '@/components/dashboard/dashboard-card';
+import { DashboardCard } from '@/components/pages/dashboard/components/dashboard-card';
 
 const STATUS_CONFIG: Record<
   string,

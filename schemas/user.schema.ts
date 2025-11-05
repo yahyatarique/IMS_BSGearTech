@@ -23,14 +23,19 @@ export const UpdateUserSchema = z.object({
   firstName: z.string().min(1).max(100).optional(),
   lastName: z.string().min(1).max(100).optional(),
   role: z.enum(['0', '1', '2']).optional(),
-  status: z.enum(['active', 'inactive']).optional(),
+  status: z.enum(['active', 'inactive', 'suspended']).optional(),
 });
 
 export const UserIdParamSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string(),
 });
 
 // Refresh token schema
 export const RefreshTokenSchema = z.object({
   refreshToken: z.string().min(1),
+});
+
+export const UsersListQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(10),
 });

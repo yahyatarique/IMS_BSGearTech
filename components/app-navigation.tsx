@@ -4,7 +4,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { logout, getCurrentUser } from '@/services/auth';
 import { Button } from '@/components/ui/button';
 import { tokenUtils } from '@/axios';
-import { AdminWrapper } from '@/components/auth';
+import { AdminWrapper } from '@/components/wrappers';
 import {
   Home,
   ShoppingCart,
@@ -134,7 +134,7 @@ export function AppNavigation() {
             <div className='flex shrink-0 items-center gap-2'>
               <Link
                 href='/'
-                className='h-8 w-8 block rounded-lg bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center'>
+                className='h-8 w-8 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center'>
                 <Home className='h-5 w-5 text-white' />
               </Link>
               <span className='text-xl font-bold bg-gradient-to-r from-blue-300 to-cyan-300 bg-clip-text text-transparent'>
@@ -173,7 +173,7 @@ export function AppNavigation() {
                       variant='ghost'
                       onClick={() => router.push(item.href)}
                       className={`gap-2 text-gray-300 hover:text-white transition-all ${
-                        active ? 'bg-white/10 text-white border border-white/20' : 'hover:bg-white/5'
+                        active ? '!bg-white/10 text-white border hover:!bg-white/30 border-white/20' : 'hover:bg-white/5'
                       }`}
                       size='sm'>
                       <Icon className='h-4 w-4' />
@@ -270,7 +270,7 @@ export function AppNavigation() {
                         setIsMobileMenuOpen(false);
                       }}
                       className={`w-full justify-start gap-2 text-gray-300 hover:text-white ${
-                        active ? 'bg-white/10 text-white border border-white/20' : 'hover:bg-white/5'
+                        active ? '!bg-white/10 text-white border hover:!bg-white/30 border-white/20' : 'hover:bg-white/5'
                       }`}>
                       <Icon className='h-4 w-4' />
                       {item.name}
