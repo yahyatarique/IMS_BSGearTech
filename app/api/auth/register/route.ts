@@ -3,6 +3,11 @@ import { SignJWT } from 'jose';
 import { CreateUserSchema } from '@/schemas/user.schema';
 import sequelize, { testConnection } from '@/db/connection';
 import { User } from '@/db/models';
+import {
+  errorResponse,
+  sendResponse,
+  validationErrorResponse
+} from '../../../../utils/api-response';
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,7 +27,7 @@ export async function POST(request: NextRequest) {
       // Check if user already exists
       const existingUser = await User.findOne({
         where: { username },
-        transaction,
+        transaction
       });
 
       if (existingUser) {
@@ -42,7 +47,7 @@ export async function POST(request: NextRequest) {
           password: hashedPassword,
           first_name: firstName,
           last_name: lastName,
-          role: role || '2',
+          role: role
         },
         { transaction }
       );
@@ -56,11 +61,8 @@ export async function POST(request: NextRequest) {
 
       // Access token (15 minutes)
       const accessToken = await new SignJWT({
-        sub: newUser.id,
-        username: newUser.username,
-        role: newUser.role,
-        first_name: newUser.first_name,
-        last_name: newUser.last_name,
+        userId: newUser.dataValues.id,
+        role: newUser.dataValues.role
       })
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuedAt()
@@ -69,8 +71,9 @@ export async function POST(request: NextRequest) {
 
       // Refresh token (7 days)
       const refreshToken = await new SignJWT({
-        sub: newUser.id,
-        type: 'refresh',
+        userId: newUser.dataValues.id,
+        role: newUser.dataValues.role,
+        type: 'refresh'
       })
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuedAt()
@@ -79,21 +82,21 @@ export async function POST(request: NextRequest) {
 
       // Prepare user data (exclude sensitive information)
       const userData = {
-        id: newUser.id,
-        username: newUser.username,
-        role: newUser.role,
-        first_name: newUser.first_name,
-        last_name: newUser.last_name,
-        created_at: newUser.created_at,
+        id: newUser.dataValues.id,
+        username: newUser.dataValues.username,
+        role: newUser.dataValues.role,
+        first_name: newUser.dataValues.first_name,
+        last_name: newUser.dataValues.last_name,
+        created_at: newUser.dataValues.created_at
       };
 
       // Create response with user data only (tokens will be in cookies)
-      const response = NextResponse.json(
+      const response = sendResponse(
         {
-          message: 'Registration successful',
-          user: userData,
+          user: userData
         },
-        { status: 201 }
+        'Registration successful',
+        201
       );
 
       // Set HTTP-only cookies for tokens
@@ -103,7 +106,7 @@ export async function POST(request: NextRequest) {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         maxAge: 15 * 60, // 15 minutes in seconds
-        path: '/',
+        path: '/'
       });
 
       // Refresh token - long lived (7 days)
@@ -112,7 +115,7 @@ export async function POST(request: NextRequest) {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
-        path: '/',
+        path: '/'
       });
 
       return response;
@@ -126,35 +129,20 @@ export async function POST(request: NextRequest) {
 
     // Handle Zod validation errors
     if (error.name === 'ZodError') {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: error.errors,
-        },
-        { status: 400 }
-      );
+      return validationErrorResponse('Validation Failed', error.errors);
     }
 
     // Handle Sequelize unique constraint violation
     if (error.name === 'SequelizeUniqueConstraintError') {
-      return NextResponse.json({ error: 'Username already exists' }, { status: 409 });
+      return errorResponse('Username already exists', 409);
     }
 
     // Handle Sequelize validation errors
     if (error.name === 'SequelizeValidationError') {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: error.errors.map((e: any) => ({
-            field: e.path,
-            message: e.message,
-          })),
-        },
-        { status: 400 }
-      );
+      return validationErrorResponse('Validation failed', error);
     }
 
     // Generic error response
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return errorResponse('Internal server error', 500);
   }
 }

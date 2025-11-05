@@ -24,6 +24,18 @@ Short, focused instructions to help an AI code agent be productive in this repos
 - Authorization checks are sometimes implemented using request headers (example: `x-user-role` checked in `api/users/route.ts`). When editing auth, update all routes that rely on that header.
 - **Tokens are stored ONLY in httpOnly cookies**: API routes (e.g., `api/auth/login/route.ts`) set `accessToken` and `refreshToken` as httpOnly cookies. Client-side code does NOT store tokens in localStorage. The axios instance (`axios/index.ts`) uses `withCredentials: true` to automatically send cookies with requests and implements a refresh queue for concurrent 401s.
 - **Remember Me functionality**: Login supports "Remember Me" checkbox. When checked, refresh token expiry extends from 7 days to 30 days. Access token remains 15 minutes regardless.
+- **Styling conventions**:
+  - ALWAYS use the `cn()` utility from `lib/utils.ts` for conditional or merged className strings.
+  - Never concatenate className strings with template literals or `+` operator.
+  - Use Tailwind CSS utility classes; avoid inline styles unless absolutely necessary.
+  - Primary color theme: Blue (`primary-*` scale or `blue-*` + `cyan-*` for gradients).
+  - Example: `className={cn('base-class', condition && 'conditional-class', props.className)}`
+- **Component reusability**:
+  - Before creating duplicate UI patterns, check `components/` for reusable components.
+  - **Auth wrappers**: Use `AdminWrapper`, `UserWrapper`, or `AuthWrapper` from `components/auth/` for role-based rendering.
+  - **UI components**: Use `GradientText`, `GradientBox`, `PageHeader`, `GradientCard` from `components/ui/` for consistent gradient styling.
+  - **When to create reusable components**: If a pattern (styling, logic, or layout) appears 3+ times, extract it into a reusable component.
+  - See `components/README.md` for full documentation on available reusable components.
 
 ## Build / dev / DB workflows (concrete commands)
 - Start dev: `npm run dev` (Next dev server). `package.json` contains `dev`, `build`, `start`, and `lint` scripts.
@@ -56,6 +68,44 @@ Short, focused instructions to help an AI code agent be productive in this repos
   5. When issuing tokens, follow the `jose` pattern in `api/auth/login/route.ts` and set cookies with `response.cookies.set(...)`.
 - To modify role logic: update `enums/users.enum.ts` and adjust checks in routes that read `x-user-role` header (search for `x-user-role` to find all places).
 - When changing a model shape, update corresponding migration in `db/migrations/` and run `npm run db:migrate` (or create a new migration).
+- **For UI components with conditional classes**:
+  ```typescript
+  import { cn } from '@/lib/utils'
+  
+  // ✅ Good - use cn() for conditional classes
+  <div className={cn(
+    'base-class',
+    isActive && 'active-class',
+    error && 'error-class',
+    props.className
+  )}>
+  
+  // ❌ Bad - don't use template literals
+  <div className={`base-class ${isActive ? 'active-class' : ''} ${props.className}`}>
+  ```
+- **For role-based rendering**:
+  ```typescript
+  import { AdminWrapper } from '@/components/auth'
+  
+  // ✅ Good - use wrappers
+  <AdminWrapper>
+    <AdminOnlyContent />
+  </AdminWrapper>
+  
+  // ❌ Bad - manual checks
+  {isAdmin && <AdminOnlyContent />}
+  ```
+- **For consistent gradient styling**:
+  ```typescript
+  import { GradientText, PageHeader } from '@/components/ui/...'
+  
+  // ✅ Good - use reusable components
+  <PageHeader title="Dashboard" gradient="primary" icon={Home} />
+  <GradientText gradient="blue-cyan">Title</GradientText>
+  
+  // ❌ Bad - repeated gradient classes
+  <h1 className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+  ```
 
 ## Integration points & external dependencies
 - Postgres accessed through `Sequelize` (`sequelize` package). Migrations use `sequelize-cli`.

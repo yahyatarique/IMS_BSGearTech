@@ -53,6 +53,11 @@ class Orders extends Model<OrdersAttributes, OrdersCreationAttributes> implement
       foreignKey: 'buyer_id', 
       as: 'buyer' 
     });
+
+    Orders.hasMany(models.OrderProfile, {
+      foreignKey: 'order_id',
+      as: 'orderProfiles'
+    });
   }
 }
 

@@ -1,4 +1,11 @@
-require('dotenv').config();
+const dotenv = require('dotenv');
+
+const nodeEnv = process.env.NODE_ENV || 'development';
+const envFile = nodeEnv === 'production' ? '.env' : `.env.${nodeEnv}`;
+
+// Load environment-specific file first, then fallback to default .env
+dotenv.config({ path: envFile });
+dotenv.config();
 
 module.exports = {
   development: {

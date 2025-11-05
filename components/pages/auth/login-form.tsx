@@ -39,6 +39,11 @@ export function LoginForm() {
       const res = await login(values);
 
       if (res.data.success) {
+        // Store user data in localStorage for faster initial navigation load
+        if (res.data.data.user) {
+          localStorage.setItem('userInfo', JSON.stringify(res.data.data.user));
+        }
+
         router.push('/');
 
         success({
