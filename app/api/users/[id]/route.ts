@@ -11,9 +11,9 @@ import {
   ensureCanManageTarget,
   serializeUser,
   handleRouteError,
-  HttpError,
+  HttpError
 } from '../_utils';
-import {z} from 'zod';
+import { z } from 'zod';
 
 function parseUserId(params: { id: string }) {
   const result = UserIdParamSchema.safeParse(params);
@@ -25,15 +25,16 @@ function parseUserId(params: { id: string }) {
 }
 
 //get user info
-export async function GET(request: NextRequest,  context: {params: Promise<{id: string}>}) {
+export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     await testConnection();
     await authorizeAdmin(request);
+    const params = await context.params;
 
-    const userId = parseUserId(context.params);
+    const userId = parseUserId(params);
 
     const user = await User.findByPk(userId, {
-      attributes: ['id', 'username', 'role', 'first_name', 'last_name', 'status', 'created_at'],
+      attributes: ['id', 'username', 'role', 'first_name', 'last_name', 'status', 'created_at']
     });
 
     if (!user) {
@@ -47,11 +48,11 @@ export async function GET(request: NextRequest,  context: {params: Promise<{id: 
 }
 
 //update user info
-export async function PATCH(request: NextRequest,  context: {params: Promise<{id: string}>}) {
+export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     await testConnection();
     const adminContext = await authorizeAdmin(request);
-    const params =  await context.params;
+    const params = await context.params;
     const userId = parseUserId(params);
 
     const body = await request.json();
@@ -89,9 +90,9 @@ export async function PATCH(request: NextRequest,  context: {params: Promise<{id
         const existingUser = await User.findOne({
           where: {
             username: updates.username,
-            id: { [Op.ne]: userId },
+            id: { [Op.ne]: userId }
           },
-          transaction,
+          transaction
         });
 
         if (existingUser) {
@@ -135,7 +136,7 @@ export async function PATCH(request: NextRequest,  context: {params: Promise<{id
       await transaction.commit();
 
       await user.reload({
-        attributes: ['id', 'username', 'role', 'first_name', 'last_name', 'status', 'created_at'],
+        attributes: ['id', 'username', 'role', 'first_name', 'last_name', 'status', 'created_at']
       });
 
       return sendResponse(serializeUser(user), 'User updated successfully');
@@ -149,7 +150,7 @@ export async function PATCH(request: NextRequest,  context: {params: Promise<{id
 }
 
 //delete user account
-export async function DELETE(request: NextRequest, context: {params: Promise<{id: string}>}) {
+export async function DELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     await testConnection();
     const adminContext = await authorizeAdmin(request);
