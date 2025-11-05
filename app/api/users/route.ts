@@ -1,143 +1,85 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { User } from '@/db/models';
 import { CreateUserSchema } from '@/schemas/user.schema';
 import { testConnection } from '@/db/connection';
+import sequelize from '@/db/connection';
 import { USER_ROLES } from '@/enums/users.enum';
-import { jwtVerify } from 'jose';
+import { sendResponse } from '@/utils/api-response';
+import {
+  authorizeAdmin,
+  assertRoleAssignmentPermission,
+  serializeUser,
+  handleRouteError,
+  HttpError,
+} from './_utils';
 
 // GET /api/users - Get all users (admin only)
 export async function GET(request: NextRequest) {
   try {
-    // Ensure database connection
     await testConnection();
-
-    // Get and verify access token
-    const accessToken = request.cookies.get('accessToken')?.value;
-    if (!accessToken) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-    const { payload } = await jwtVerify(accessToken, secret);
-    const userRole = payload.role as string;
-
-    // Check if user is admin (Super Admin or Admin)
-    if (userRole !== USER_ROLES.SUPER_ADMIN && userRole !== USER_ROLES.ADMIN) {
-      return NextResponse.json(
-        { error: 'Forbidden: Admin access required' },
-        { status: 403 }
-      );
-    }
+    await authorizeAdmin(request);
 
     const users = await User.findAll({
       attributes: ['id', 'username', 'role', 'first_name', 'last_name', 'status', 'created_at'],
       order: [['created_at', 'DESC']],
     });
 
-    return NextResponse.json({ users });
+    const payload = users.map(serializeUser);
+    return sendResponse(payload, 'Users retrieved successfully');
   } catch (error) {
-    console.error('Error fetching users:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleRouteError(error);
   }
 }
 
 // POST /api/users - Create new user (admin only)
 export async function POST(request: NextRequest) {
   try {
-    // Ensure database connection
     await testConnection();
-
-    // Get and verify access token
-    const accessToken = request.cookies.get('accessToken')?.value;
-    if (!accessToken) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-    const { payload } = await jwtVerify(accessToken, secret);
-    const userRole = payload.role as string;
-
-    // Check if user is admin (Super Admin or Admin)
-    if (userRole !== USER_ROLES.SUPER_ADMIN && userRole !== USER_ROLES.ADMIN) {
-      return NextResponse.json(
-        { error: 'Forbidden: Admin access required' },
-        { status: 403 }
-      );
-    }
+    const adminContext = await authorizeAdmin(request);
 
     const body = await request.json();
-    
-    // Validate request body
-    const validatedData = CreateUserSchema.parse(body);
+    const parsedBody = CreateUserSchema.safeParse(body);
 
-    // Only allow creating users with role '2' (USER)
-    // Admins cannot create other admins through this endpoint
-    if (validatedData.role && validatedData.role !== USER_ROLES.USER) {
-      return NextResponse.json(
-        { error: 'You can only create users with USER role' },
-        { status: 403 }
-      );
+    if (!parsedBody.success) {
+      throw new HttpError(400, 'Invalid request data', parsedBody.error.flatten());
     }
 
-    // Check if username already exists
+    const data = parsedBody.data;
+    const desiredRole = data.role ?? USER_ROLES.USER;
+
+    assertRoleAssignmentPermission(adminContext.role, desiredRole);
+
     const existingUser = await User.findOne({
-      where: { username: validatedData.username },
+      where: { username: data.username },
     });
 
     if (existingUser) {
-      return NextResponse.json(
-        { error: 'Username already exists' },
-        { status: 409 }
-      );
+      throw new HttpError(409, 'Username already exists');
     }
 
-    // Create new user with role '2' (USER)
-    const newUser = await User.create({
-      username: validatedData.username,
-      password: validatedData.password,
-      role: USER_ROLES.USER, // Force USER role
-      first_name: validatedData.firstName,
-      last_name: validatedData.lastName,
-      status: 'active',
-    });
+    const transaction = await sequelize.transaction();
 
-    // Return user data (exclude password)
-    const userData = {
-      id: newUser.id,
-      username: newUser.username,
-      role: newUser.role,
-      first_name: newUser.first_name,
-      last_name: newUser.last_name,
-      status: newUser.status,
-      created_at: newUser.created_at,
-    };
+    try {
+      const newUser = await User.create(
+        {
+          username: data.username,
+          password: data.password,
+          role: desiredRole,
+          first_name: data.firstName,
+          last_name: data.lastName,
+          status: 'active',
+        },
+        { transaction },
+      );
 
-    return NextResponse.json({
-      message: 'User created successfully',
-      user: userData,
-    }, { status: 201 });
+      await transaction.commit();
+
+      return sendResponse(serializeUser(newUser), 'User created successfully', 201);
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
   } catch (error) {
-    console.error('Error creating user:', error);
-    
-    if (error instanceof Error && error.name === 'ZodError') {
-      return NextResponse.json(
-        { error: 'Invalid request data', details: error.message },
-        { status: 400 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleRouteError(error);
   }
 }

@@ -6,7 +6,7 @@ export const CreateUserSchema = z.object({
   password: z.string().min(6).regex(/^[A-Za-z0-9]+$/, 'Password must contain only alphanumeric characters'),
   firstName: z.string().min(1).max(100),
   lastName: z.string().min(1).max(100),
-  role: z.enum(['0', '1', '2']), // 0=admin, 1=manager, 2=user
+  role: z.enum(['0', '1', '2']).optional(), // 0=admin, 1=manager, 2=user
 });
 
 // User login schema
@@ -23,6 +23,11 @@ export const UpdateUserSchema = z.object({
   firstName: z.string().min(1).max(100).optional(),
   lastName: z.string().min(1).max(100).optional(),
   role: z.enum(['0', '1', '2']).optional(),
+  status: z.enum(['active', 'inactive']).optional(),
+});
+
+export const UserIdParamSchema = z.object({
+  id: z.string().uuid(),
 });
 
 // Refresh token schema
