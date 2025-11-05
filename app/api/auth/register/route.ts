@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
           password: hashedPassword,
           first_name: firstName,
           last_name: lastName,
-          role: role || '2',
+          role: role,
         },
         { transaction }
       );

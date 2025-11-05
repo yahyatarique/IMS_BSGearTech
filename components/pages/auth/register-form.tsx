@@ -40,7 +40,7 @@ export function RegisterForm() {
       password: '',
       firstName: '',
       lastName: '',
-      role: USER_ROLES.USER,
+      role: USER_ROLES.ADMIN,
     },
   })
 

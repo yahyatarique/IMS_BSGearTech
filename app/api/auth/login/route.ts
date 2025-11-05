@@ -34,31 +34,30 @@ export async function POST(request: NextRequest) {
       return errorResponse('Invalid Password', 401);
     }
 
-    // Generate tokens
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-    const refreshSecret = new TextEncoder().encode(process.env.REFRESH_TOKEN_SECRET);
+  // Generate tokens
+  const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+  const refreshSecret = new TextEncoder().encode(process.env.REFRESH_TOKEN_SECRET);
+  const userId = String(user.dataValues.id);
 
     // Access token (15 minutes)
     const accessToken = await new SignJWT({
-      sub: user.id,
-      username: user.username,
-      role: user.role,
-      first_name: user.first_name,
-      last_name: user.last_name,
+      userId,
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
+      .setSubject(userId)
       .setExpirationTime('15m')
       .sign(secret);
 
     // Refresh token (7 days or 30 days if "remember me")
     const refreshTokenExpiry = rememberMe ? '30d' : '7d';
     const refreshToken = await new SignJWT({
-      sub: user.id,
+      userId,
       type: 'refresh',
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
+      .setSubject(userId)
       .setExpirationTime(refreshTokenExpiry)
       .sign(refreshSecret);
 

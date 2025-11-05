@@ -1,5 +1,5 @@
 import axiosInstance from "../axios";
-import { CreateUserInput, LoginInput, LoginRes, RefreshTokenInput, UpdateUserInput } from "./types/auth.api.type";
+import { CreateUserInput, LoginInput, LoginRes, UpdateUserInput } from "./types/auth.api.type";
 
 
 const BASE_URL = 'auth';
@@ -9,6 +9,7 @@ export const endpoints = {
   logout: `${BASE_URL}/logout`,
   register: `${BASE_URL}/register`,
   refreshToken: `${BASE_URL}/refresh-token`,
+  me: `${BASE_URL}/me`,
 }
 
 export const login = async (payload: LoginInput): LoginRes => {
@@ -53,10 +54,16 @@ export const logout = async () => {
 }
 
 
-export const refreshToken = async (refreshToken: RefreshTokenInput) => {
+export const refreshToken = async () => {
+  return axiosInstance.post(endpoints.refreshToken, undefined, {
+    withCredentials: false,
+  });
+}
+
+export const getCurrentUser = async () => {
   try {
-    const res = await axiosInstance.post(endpoints.refreshToken, refreshToken);
-    return res;
+    const res = await axiosInstance.get(endpoints.me);
+    return res.data;
   } catch (error) {
     throw error;
   }

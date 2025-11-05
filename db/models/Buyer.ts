@@ -10,11 +10,12 @@ interface BuyerAttributes {
   tin_number?: string;
   org_name: string;
   org_address: string;
+  status: 'active' | 'inactive' | 'blocked';
   created_at: Date;
   updated_at: Date;
 }
 
-interface BuyerCreationAttributes extends Optional<BuyerAttributes, 'id' | 'created_at' | 'updated_at'> {}
+interface BuyerCreationAttributes extends Optional<BuyerAttributes, 'id' | 'created_at' | 'updated_at' | 'status'> {}
 
 class Buyer extends Model<BuyerAttributes, BuyerCreationAttributes> implements BuyerAttributes {
   public id!: string;
@@ -25,6 +26,7 @@ class Buyer extends Model<BuyerAttributes, BuyerCreationAttributes> implements B
   public tin_number?: string;
   public org_name!: string;
   public org_address!: string;
+  public status!: 'active' | 'inactive';
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 
@@ -71,6 +73,11 @@ Buyer.init(
     org_address: {
       type: DataTypes.TEXT,
       allowNull: false,
+    },
+    status: {
+      type: DataTypes.ENUM('active', 'inactive', 'blocked'),
+      allowNull: false,
+      defaultValue: 'active',
     },
     created_at: {
       type: DataTypes.DATE,

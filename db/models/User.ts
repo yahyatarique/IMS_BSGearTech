@@ -21,10 +21,11 @@ interface UserAttributes {
   role: '0' | '1' | '2';
   first_name: string;
   last_name: string;
+  status: 'active' | 'inactive' | 'suspended';
   created_at: Date;
 }
 
-interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'created_at' | 'role'> {}
+interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'created_at' | 'role' | 'status'> {}
 
 class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
   public id!: string;
@@ -33,6 +34,7 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   public role!: '0' | '1' | '2';
   public first_name!: string;
   public last_name!: string;
+  public status!: 'active' | 'inactive' | 'suspended';
   public readonly created_at!: Date;
 
   // Instance methods
@@ -85,6 +87,11 @@ User.init(
     last_name: {
       type: DataTypes.TEXT,
       allowNull: false,
+    },
+    status: {
+      type: DataTypes.ENUM('active', 'inactive'),
+      allowNull: false,
+      defaultValue: 'active',
     },
     created_at: {
       type: DataTypes.DATE,

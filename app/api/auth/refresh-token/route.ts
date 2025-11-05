@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { User } from '@/db/models';
 import { SignJWT, jwtVerify } from 'jose';
+import { errorResponse, sendResponse } from '../../../../utils/api-response';
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,10 +9,7 @@ export async function POST(request: NextRequest) {
     const refreshToken = request.cookies.get('refreshToken')?.value;
 
     if (!refreshToken) {
-      return NextResponse.json(
-        { error: 'Refresh token not found' },
-        { status: 401 }
-      );
+      return errorResponse('Refresh token not found', 401);
     }
 
     // Verify refresh token
@@ -19,25 +17,25 @@ export async function POST(request: NextRequest) {
     const { payload } = await jwtVerify(refreshToken, refreshSecret);
 
     if (payload.type !== 'refresh') {
-      return NextResponse.json(
-        { error: 'Invalid token type' },
-        { status: 401 }
-      );
+      return errorResponse('Invalid token type', 401);
+    }
+
+    if (!payload.userId || payload.userId === 'undefined') {
+      return errorResponse('Invalid token payload', 401);
     }
 
     // Find user
-    const user = await User.findByPk(payload.sub as string);
+    const user = await User.findByPk(payload.userId as string);
+
     if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 401 }
-      );
+      return errorResponse('User not found', 401);
     }
 
     // Generate new access token
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+    const userId = String(user.id);
     const accessToken = await new SignJWT({
-      sub: user.id,
+      userId,
       username: user.username,
       role: user.role,
       first_name: user.first_name,
@@ -45,23 +43,23 @@ export async function POST(request: NextRequest) {
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
+      .setSubject(userId)
       .setExpirationTime('15m')
       .sign(secret);
 
     // Generate new refresh token (optional - for token rotation)
     const newRefreshToken = await new SignJWT({
-      sub: user.id,
+      userId,
       type: 'refresh',
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
+      .setSubject(userId)
       .setExpirationTime('7d')
       .sign(refreshSecret);
 
     // Return success response without tokens in body
-    const response = NextResponse.json({
-      message: 'Token refreshed successfully',
-    });
+    const response = sendResponse(undefined, 'Token refreshed successfully');
 
     // Set new tokens in HTTP-only cookies
     response.cookies.set('accessToken', accessToken, {
@@ -84,9 +82,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Token refresh error:', error);
 
-    return NextResponse.json(
-      { error: 'Invalid or expired refresh token' },
-      { status: 401 }
-    );
+    return errorResponse('Invalid or expired refresh token', 401);
   }
 }
