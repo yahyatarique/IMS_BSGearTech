@@ -1,8 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, } from 'next/server';
 import { SignJWT } from 'jose';
-import { User } from '../../../../db/models';
-import { LoginSchema } from '../../../../schemas/user.schema';
-import { testConnection } from '../../../../db/connection';
+import { LoginSchema } from '@/schemas/user.schema';
+import { testConnection } from '@/db/connection';
+import { User } from '@/db/models';
+import type { User as UserType } from '@/services/types/auth.api.type';
+import { errorResponse, sendResponse } from '../../../../utils/api-response';
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,10 +12,10 @@ export async function POST(request: NextRequest) {
     await testConnection();
 
     const body = await request.json();
-    
+
     // Validate request body
     const validatedData = LoginSchema.parse(body);
-    const { username, password } = validatedData;
+    const { username, password, rememberMe = false } = validatedData;
 
     // Find user by username
     // Note: rolePermissions table has been removed
@@ -23,19 +25,13 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      );
+      return errorResponse('Invalid credentials', 401);
     }
 
     // Check password
-    const isPasswordValid = await user.comparePassword(password);
+    const isPasswordValid = await user.comparePassword(password, user.dataValues.password);
     if (!isPasswordValid) {
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      );
+      return errorResponse('Invalid Password', 401);
     }
 
     // Generate tokens
@@ -55,31 +51,29 @@ export async function POST(request: NextRequest) {
       .setExpirationTime('15m')
       .sign(secret);
 
-    // Refresh token (7 days)
+    // Refresh token (7 days or 30 days if "remember me")
+    const refreshTokenExpiry = rememberMe ? '30d' : '7d';
     const refreshToken = await new SignJWT({
       sub: user.id,
       type: 'refresh',
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
-      .setExpirationTime('7d')
+      .setExpirationTime(refreshTokenExpiry)
       .sign(refreshSecret);
 
     // Prepare user data (exclude sensitive information)
-    const userData = {
-      id: user.id,
-      username: user.username,
-      role: user.role,
-      first_name: user.first_name,
-      last_name: user.last_name,
-      created_at: user.created_at,
+    const userData: UserType = {
+      id: user.dataValues.id,
+      username: user.dataValues.username,
+      role: user.dataValues.role as UserType['role'],
+      first_name: user.dataValues.first_name,
+      last_name: user.dataValues.last_name,
+      created_at: user.dataValues.created_at.toISOString(),
     };
 
     // Create response with user data only (tokens will be in cookies)
-    const response = NextResponse.json({
-      message: 'Login successful',
-      user: userData,
-    });
+    const response = sendResponse({ user: userData }, 'Login successful');
 
     // Set HTTP-only cookies for tokens
     // Access token - short lived (15 minutes)
@@ -91,29 +85,24 @@ export async function POST(request: NextRequest) {
       path: '/',
     });
 
-    // Refresh token - long lived (7 days)
+    // Refresh token - long lived (7 days or 30 days if "remember me")
+    const refreshTokenMaxAge = rememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60;
     response.cookies.set('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
+      maxAge: refreshTokenMaxAge, // 7 or 30 days in seconds
       path: '/',
     });
 
     return response;
   } catch (error) {
     console.error('Login error:', error);
-    
+
     if (error instanceof Error && error.name === 'ZodError') {
-      return NextResponse.json(
-        { error: 'Invalid request data', details: error.message },
-        { status: 400 }
-      );
+      return errorResponse('Invalid request data', 400, error.message);
     }
 
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return errorResponse('Internal server error', 500);
   }
 }

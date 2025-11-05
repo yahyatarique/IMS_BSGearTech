@@ -1,14 +1,17 @@
-'use client'
 
-import "./globals.css";
-
-import Image from "next/image";
+import { Navigation } from "@/components/navigation";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-    
+    <div className="min-h-screen bg-background">
+      <Navigation />
+      <main className="container mx-auto px-4 py-16">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-4">Welcome to IMS BS GearTech</h1>
+          <p className="text-lg text-muted-foreground mb-8">
+            Inventory Management System
+          </p>
+        </div>
       </main>
     </div>
   );

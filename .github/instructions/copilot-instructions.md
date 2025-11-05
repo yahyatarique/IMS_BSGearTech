@@ -18,10 +18,12 @@ Short, focused instructions to help an AI code agent be productive in this repos
 
 ## Project-specific conventions and patterns
 - Role values are string enums: `'0'` = super/admin, `'1'` = admin/manager, `'2'` = user. See `enums/users.enum.ts`.
-- Passwords are hashed inside the Sequelize model via `beforeCreate` / `beforeUpdate` hooks (see `db/models/User.ts`). Password validation uses an alphanumeric regex in `schemas/user.schema.ts` and model validation.
+- Passwords are hashed inside the Sequelize model via `beforeCreate` / `beforeUpdate` hooks (see `db/models/User.ts`). Password validation uses an alphanumeric regex in `schemas/user.schema.ts`. Note: Model-level password validation was removed to allow bcrypt hashed passwords (which contain special characters).
 - DB calls commonly call `testConnection()` (in `db/connection.ts`) at the start of API handlers to ensure DB reachable.
+- **Database transactions**: When mutating the database (INSERT, UPDATE, DELETE operations), ALWAYS use Sequelize transactions to ensure data consistency and enable rollback on errors. Wrap all mutation operations in a transaction block.
 - Authorization checks are sometimes implemented using request headers (example: `x-user-role` checked in `api/users/route.ts`). When editing auth, update all routes that rely on that header.
-- Tokens: `api/auth/login/route.ts` writes `accessToken` and `refreshToken` as httpOnly cookies; the client also stores tokens in localStorage/cookies via `axios/index.ts` token utilities. The axios instance uses `withCredentials: true` and implements a refresh queue for concurrent 401s.
+- **Tokens are stored ONLY in httpOnly cookies**: API routes (e.g., `api/auth/login/route.ts`) set `accessToken` and `refreshToken` as httpOnly cookies. Client-side code does NOT store tokens in localStorage. The axios instance (`axios/index.ts`) uses `withCredentials: true` to automatically send cookies with requests and implements a refresh queue for concurrent 401s.
+- **Remember Me functionality**: Login supports "Remember Me" checkbox. When checked, refresh token expiry extends from 7 days to 30 days. Access token remains 15 minutes regardless.
 
 ## Build / dev / DB workflows (concrete commands)
 - Start dev: `npm run dev` (Next dev server). `package.json` contains `dev`, `build`, `start`, and `lint` scripts.
@@ -39,8 +41,19 @@ Short, focused instructions to help an AI code agent be productive in this repos
 - To add a new API route that uses the DB, follow the pattern in `api/auth/login/route.ts`:
   1. Call `await testConnection()` at the top.
   2. Validate request body using Zod schemas from `schemas/`.
-  3. Use models from `db/models` (e.g. `User`) and return `NextResponse.json(...)`.
-  4. When issuing tokens, follow the `jose` pattern in `api/auth/login/route.ts` and set cookies with `response.cookies.set(...)`.
+  3. For any database mutations (create, update, delete), wrap operations in a Sequelize transaction:
+     ```typescript
+     const transaction = await sequelize.transaction();
+     try {
+       // perform database operations
+       await transaction.commit();
+     } catch (error) {
+       await transaction.rollback();
+       throw error;
+     }
+     ```
+  4. Use models from `db/models` (e.g. `User`) and return `NextResponse.json(...)`.
+  5. When issuing tokens, follow the `jose` pattern in `api/auth/login/route.ts` and set cookies with `response.cookies.set(...)`.
 - To modify role logic: update `enums/users.enum.ts` and adjust checks in routes that read `x-user-role` header (search for `x-user-role` to find all places).
 - When changing a model shape, update corresponding migration in `db/migrations/` and run `npm run db:migrate` (or create a new migration).
 

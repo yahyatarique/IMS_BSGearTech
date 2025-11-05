@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { User } from '../../../db/models';
-import { CreateUserSchema } from '../../../schemas/user.schema';
-import { testConnection } from '../../../db/connection';
+import { User } from '@/db/models';
+import { CreateUserSchema } from '@/schemas/user.schema';
+import { testConnection } from '@/db/connection';
 
 // GET /api/users - Get all users (admin only)
 export async function GET(request: NextRequest) {

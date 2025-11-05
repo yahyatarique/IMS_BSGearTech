@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 
 /**
  * User Model
- * 
+ *
  * ROLE MANAGEMENT:
  * - Roles are stored as enum values: '0' | '1' | '2'
  * - Role definitions are in src/enums/userRoles.ts
@@ -36,9 +36,10 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   public readonly created_at!: Date;
 
   // Instance methods
-  public async comparePassword(candidatePassword: string): Promise<boolean> {
-    return bcrypt.compare(candidatePassword, this.password);
+  public async comparePassword(candidatePassword: string, userPassword: string): Promise<boolean> {
+    return bcrypt.compare(candidatePassword, userPassword);
   }
+
 
   // Static methods
   public static async hashPassword(password: string): Promise<string> {
@@ -48,13 +49,11 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
 
   // Association method
   static associate(models: any) {
-    User.hasMany(models.Orders, { 
-      foreignKey: 'user_id', 
-      as: 'orders' 
+    User.hasMany(models.Orders, {
+      foreignKey: 'user_id',
+      as: 'orders',
     });
-    
-    // Note: role is now managed using TypeScript enums from src/enums/userRoles.ts
-    // No database table association needed - role is a simple enum field
+
   }
 }
 
@@ -73,9 +72,6 @@ User.init(
     password: {
       type: DataTypes.STRING(128),
       allowNull: false,
-      validate: {
-        is: /^[A-Za-z0-9]+$/,
-      },
     },
     role: {
       type: DataTypes.ENUM('0', '1', '2'),

@@ -1,13 +1,11 @@
 require('dotenv').config();
 
-
-const config = {
+module.exports = {
   development: {
     url: process.env.DATABASE_URL,
     dialect: 'postgres',
     dialectOptions: {
       ssl: {
-        require: true,
         rejectUnauthorized: false
       }
     },
@@ -18,31 +16,24 @@ const config = {
       acquire: 30000,
       idle: 10000
     },
-    // Update paths for new structure
-    migrationsPath: 'src/db/migrations',
-    seedersPath: 'src/db/seeders',
-    modelsPath: 'src/db/models'
+
   },
   test: {
     url: process.env.DATABASE_URL,
     dialect: 'postgres',
     dialectOptions: {
       ssl: {
-        require: true,
         rejectUnauthorized: false
       }
     },
     logging: false,
-    migrationsPath: 'src/db/migrations',
-    seedersPath: 'src/db/seeders',
-    modelsPath: 'src/db/models'
+  
   },
   production: {
     url: process.env.DATABASE_URL,
     dialect: 'postgres',
     dialectOptions: {
       ssl: {
-        require: true,
         rejectUnauthorized: false
       }
     },
@@ -53,10 +44,6 @@ const config = {
       acquire: 30000,
       idle: 10000
     },
-    migrationsPath: 'src/db/migrations',
-    seedersPath: 'src/db/seeders',
-    modelsPath: 'src/db/models'
+    
   }
 };
-
-module.exports = config;
