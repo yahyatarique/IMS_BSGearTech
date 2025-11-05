@@ -1,127 +1,123 @@
-'use client'
+import type { ComponentType } from 'react';
+import Link from 'next/link';
+import { ShoppingCart, Clock, CheckCircle2, XCircle, PauseCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { fetchRecentOrders } from '@/services/dashboard';
+import { DashboardCard } from '@/components/dashboard/dashboard-card';
 
-import { DashboardCard } from './dashboard-cards'
-import { ShoppingCart, Clock, CheckCircle2, XCircle } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-
-interface Order {
-  id: string
-  orderNumber: string
-  buyer: string
-  material: string
-  quantity: number
-  status: 'pending' | 'processing' | 'completed' | 'cancelled'
-  date: string
-  amount: number
-}
-
-const mockOrders: Order[] = [
+const STATUS_CONFIG: Record<
+  string,
   {
-    id: '1',
-    orderNumber: 'ORD-2024-001',
-    buyer: 'ABC Manufacturing',
-    material: 'Steel Gear 20mm',
-    quantity: 500,
-    status: 'completed',
-    date: '2024-11-05',
-    amount: 45000
-  },
-  {
-    id: '2',
-    orderNumber: 'ORD-2024-002',
-    buyer: 'XYZ Industries',
-    material: 'Aluminum Profile Type-A',
-    quantity: 1000,
-    status: 'processing',
-    date: '2024-11-04',
-    amount: 78000
-  },
-  {
-    id: '3',
-    orderNumber: 'ORD-2024-003',
-    buyer: 'Tech Solutions Ltd',
-    material: 'Brass Gear 15mm',
-    quantity: 250,
-    status: 'pending',
-    date: '2024-11-03',
-    amount: 32000
-  },
-  {
-    id: '4',
-    orderNumber: 'ORD-2024-004',
-    buyer: 'Mega Corp',
-    material: 'Steel Profile Type-B',
-    quantity: 750,
-    status: 'completed',
-    date: '2024-11-02',
-    amount: 95000
-  },
-  {
-    id: '5',
-    orderNumber: 'ORD-2024-005',
-    buyer: 'Prime Industries',
-    material: 'Titanium Gear 25mm',
-    quantity: 300,
-    status: 'processing',
-    date: '2024-11-01',
-    amount: 125000
+    label: string;
+    className: string;
+    icon: ComponentType<{ className?: string }>;
   }
-]
+> = {
+  '0': {
+    label: 'Pending',
+    className: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-500 border-yellow-500/20',
+    icon: Clock,
+  },
+  '1': {
+    label: 'Processing',
+    className: 'bg-blue-500/10 text-blue-700 dark:text-blue-500 border-blue-500/20',
+    icon: ShoppingCart,
+  },
+  '2': {
+    label: 'Completed',
+    className: 'bg-green-500/10 text-green-700 dark:text-green-500 border-green-500/20',
+    icon: CheckCircle2,
+  },
+  '3': {
+    label: 'Cancelled',
+    className: 'bg-red-500/10 text-red-700 dark:text-red-500 border-red-500/20',
+    icon: XCircle,
+  },
+  '4': {
+    label: 'On Hold',
+    className: 'bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20',
+    icon: PauseCircle,
+  },
+};
 
-const statusConfig = {
-  pending: { label: 'Pending', className: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-500 border-yellow-500/20', icon: Clock },
-  processing: { label: 'Processing', className: 'bg-blue-500/10 text-blue-700 dark:text-blue-500 border-blue-500/20', icon: ShoppingCart },
-  completed: { label: 'Completed', className: 'bg-green-500/10 text-green-700 dark:text-green-500 border-green-500/20', icon: CheckCircle2 },
-  cancelled: { label: 'Cancelled', className: 'bg-red-500/10 text-red-700 dark:text-red-500 border-red-500/20', icon: XCircle }
+const currencyFormatter = new Intl.NumberFormat('en-IN', {
+  style: 'currency',
+  currency: 'INR',
+  maximumFractionDigits: 0,
+});
+
+const dateFormatter = new Intl.DateTimeFormat('en-IN', {
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+});
+
+function resolveStatusConfig(status: string) {
+  return STATUS_CONFIG[status] ?? STATUS_CONFIG['0'];
 }
 
-export function RecentOrders() {
+export default async function RecentOrders() {
+  const response = await fetchRecentOrders({ limit: 5 });
+  const orders = response.data?.data ?? [];
+
   return (
     <DashboardCard
       title="Recent Orders"
-      description="Last 5 orders placed"
+      description="Latest orders placed by buyers"
       icon={ShoppingCart}
       gradient="from-blue-500 to-cyan-500"
       action={
-        <Button variant="ghost" size="sm" className="text-sm">
+        <Link
+          href="#"
+          className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+        >
           View All
-        </Button>
+        </Link>
       }
     >
       <div className="space-y-3">
-        {mockOrders.map((order) => {
-          const statusInfo = statusConfig[order.status]
-          const StatusIcon = statusInfo.icon
-          
+        {orders.length === 0 && (
+          <div className="rounded-lg border border-dashed bg-slate-50 p-6 text-center text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-400">
+            No orders have been placed yet.
+          </div>
+        )}
+
+        {orders.map((order) => {
+          const statusInfo = resolveStatusConfig(order.status);
+          const StatusIcon = statusInfo.icon;
+          const buyerName = order.buyer?.name ?? 'Unknown buyer';
+          const buyerCompany = order.buyer?.company ?? '—';
+          const formattedAmount = currencyFormatter.format(order.amount);
+          const formattedDate = dateFormatter.format(new Date(order.date));
+
           return (
             <div
               key={order.id}
-              className="flex items-center justify-between p-4 rounded-lg border bg-white dark:bg-slate-800 hover:shadow-md transition-all duration-200"
+              className="flex items-center justify-between gap-4 rounded-lg border bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md dark:border-slate-800 dark:bg-slate-800"
             >
               <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="font-semibold text-sm text-slate-900 dark:text-white">{order.orderNumber}</p>
+                <div className="mb-1 flex items-center gap-2">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                    {order.orderNumber}
+                  </p>
                   <Badge className={statusInfo.className}>
-                    <StatusIcon className="h-3 w-3 mr-1" />
+                    <StatusIcon className="mr-1 h-3 w-3" />
                     {statusInfo.label}
                   </Badge>
                 </div>
-                <p className="text-sm text-slate-600 dark:text-slate-400">{order.buyer}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">
-                  {order.material} • Qty: {order.quantity}
-                </p>
+                <p className="text-sm text-slate-600 dark:text-slate-300">{buyerName}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{buyerCompany}</p>
               </div>
               <div className="text-right">
-                <p className="font-semibold text-sm bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-                  ₹{order.amount.toLocaleString()}
+                <p className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-sm font-semibold text-transparent">
+                  {formattedAmount}
                 </p>
-                <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">{order.date}</p>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{formattedDate}</p>
               </div>
             </div>
-          )
+          );
         })}
       </div>
     </DashboardCard>
-  )
+  );
 }

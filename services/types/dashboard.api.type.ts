@@ -14,4 +14,47 @@ export type DashboardStatsData = {
   products: DashboardStatSummary;
 };
 
+export type DashboardRecentOrderBuyer = {
+  id: string;
+  name: string;
+  company: string | null;
+};
+
+export type DashboardRecentOrder = {
+  id: string;
+  orderNumber: string;
+  buyer: DashboardRecentOrderBuyer | null;
+  amount: number;
+  status: string;
+  date: string;
+  statusLabel: string;
+};
+
+export type DashboardRecentOrdersData = DashboardRecentOrder[];
+
 export type DashboardStatsResponse = BaseResponse<DashboardStatsData>;
+export type DashboardRecentOrdersResponse = BaseResponse<DashboardRecentOrdersData>;
+
+export type DashboardRecentOrdersQuery = {
+  limit?: number;
+};
+
+export type DashboardRecentBuyer = {
+  id: string;
+  name: string;
+  company: string;
+  email: string;
+  phone: string;
+  location: string;
+  totalOrders: number;
+  status: string;
+  addedDate: string;
+};
+
+export type DashboardRecentBuyersData = DashboardRecentBuyer[];
+
+export type DashboardRecentBuyersResponse = BaseResponse<DashboardRecentBuyersData>;
+
+export type DashboardRecentBuyersQuery = {
+  limit?: number;
+};

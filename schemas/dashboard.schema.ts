@@ -5,4 +5,26 @@ export const DashboardStatsQuerySchema = z.object({
   to: z.string().datetime().optional(),
 });
 
+export const DashboardRecentOrdersQuerySchema = z.object({
+  limit: z
+    .coerce
+    .number()
+    .int()
+    .min(1)
+    .max(50)
+    .optional(),
+});
+
+export const DashboardRecentBuyersQuerySchema = z.object({
+  limit: z
+    .coerce
+    .number()
+    .int()
+    .min(1)
+    .max(50)
+    .optional(),
+});
+
 export type DashboardStatsQueryInput = z.infer<typeof DashboardStatsQuerySchema>;
+export type DashboardRecentOrdersQueryInput = z.infer<typeof DashboardRecentOrdersQuerySchema>;
+export type DashboardRecentBuyersQueryInput = z.infer<typeof DashboardRecentBuyersQuerySchema>;

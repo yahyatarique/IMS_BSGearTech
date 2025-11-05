@@ -2,8 +2,12 @@ import { Suspense } from 'react';
 import StatsSection from '@/components/dashboard/stats-section';
 import StatsSectionSkeleton from '@/components/dashboard/stats-section-skeleton';
 import { StatsSectionBoundary } from '@/components/dashboard/stats-section-boundary';
-import { RecentOrders } from '@/components/pages/dashboard/components/recent-orders';
+import RecentOrders from '@/components/pages/dashboard/components/recent-orders';
+import RecentOrdersSkeleton from '@/components/pages/dashboard/components/recent-orders-skeleton';
+import { RecentOrdersBoundary } from '@/components/pages/dashboard/components/recent-orders-boundary';
 import { RecentBuyers } from '@/components/pages/dashboard/components/recent-buyers';
+import RecentBuyersSkeleton from '@/components/pages/dashboard/components/recent-buyers-skeleton';
+import { RecentBuyersBoundary } from '@/components/pages/dashboard/components/recent-buyers-boundary';
 import { MaterialsAndProfiles } from '@/components/pages/dashboard/components/materials-and-profiles';
 
 export default function Home() {
@@ -30,12 +34,20 @@ export default function Home() {
 
         {/* Recent Orders Section */}
         <div className="mb-8">
-          <RecentOrders />
+          <RecentOrdersBoundary>
+            <Suspense fallback={<RecentOrdersSkeleton />}>
+              <RecentOrders />
+            </Suspense>
+          </RecentOrdersBoundary>
         </div>
 
         {/* Recent Buyers Section */}
         <div className="mb-8">
-          <RecentBuyers />
+          <RecentBuyersBoundary>
+            <Suspense fallback={<RecentBuyersSkeleton />}>
+              <RecentBuyers />
+            </Suspense>
+          </RecentBuyersBoundary>
         </div>
 
         {/* Materials and Profiles Section */}
