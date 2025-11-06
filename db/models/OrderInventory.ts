@@ -22,11 +22,6 @@ export interface OrderInventoryAttributes {
   cut_size_height: number;
   po_number?: string | null;
   quantity: number;
-  weight_used?: number | null;
-  location?: string | null;
-  notes?: string | null;
-  reserved_at?: Date | null;
-  used_at?: Date | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -35,7 +30,7 @@ export interface OrderInventoryAttributes {
 interface OrderInventoryCreationAttributes
   extends Optional<
     OrderInventoryAttributes,
-    'id' | 'po_number' | 'weight_used' | 'location' | 'notes' | 'reserved_at' | 'used_at' | 'created_at' | 'updated_at'
+    'id' | 'po_number' | 'created_at' | 'updated_at'
   > {}
 
 // Define the model class
@@ -51,11 +46,6 @@ export class OrderInventory extends Model<
   declare cut_size_height: number;
   declare po_number: string | null;
   declare quantity: number;
-  declare weight_used: number | null;
-  declare location: string | null;
-  declare notes: string | null;
-  declare reserved_at: Date | null;
-  declare used_at: Date | null;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
 
@@ -96,22 +86,27 @@ OrderInventory.init(
     material_type: {
       type: DataTypes.ENUM('CR-5', 'EN-9'),
       allowNull: false,
+      comment: 'Type of material - CR-5 or EN-9'
     },
     material_weight: {
       type: DataTypes.DECIMAL(10, 3),
       allowNull: false,
+      comment: 'Weight of material in kg'
     },
     cut_size_width: {
       type: DataTypes.DECIMAL(10, 4),
       allowNull: false,
+      comment: 'Width dimension in mm'
     },
     cut_size_height: {
       type: DataTypes.DECIMAL(10, 4),
       allowNull: false,
+      comment: 'Height dimension in mm'
     },
     po_number: {
       type: DataTypes.STRING(100),
       allowNull: true,
+      comment: 'Related Purchase Order number'
     },
     quantity: {
       type: DataTypes.INTEGER,
@@ -120,26 +115,7 @@ OrderInventory.init(
       validate: {
         min: 1,
       },
-    },
-    weight_used: {
-      type: DataTypes.DECIMAL(10, 3),
-      allowNull: true,
-    },
-    location: {
-      type: DataTypes.STRING(255),
-      allowNull: true,
-    },
-    notes: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
-    reserved_at: {
-      type: DataTypes.DATE,
-      allowNull: true,
-    },
-    used_at: {
-      type: DataTypes.DATE,
-      allowNull: true,
+      comment: 'Quantity of items'
     },
     created_at: {
       type: DataTypes.DATE,

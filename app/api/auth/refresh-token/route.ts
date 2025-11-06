@@ -25,32 +25,32 @@ export async function POST(request: NextRequest) {
     }
 
     // Find user
-    const user = await User.findByPk(payload.userId as string);
+    const _user = await User.findByPk(payload.userId as string);
 
-    if (!user) {
+    if (!_user) {
       return errorResponse('User not found', 401);
     }
+
+    const user = _user.get({ plain: true });
 
     // Generate new access token
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
     const userId = String(user.id);
     const accessToken = await new SignJWT({
       userId,
-      username: user.username,
-      role: user.role,
-      first_name: user.first_name,
-      last_name: user.last_name,
+      role: user.role
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
       .setSubject(userId)
-      .setExpirationTime('15m')
+      .setExpirationTime('3m')
       .sign(secret);
 
     // Generate new refresh token (optional - for token rotation)
     const newRefreshToken = await new SignJWT({
       userId,
-      type: 'refresh',
+      role: user.role,
+      type: 'refresh'
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
@@ -66,8 +66,8 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 15 * 60, // 15 minutes in seconds
-      path: '/',
+      // maxAge: 15 * 60, // 15 minutes in seconds
+      path: '/'
     });
 
     response.cookies.set('refreshToken', newRefreshToken, {
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
-      path: '/',
+      path: '/'
     });
 
     return response;

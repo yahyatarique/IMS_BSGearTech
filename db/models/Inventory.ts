@@ -9,15 +9,12 @@ export interface InventoryAttributes {
   cut_size_height: number;
   po_number?: string;
   quantity: number;
-  status: 'available' | 'reserved' | 'used' | 'damaged';
-  location?: string;
-  notes?: string;
   created_at: Date;
   updated_at: Date;
 }
 
 export interface InventoryCreationAttributes
-  extends Optional<InventoryAttributes, 'id' | 'po_number' | 'quantity' | 'status' | 'location' | 'notes' | 'created_at' | 'updated_at'> {}
+  extends Optional<InventoryAttributes, 'id' | 'po_number' | 'created_at' | 'updated_at'> {}
 
 class Inventory extends Model<InventoryAttributes, InventoryCreationAttributes> implements InventoryAttributes {
   public id!: string;
@@ -27,9 +24,6 @@ class Inventory extends Model<InventoryAttributes, InventoryCreationAttributes> 
   public cut_size_height!: number;
   public po_number?: string;
   public quantity!: number;
-  public status!: 'available' | 'reserved' | 'used' | 'damaged';
-  public location?: string;
-  public notes?: string;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 
@@ -53,7 +47,7 @@ Inventory.init(
     material_type: {
       type: DataTypes.ENUM('CR-5', 'EN-9'),
       allowNull: false,
-      comment: 'Type of material - must match enum_profiles_material'
+      comment: 'Type of material - CR-5 or EN-9'
     },
     material_weight: {
       type: DataTypes.DECIMAL(10, 3),
@@ -80,22 +74,6 @@ Inventory.init(
       allowNull: false,
       defaultValue: 1,
       comment: 'Quantity of items in inventory'
-    },
-    status: {
-      type: DataTypes.ENUM('available', 'reserved', 'used', 'damaged'),
-      allowNull: false,
-      defaultValue: 'available',
-      comment: 'Current status of inventory item'
-    },
-    location: {
-      type: DataTypes.STRING(255),
-      allowNull: true,
-      comment: 'Storage location or bin number'
-    },
-    notes: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-      comment: 'Additional notes or remarks'
     },
     created_at: {
       type: DataTypes.DATE,

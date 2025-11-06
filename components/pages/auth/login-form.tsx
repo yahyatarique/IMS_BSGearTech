@@ -208,9 +208,9 @@ export function LoginForm() {
                       </FormItem>
                     )}
                   />
-                  <Link href="/forgot-password" className="text-primary hover:underline">
+                  {/* <Link href="/forgot-password" className="text-primary hover:underline">
                     Forgot password?
-                  </Link>
+                  </Link> */}
                 </div>
 
                 <Button type="submit" className="w-full h-11" disabled={isLoading}>
@@ -227,7 +227,7 @@ export function LoginForm() {
             </Form>
 
             <div className="mt-6 space-y-4">
-              <div className="relative">
+              {/* <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-slate-200 dark:border-slate-700"></div>
                 </div>
@@ -236,14 +236,14 @@ export function LoginForm() {
                     Or
                   </span>
                 </div>
-              </div>
+              </div> */}
 
-              <Link
+              {/* <Link
                 href="/register"
                 className="w-full flex items-center justify-center py-2 transition-colors rounded-md backdrop-blur-sm hover:bg-gray-200 bg-white/50 dark:bg-slate-800/50 border-slate-200/50 dark:border-slate-700/50"
               >
                 Create an account
-              </Link>
+              </Link> */}
 
               <div className="text-center text-sm text-muted-foreground">
                 <p>Secure access to inventory management</p>

@@ -1,0 +1,111 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { testConnection } from '@/db/connection';
+import Inventory from '@/db/models/Inventory';
+import { CreateInventorySchema, InventoryListQuerySchema } from '@/schemas/inventory.schema';
+import { successResponse, errorResponse } from '@/utils/api-response';
+import sequelize from '@/db/connection';
+import { Op } from 'sequelize';
+
+// GET /api/inventory - List inventory with meta (pagination) and filters
+export async function GET(request: NextRequest) {
+  try {
+    await testConnection();
+
+    const { searchParams } = new URL(request.url);
+    const queryParams = Object.fromEntries(searchParams.entries());
+
+    // Validate query params
+    const validatedQuery = InventoryListQuerySchema.parse(queryParams);
+    const { page, limit, material_type, search } = validatedQuery;
+
+    // Build where clause
+    const whereClause: any = {};
+    
+    if (material_type && material_type !== 'all') {
+      whereClause.material_type = material_type;
+    }
+    
+    if (search) {
+      whereClause[Op.or] = [
+        { po_number: { [Op.iLike]: `%${search}%` } },
+      ];
+    }
+
+    // Fetch inventory with meta pagination
+    const offset = (page - 1) * limit;
+    const { rows: inventory, count: total } = await Inventory.findAndCountAll({
+      where: whereClause,
+      limit,
+      offset,
+      order: [['created_at', 'DESC']],
+    });
+
+    const totalPages = Math.ceil(total / limit);
+
+    return NextResponse.json(
+      successResponse({
+        inventory: inventory.map((item) => item.toJSON()),
+        meta: {
+          page,
+          pageSize: limit,
+          totalItems: total,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
+        },
+      })
+    );
+  } catch (error: any) {
+    console.error('Error fetching inventory:', error);
+    
+    if (error.name === 'ZodError') {
+      return NextResponse.json(errorResponse('Validation failed', 400, error.errors), {
+        status: 400,
+      });
+    }
+    
+    return NextResponse.json(errorResponse(error.message || 'Failed to fetch inventory'), {
+      status: 500,
+    });
+  }
+}
+
+// POST /api/inventory - Create new inventory item
+export async function POST(request: NextRequest) {
+  const transaction = await sequelize.transaction();
+
+  try {
+    await testConnection();
+
+    const body = await request.json();
+
+    // Validate request body
+    const validatedData = CreateInventorySchema.parse(body);
+
+    // Create inventory item
+    const inventoryItem = await Inventory.create(
+      {
+        ...validatedData,
+        po_number: validatedData.po_number || null,
+      } as any,
+      { transaction }
+    );
+
+    await transaction.commit();
+
+    return NextResponse.json(successResponse(inventoryItem.toJSON()), { status: 201 });
+  } catch (error: any) {
+    await transaction.rollback();
+    console.error('Error creating inventory item:', error);
+
+    if (error.name === 'ZodError') {
+      return NextResponse.json(errorResponse('Validation failed', 400, error.errors), {
+        status: 400,
+      });
+    }
+
+    return NextResponse.json(errorResponse(error.message || 'Failed to create inventory item'), {
+      status: 500,
+    });
+  }
+}

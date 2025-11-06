@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
       .setSubject(userId)
-      .setExpirationTime('15m')
+      .setExpirationTime('2m')
       .sign(secret);
 
     // Refresh token (7 days or 30 days if "remember me")
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 15 * 60, // 15 minutes in seconds
+      // maxAge: 15 * 60, // 15 minutes in seconds
       path: '/'
     });
 

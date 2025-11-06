@@ -3,9 +3,6 @@ import { z } from 'zod';
 // Material type enum matching database enum
 export const MaterialTypeEnum = z.enum(['CR-5', 'EN-9']);
 
-// Inventory status enum
-export const InventoryStatusEnum = z.enum(['available', 'reserved', 'used', 'damaged']);
-
 // Create inventory schema
 export const CreateInventorySchema = z.object({
   material_type: MaterialTypeEnum,
@@ -26,13 +23,10 @@ export const CreateInventorySchema = z.object({
     .number()
     .int('Quantity must be an integer')
     .positive('Quantity must be positive')
-    .default(1),
-  status: InventoryStatusEnum.default('available'),
-  location: z.string().max(255, 'Location is too long').optional(),
-  notes: z.string().optional()
+    .default(1)
 });
 
-// Update inventory schema (all fields optional except id)
+// Update inventory schema (all fields optional)
 export const UpdateInventorySchema = z.object({
   material_type: MaterialTypeEnum.optional(),
   material_weight: z
@@ -55,14 +49,20 @@ export const UpdateInventorySchema = z.object({
     .number()
     .int('Quantity must be an integer')
     .positive('Quantity must be positive')
-    .optional(),
-  status: InventoryStatusEnum.optional(),
-  location: z.string().max(255, 'Location is too long').optional(),
-  notes: z.string().optional()
+    .optional()
+});
+
+// Inventory list query schema
+export const InventoryListQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(10),
+  material_type: MaterialTypeEnum.or(z.literal('all')).default('all').optional(),
+  search: z.string().optional(),
 });
 
 // Infer TypeScript types from schemas
 export type CreateInventoryInput = z.infer<typeof CreateInventorySchema>;
 export type UpdateInventoryInput = z.infer<typeof UpdateInventorySchema>;
+export type InventoryListQuery = z.infer<typeof InventoryListQuerySchema>;
 export type MaterialType = z.infer<typeof MaterialTypeEnum>;
-export type InventoryStatus = z.infer<typeof InventoryStatusEnum>;
+
