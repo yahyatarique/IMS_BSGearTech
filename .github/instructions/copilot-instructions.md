@@ -13,6 +13,7 @@ Short, focused instructions to help an AI code agent be productive in this repos
 - API routes (examples): `api/auth/login/route.ts`, `api/users/route.ts`, `api/refresh-token/route.ts`.
 - DB: `db/connection.ts`, `db/models/*` (e.g. `db/models/User.ts`), `db/migrations/`, `db/seeders/`.
 - Validation schemas: `schemas/user.schema.ts` (CreateUserSchema, LoginSchema).
+- TypeScript types: `services/types/*.api.type.ts` (API response/request types).
 - Role enums: `enums/users.enum.ts` (roles are string values: `'0'|'1'|'2'`).
 - Front-end HTTP client: `axios/index.ts` (with token refresh behavior).
 
@@ -36,6 +37,12 @@ Short, focused instructions to help an AI code agent be productive in this repos
   - **UI components**: Use `GradientText`, `GradientBox`, `PageHeader`, `GradientCard` from `components/ui/` for consistent gradient styling.
   - **When to create reusable components**: If a pattern (styling, logic, or layout) appears 3+ times, extract it into a reusable component.
   - See `components/README.md` for full documentation on available reusable components.
+- **Schema and Type definitions**:
+  - **Validation schemas** are defined in the `schemas/` folder using Zod (e.g., `schemas/user.schema.ts`, `schemas/dashboard.schema.ts`).
+  - **TypeScript types** for API requests/responses are defined in `services/types/*.api.type.ts` (e.g., `auth.api.type.ts`, `users.api.type.ts`).
+  - When creating new schemas, follow the existing pattern: export Zod schemas and infer TypeScript types from them.
+  - When creating new API types, follow the `BaseResponse<T>` pattern from `services/types/base.api.type.ts`.
+  - NEVER define schemas or types inline in components or API routes—always create them in the appropriate folder.
 
 ## Build / dev / DB workflows (concrete commands)
 - Start dev: `npm run dev` (Next dev server). `package.json` contains `dev`, `build`, `start`, and `lint` scripts.

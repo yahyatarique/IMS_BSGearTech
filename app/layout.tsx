@@ -5,6 +5,7 @@ import RootWrapper from "../components/pages/root/RootWrapper";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ConditionalNavigation } from "@/components/conditional-navigation";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,11 +38,13 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <RootWrapper>
-            <ConditionalNavigation />
-            {children}
-          </RootWrapper>
-          <Toaster />
+          <AuthProvider>
+            <RootWrapper>
+              <ConditionalNavigation />
+              {children}
+            </RootWrapper>
+            <Toaster />
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

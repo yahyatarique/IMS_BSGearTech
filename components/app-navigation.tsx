@@ -1,9 +1,7 @@
 'use client';
 
 import { useRouter, usePathname } from 'next/navigation';
-import { logout, getCurrentUser } from '@/services/auth';
 import { Button } from '@/components/ui/button';
-import { tokenUtils } from '@/axios';
 import { AdminWrapper } from '@/components/wrappers';
 import {
   Home,
@@ -17,7 +15,7 @@ import {
   UserPlus,
   UserCircle,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ThemeToggle } from '@/components/theme-toggle';
 import {
@@ -28,8 +26,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { USER_ROLES } from '@/enums/users.enum';
-import { User } from '../services/types/auth.api.type';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
 
 const navItems = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -44,70 +42,25 @@ export function AppNavigation() {
   const router = useRouter();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [userInfo, setUserInfo] = useState<User | null>(null);
-  const [isLoadingUser, setIsLoadingUser] = useState(true);
-
-  useEffect(() => {
-    const fetchUserInfo = async () => {
-      try {
-        // First check localStorage for cached user info
-        const cachedUser = localStorage.getItem('userInfo');
-        if (cachedUser) {
-          setUserInfo(JSON.parse(cachedUser));
-        }
-
-        // Then fetch fresh data from API
-        const response = await getCurrentUser();
-        if (response?.data?.user) {
-          setUserInfo(response.data.user);
-          // Update localStorage with fresh data
-          localStorage.setItem('userInfo', JSON.stringify(response.data.user));
-        }
-      } catch (error) {
-        console.error('Failed to fetch user info:', error);
-        // If token is invalid, clear cache and redirect to login
-        if (error instanceof Error) {
-          localStorage.removeItem('userInfo');
-          tokenUtils.clearTokens();
-          router.push('/login');
-        }
-      } finally {
-        setIsLoadingUser(false);
-      }
-    };
-
-    fetchUserInfo();
-  }, [router]);
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      localStorage.removeItem('userInfo');
-      tokenUtils.clearTokens();
-      router.push('/login');
-      router.refresh();
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
+  const { user, isLoading, logout: handleLogout } = useAuth();
 
   const isActive = (href: string) => pathname === href;
 
   // Check if user is admin (role '0' or '1')
-  const isAdmin = userInfo?.role === USER_ROLES.SUPER_ADMIN || userInfo?.role === USER_ROLES.ADMIN;
+  const isAdmin = user?.role === USER_ROLES.SUPER_ADMIN || user?.role === USER_ROLES.ADMIN;
 
   // Get user initials for avatar
   const getUserInitials = () => {
-    if (!userInfo) return '?';
-    const firstInitial = userInfo.first_name?.charAt(0) || '';
-    const lastInitial = userInfo.last_name?.charAt(0) || '';
-    return `${firstInitial}${lastInitial}`.toUpperCase() || userInfo.username?.charAt(0).toUpperCase() || '?';
+    if (!user) return '?';
+    const firstInitial = user.first_name?.charAt(0) || '';
+    const lastInitial = user.last_name?.charAt(0) || '';
+    return `${firstInitial}${lastInitial}`.toUpperCase() || user.username?.charAt(0).toUpperCase() || '?';
   };
 
   // Get role display name
   const getRoleDisplay = () => {
-    if (!userInfo) return 'Loading...';
-    switch (userInfo.role) {
+    if (!user) return 'Loading...';
+    switch (user.role) {
       case USER_ROLES.SUPER_ADMIN:
         return 'Super Admin';
       case USER_ROLES.ADMIN:
@@ -121,8 +74,8 @@ export function AppNavigation() {
 
   // Get full name
   const getFullName = () => {
-    if (!userInfo) return 'Loading...';
-    return `${userInfo.first_name} ${userInfo.last_name}`.trim() || userInfo.username;
+    if (!user) return 'Loading...';
+    return `${user.first_name} ${user.last_name}`.trim() || user.username;
   };
 
   return (
@@ -143,7 +96,7 @@ export function AppNavigation() {
             </div>
 
             {/* Desktop Navigation */}
-            <div className='hidden min-w-0 flex-1 items-center gap-2 overflow-x-auto whitespace-nowrap lg:flex xl:gap-3'>
+            <div className='hidden min-w-0 flex-1 items-center gap-2 whitespace-nowrap lg:flex xl:gap-3'>
               {navItems.map(item => {
                 const Icon = item.icon;
                 const active = isActive(item.href);
@@ -187,7 +140,7 @@ export function AppNavigation() {
 
           <div className='flex shrink-0 items-center gap-3 sm:gap-4'>
             {/* User Avatar with Dropdown */}
-            {!isLoadingUser && userInfo && (
+            {!isLoading && user && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant='ghost' className='hidden md:flex items-center gap-3 hover:bg-white/5'>

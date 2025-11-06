@@ -1,6 +1,6 @@
 import { AxiosResponse } from "axios";
 import axiosInstance from "../axios";
-import { CreateUserInput, LoginInput, LoginRes, UpdateUserInput } from "./types/auth.api.type";
+import { CreateUserInput, GetCurrentUserRes, LoginInput, LoginRes, RegisterRes, UpdateUserInput, UpdateUserRes } from "./types/auth.api.type";
 
 
 const BASE_URL = 'auth';
@@ -24,7 +24,7 @@ export const login = async (payload: LoginInput): Promise<AxiosResponse<LoginRes
   }
 }
 
-export const register = async (payload: CreateUserInput) => {
+export const register = async (payload: CreateUserInput): Promise<AxiosResponse<RegisterRes>> => {
   try {
     const res = await axiosInstance.post(endpoints.register, payload, {
       withCredentials: false
@@ -36,7 +36,7 @@ export const register = async (payload: CreateUserInput) => {
 }
 
 
-export const updateUser = async (payload: UpdateUserInput) => {
+export const updateUser = async (payload: UpdateUserInput): Promise<AxiosResponse<UpdateUserRes>> => {
   try {
     const res = await axiosInstance.put(endpoints.register, payload);
     return res;
@@ -45,7 +45,7 @@ export const updateUser = async (payload: UpdateUserInput) => {
   }
 }
 
-export const logout = async () => {
+export const logout = async (): Promise<AxiosResponse> => {
   try {
     const res = await axiosInstance.post(endpoints.logout);
     return res;
@@ -55,15 +55,24 @@ export const logout = async () => {
 }
 
 
-export const refreshToken = async () => {
+export const refreshToken = async (): Promise<AxiosResponse> => {
   return axiosInstance.post(endpoints.refreshToken, undefined, {
     withCredentials: false,
   });
 }
 
-export const getCurrentUser = async () => {
+export const getCurrentUser = async (): Promise<GetCurrentUserRes> => {
   try {
-    const res = await axiosInstance.get(endpoints.me);
+    const res = await axiosInstance.get<GetCurrentUserRes>(endpoints.me);
+    return res.data;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export const updateProfile = async (payload: Pick<UpdateUserInput, 'firstName' | 'lastName'>): Promise<UpdateUserRes> => {
+  try {
+    const res = await axiosInstance.put<UpdateUserRes>(endpoints.me, payload);
     return res.data;
   } catch (error) {
     throw error;

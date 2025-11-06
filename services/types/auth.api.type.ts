@@ -19,3 +19,15 @@ export type User = {
   created_at: string;
   status: 'active' | 'inactive' | 'suspended';
 };
+
+export type GetCurrentUserRes = BaseResponse<{
+  user: User;
+}>;
+
+export type RegisterRes = BaseResponse<{
+  user: User;
+}>;
+
+export type UpdateUserRes = BaseResponse<{
+  user: User;
+}>;
