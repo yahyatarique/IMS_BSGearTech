@@ -120,11 +120,4 @@ Inventory.init(
   }
 );
 
-Inventory.associate = (models: any) => {
-  Inventory.hasMany(models.OrderInventory, {
-    foreignKey: 'inventory_id',
-    as: 'orderInventoryItems',
-  });
-};
-
 export default Inventory;
