@@ -71,6 +71,8 @@ export function BuyerFormDialog({
         org_address: buyer.org_address || '',
         status: buyer.status
       });
+    } else {
+      form.reset();
     }
   }, [buyer]);
 
@@ -253,6 +255,7 @@ export function BuyerFormDialog({
                     </FormItem>
                   )}
                 />
+
                 <FormField
                   control={form.control}
                   name="contact_details.country"

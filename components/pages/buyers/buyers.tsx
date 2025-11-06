@@ -49,7 +49,7 @@ export default function BuyersPage() {
     } catch (error: any) {
       errorToast({
         title: 'Error',
-        description: error.message || 'Failed to load buyers',
+        description: error.message || 'Failed to load buyers'
       });
     } finally {
       setIsLoading(false);
@@ -91,7 +91,7 @@ export default function BuyersPage() {
     } catch (error: any) {
       errorToast({
         title: 'Error',
-        description: error.message || 'Failed to save buyer',
+        description: error.message || 'Failed to save buyer'
       });
     } finally {
       setIsSubmitting(false);
@@ -110,15 +110,14 @@ export default function BuyersPage() {
     } catch (error: any) {
       errorToast({
         title: 'Error',
-        description: error.message || 'Failed to update status',
+        description: error.message || 'Failed to update status'
       });
     }
   };
 
-
-
   // Handle create new
   const handleCreateNew = () => {
+    setIsDetailsDialogOpen(false); // Close details dialog if open
     setSelectedBuyer(null);
     setIsDialogOpen(true);
   };
@@ -190,7 +189,7 @@ export default function BuyersPage() {
       </div>
 
       {/* Buyers Card Grid */}
-      <BuyersCardGrid buyers={buyers} isLoading={true} onCardClick={handleCardClick} />
+      <BuyersCardGrid buyers={buyers} isLoading={isLoading} onCardClick={handleCardClick} />
 
       {/* Details Dialog */}
       <BuyerDetailsDialog
@@ -206,9 +205,11 @@ export default function BuyersPage() {
 
       {/* Form Dialog */}
       <BuyerFormDialog
+        key={String(isDialogOpen)}
         open={isDialogOpen}
         onClose={() => {
           setIsDialogOpen(false);
+          setSelectedBuyer(null);
         }}
         onSubmit={handleSubmit}
         buyer={selectedBuyer}

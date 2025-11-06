@@ -82,7 +82,7 @@ export function BuyerDetailsDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(newOpen) => newOpen === false && onClose()}>
+    <Dialog open={open} onOpenChange={(newOpen) => onClose()}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">Buyer Details</DialogTitle>
