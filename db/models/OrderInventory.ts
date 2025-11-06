@@ -11,15 +11,19 @@ import {
 } from 'sequelize';
 import sequelize from '../connection';
 import type Orders from './Orders';
-import type Inventory from './Inventory';
 
 // Define attributes interface
 export interface OrderInventoryAttributes {
   id: string;
   order_id: string;
-  inventory_id: string;
-  quantity_used: number;
+  material_type: 'CR-5' | 'EN-9';
+  material_weight: number;
+  cut_size_width: number;
+  cut_size_height: number;
+  po_number?: string | null;
+  quantity: number;
   weight_used?: number | null;
+  location?: string | null;
   notes?: string | null;
   reserved_at?: Date | null;
   used_at?: Date | null;
@@ -31,7 +35,7 @@ export interface OrderInventoryAttributes {
 interface OrderInventoryCreationAttributes
   extends Optional<
     OrderInventoryAttributes,
-    'id' | 'weight_used' | 'notes' | 'reserved_at' | 'used_at' | 'created_at' | 'updated_at'
+    'id' | 'po_number' | 'weight_used' | 'location' | 'notes' | 'reserved_at' | 'used_at' | 'created_at' | 'updated_at'
   > {}
 
 // Define the model class
@@ -41,9 +45,14 @@ export class OrderInventory extends Model<
 > {
   declare id: CreationOptional<string>;
   declare order_id: ForeignKey<Orders['id']>;
-  declare inventory_id: ForeignKey<Inventory['id']>;
-  declare quantity_used: number;
+  declare material_type: 'CR-5' | 'EN-9';
+  declare material_weight: number;
+  declare cut_size_width: number;
+  declare cut_size_height: number;
+  declare po_number: string | null;
+  declare quantity: number;
   declare weight_used: number | null;
+  declare location: string | null;
   declare notes: string | null;
   declare reserved_at: Date | null;
   declare used_at: Date | null;
@@ -52,22 +61,15 @@ export class OrderInventory extends Model<
 
   // Associations
   declare order?: NonAttribute<Orders>;
-  declare inventory?: NonAttribute<Inventory>;
 
   declare static associations: {
     order: Association<OrderInventory, Orders>;
-    inventory: Association<OrderInventory, Inventory>;
   };
 
   static associate(models: any): void {
     OrderInventory.belongsTo(models.Orders, {
       foreignKey: 'order_id',
       as: 'order',
-    });
-    
-    OrderInventory.belongsTo(models.Inventory, {
-      foreignKey: 'inventory_id',
-      as: 'inventory',
     });
   }
 }
@@ -91,17 +93,27 @@ OrderInventory.init(
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE',
     },
-    inventory_id: {
-      type: DataTypes.UUID,
+    material_type: {
+      type: DataTypes.ENUM('CR-5', 'EN-9'),
       allowNull: false,
-      references: {
-        model: 'inventory',
-        key: 'id',
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'RESTRICT',
     },
-    quantity_used: {
+    material_weight: {
+      type: DataTypes.DECIMAL(10, 3),
+      allowNull: false,
+    },
+    cut_size_width: {
+      type: DataTypes.DECIMAL(10, 4),
+      allowNull: false,
+    },
+    cut_size_height: {
+      type: DataTypes.DECIMAL(10, 4),
+      allowNull: false,
+    },
+    po_number: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    quantity: {
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 1,
@@ -111,6 +123,10 @@ OrderInventory.init(
     },
     weight_used: {
       type: DataTypes.DECIMAL(10, 3),
+      allowNull: true,
+    },
+    location: {
+      type: DataTypes.STRING(255),
       allowNull: true,
     },
     notes: {

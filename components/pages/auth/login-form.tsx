@@ -57,7 +57,9 @@ export function LoginForm() {
           title: 'Login Successful',
           description: 'You have successfully logged in.'
         });
+        
         router.push('/');
+        router.refresh();
       }
     } catch (err: any) {
       console.error('Login error:', err);

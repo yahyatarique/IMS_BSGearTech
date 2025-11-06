@@ -2,14 +2,19 @@ import { BaseResponse } from './base.api.type';
 
 /**
  * Order-Inventory record structure
- * Represents a link between an order and inventory item with usage tracking
+ * Stores denormalized inventory data for historical tracking
  */
 export interface OrderInventoryRecord {
   id: string;
   order_id: string;
-  inventory_id: string;
-  quantity_used: number;
+  material_type: 'CR-5' | 'EN-9';
+  material_weight: number;
+  cut_size_width: number;
+  cut_size_height: number;
+  po_number?: string | null;
+  quantity: number;
   weight_used?: number | null;
+  location?: string | null;
   notes?: string | null;
   reserved_at?: string | null;
   used_at?: string | null;
@@ -21,13 +26,6 @@ export interface OrderInventoryRecord {
     order_number: string;
     status: string;
   };
-  inventory?: {
-    id: string;
-    material_type: 'CR-5' | 'EN-9';
-    material_weight: number;
-    po_number?: string;
-    status: string;
-  };
 }
 
 /**
@@ -35,9 +33,14 @@ export interface OrderInventoryRecord {
  */
 export interface CreateOrderInventoryRequest {
   order_id: string;
-  inventory_id: string;
-  quantity_used: number;
+  material_type: 'CR-5' | 'EN-9';
+  material_weight: number;
+  cut_size_width: number;
+  cut_size_height: number;
+  po_number?: string | null;
+  quantity: number;
   weight_used?: number | null;
+  location?: string | null;
   notes?: string | null;
   reserved_at?: string | null;
   used_at?: string | null;
@@ -47,8 +50,14 @@ export interface CreateOrderInventoryRequest {
  * Request body for updating an order-inventory record
  */
 export interface UpdateOrderInventoryRequest {
-  quantity_used?: number;
+  material_type?: 'CR-5' | 'EN-9';
+  material_weight?: number;
+  cut_size_width?: number;
+  cut_size_height?: number;
+  po_number?: string | null;
+  quantity?: number;
   weight_used?: number | null;
+  location?: string | null;
   notes?: string | null;
   reserved_at?: string | null;
   used_at?: string | null;
@@ -91,7 +100,8 @@ export interface DeleteOrderInventoryResponse extends BaseResponse<{ id: string 
  */
 export interface OrderInventoryFilters {
   order_id?: string;
-  inventory_id?: string;
+  material_type?: 'CR-5' | 'EN-9';
+  po_number?: string;
   reserved_after?: string;
   used_after?: string;
   page?: number;
