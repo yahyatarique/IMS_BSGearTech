@@ -1,1 +1,2 @@
-# BS Gear Tech Pvt. Ltd.
+
+### BS Gear Tech
