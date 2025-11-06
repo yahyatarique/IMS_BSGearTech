@@ -43,7 +43,7 @@ export function ThemeToggle() {
           ) : (
             <Monitor className="h-4 w-4" />
           )}
-          <span className="hidden md:inline">Theme</span>
+          <span className="hidden md:hidden lg:inline">Theme</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-[140px]">

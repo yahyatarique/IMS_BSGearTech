@@ -31,35 +31,30 @@ export async function GET(request: NextRequest) {
         }
       ],
       attributes: {
-        include: [
-          [
-            sequelize.fn('COUNT', sequelize.col('orders.id')),
-            'totalOrders'
-          ]
-        ]
+        include: [[sequelize.fn('COUNT', sequelize.col('orders.id')), 'totalOrders']]
       },
       group: ['Buyer.id'],
       subQuery: false
     });
 
     // Transform the data
-    const formattedBuyers = recentBuyers.map(buyer => {
+    const formattedBuyers = recentBuyers.map((buyer) => {
       const buyerData = buyer.get({ plain: true }) as any;
-      const contactDetails = (buyer.contact_details ?? {}) as Record<string, any>;
+      const contactDetails = buyerData.contact_details as Record<string, any>;
 
       return {
-        id: buyer.id,
-        name: buyer.name,
-        company: buyer.org_name,
+        id: buyerData.id,
+        name: buyerData.name,
+        company: buyerData.org_name,
         email: typeof contactDetails.email === 'string' ? contactDetails.email : '',
         phone: typeof contactDetails.phone === 'string' ? contactDetails.phone : '',
-        location: buyer.org_address,
+        location: buyerData.org_address,
         totalOrders: parseInt(buyerData.totalOrders) || 0,
-        status: buyer.status,
+        status: buyerData.status,
         addedDate:
-          buyer.created_at instanceof Date
-            ? buyer.created_at.toISOString()
-            : new Date(buyer.created_at).toISOString()
+          buyerData.created_at instanceof Date
+            ? buyerData.created_at.toISOString()
+            : new Date(buyerData.created_at).toISOString()
       };
     });
 

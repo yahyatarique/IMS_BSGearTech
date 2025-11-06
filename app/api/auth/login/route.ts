@@ -20,16 +20,21 @@ export async function POST(request: NextRequest) {
     // Find user by username
     // Note: rolePermissions table has been removed
     // User roles are managed using enums from src/enums/userRoles.ts
-    const user = await User.findOne({
+    const _user = await User.findOne({
       where: { username }
     });
+
+    const user = _user?.get({plain: true});
 
     if (!user) {
       return errorResponse('Invalid credentials', 401);
     }
 
     // Check password
-    const isPasswordValid = await user.comparePassword(password, user.dataValues.password);
+    const isPasswordValid = await _user?.comparePassword(password, user?.password);
+    console.log("🚀 ~ POST ~  isPasswordValid:",  isPasswordValid)
+
+    
     if (!isPasswordValid) {
       return errorResponse('Invalid Password', 401);
     }
@@ -37,8 +42,8 @@ export async function POST(request: NextRequest) {
     // Generate tokens
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
     const refreshSecret = new TextEncoder().encode(process.env.REFRESH_TOKEN_SECRET);
-    const userId = String(user.dataValues.id);
-    const role = user.dataValues.role as UserType['role'];
+    const userId = String(user.id);
+    const role = user.role as UserType['role'];
 
     // Access token (15 minutes)
     const accessToken = await new SignJWT({
@@ -66,13 +71,13 @@ export async function POST(request: NextRequest) {
 
     // Prepare user data (exclude sensitive information)
     const userData: UserType = {
-      id: user.dataValues.id,
-      username: user.dataValues.username,
-      role: user.dataValues.role as UserType['role'],
-      first_name: user.dataValues.first_name,
-      last_name: user.dataValues.last_name,
-      created_at: user.dataValues.created_at.toISOString(),
-      status: user.dataValues.status
+      id: user.id,
+      username: user.username,
+      role: user.role as UserType['role'],
+      first_name: user.first_name,
+      last_name: user.last_name,
+      created_at: user.created_at.toISOString(),
+      status: user.status
     };
 
     // Create response with user data only (tokens will be in cookies)

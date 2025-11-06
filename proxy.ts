@@ -2,23 +2,59 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 
+// Define allowed origins for CORS
+const allowedOrigins = [
+  'https://bsgeartech.yahyatarique.dev',
+  'http://localhost:3000',
+  process.env.NEXT_PUBLIC_BASE_URL,
+].filter(Boolean) as string[];
+
 // Define public routes that don't require authentication
 const publicRoutes = [
   '/login',
   '/register',
   '/forgot-password',
   '/reset-password',
-  '/api/login',
+  '/api/auth/login',
   '/api/auth/register',
-  '/api/refresh-token'
+  '/api/auth/refresh-token'
 ];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const origin = request.headers.get('origin') || '';
+  const isAllowedOrigin = allowedOrigins.includes(origin);
+
+  // Handle CORS preflight OPTIONS request
+  if (request.method === 'OPTIONS') {
+    const response = new NextResponse(null, { status: 204 });
+    
+    if (isAllowedOrigin) {
+      response.headers.set('Access-Control-Allow-Origin', origin);
+    }
+    
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-User-Role, X-Requested-With');
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
+    response.headers.set('Access-Control-Max-Age', '86400');
+    
+    return response;
+  }
+
+  // Helper function to add CORS headers to response
+  const addCorsHeaders = (response: NextResponse) => {
+    if (isAllowedOrigin) {
+      response.headers.set('Access-Control-Allow-Origin', origin);
+    }
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-User-Role, X-Requested-With');
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
+    return response;
+  };
 
   // Allow public routes
   if (publicRoutes.some(route => pathname.startsWith(route))) {
-    return NextResponse.next();
+    return addCorsHeaders(NextResponse.next());
   }
 
   // Allow static files and API routes (except auth-related ones)
@@ -28,7 +64,7 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith('/static/') ||
     pathname.includes('.')
   ) {
-    return NextResponse.next();
+    return addCorsHeaders(NextResponse.next());
   }
 
   // Get token from cookies or Authorization header
@@ -38,7 +74,7 @@ export async function proxy(request: NextRequest) {
   if (!token) {
     // Redirect to login if no token is found
     const loginUrl = new URL('/login', request.url);
-    return NextResponse.redirect(loginUrl);
+    return addCorsHeaders(NextResponse.redirect(loginUrl));
   }
 
   try {
@@ -56,7 +92,7 @@ export async function proxy(request: NextRequest) {
     response.headers.set('x-user-role', userRole);
     response.headers.set('x-user-username', payload.username as string);
 
-    return response;
+    return addCorsHeaders(response);
   } catch (error) {
     console.error('JWT verification failed:', error);
     
@@ -65,28 +101,39 @@ export async function proxy(request: NextRequest) {
     
     if (refreshToken) {
       try {
-        // Call refresh token API
-        const refreshResponse = await fetch(new URL('/api/refresh-token', request.url), {
+        // Call refresh token API with cookies
+        const refreshResponse = await fetch(new URL('/api/auth/refresh-token', request.url), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Cookie': `refreshToken=${refreshToken}`,
           },
-          body: JSON.stringify({ refreshToken }),
         });
 
         if (refreshResponse.ok) {
-          const { accessToken } = await refreshResponse.json();
+          // Extract new tokens from Set-Cookie headers
+          const setCookieHeaders = refreshResponse.headers.getSetCookie();
           
           // Set new token and continue
           const response = NextResponse.next();
-          response.cookies.set('accessToken', accessToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-            maxAge: 15 * 60, // 15 minutes
+          
+          // Forward the Set-Cookie headers from refresh endpoint
+          setCookieHeaders.forEach(cookie => {
+            const [cookiePart] = cookie.split(';');
+            const [name, value] = cookiePart.split('=');
+            
+            if (name === 'accessToken' || name === 'refreshToken') {
+              response.cookies.set(name, value, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                maxAge: name === 'accessToken' ? 15 * 60 : 7 * 24 * 60 * 60,
+                path: '/',
+              });
+            }
           });
           
-          return response;
+          return addCorsHeaders(response);
         }
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError);
@@ -99,7 +146,7 @@ export async function proxy(request: NextRequest) {
     response.cookies.delete('accessToken');
     response.cookies.delete('refreshToken');
     
-    return response;
+    return addCorsHeaders(response);
   }
 }
 

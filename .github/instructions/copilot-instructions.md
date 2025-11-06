@@ -13,6 +13,7 @@ Short, focused instructions to help an AI code agent be productive in this repos
 - API routes (examples): `api/auth/login/route.ts`, `api/users/route.ts`, `api/refresh-token/route.ts`.
 - DB: `db/connection.ts`, `db/models/*` (e.g. `db/models/User.ts`), `db/migrations/`, `db/seeders/`.
 - Validation schemas: `schemas/user.schema.ts` (CreateUserSchema, LoginSchema).
+- TypeScript types: `services/types/*.api.type.ts` (API response/request types).
 - Role enums: `enums/users.enum.ts` (roles are string values: `'0'|'1'|'2'`).
 - Front-end HTTP client: `axios/index.ts` (with token refresh behavior).
 
@@ -33,9 +34,78 @@ Short, focused instructions to help an AI code agent be productive in this repos
 - **Component reusability**:
   - Before creating duplicate UI patterns, check `components/` for reusable components.
   - **Auth wrappers**: Use `AdminWrapper`, `UserWrapper`, or `AuthWrapper` from `components/auth/` for role-based rendering.
-  - **UI components**: Use `GradientText`, `GradientBox`, `PageHeader`, `GradientCard` from `components/ui/` for consistent gradient styling.
+  - **UI components**: Use `GradientText`, `GradientBox`, `PageHeader`, `GradientCard`, `GradientBorderCard` from `components/ui/` for consistent gradient styling.
+  - **PageWrapper**: ALWAYS use `PageWrapper` from `components/ui/page-wrapper` for all new pages. It provides consistent padding, spacing, and optional header (title, subtitle, icon, actions).
+  - **Card-based layouts with event delegation**: Use card grids for list views instead of tables for better mobile responsiveness:
+    - Create a card grid component (e.g., `UsersCardGrid`, `BuyersCardGrid`) that displays items as cards
+    - Implement **event delegation** by attaching a single click handler to the grid container using `onClick` on the parent div
+    - Use `data-*` attributes (e.g., `data-user-id`, `data-buyer-id`) on each card to identify clicked items
+    - In the click handler, use `event.target.closest('[data-user-id]')` to find the clicked card
+    - Create a details dialog (e.g., `UserDetailsDialog`, `BuyerDetailsDialog`) to show full information when a card is clicked
+    - Pattern example:
+      ```typescript
+      // Card Grid Component with Event Delegation
+      const handleGridClick = (event: React.MouseEvent<HTMLDivElement>) => {
+        const cardElement = (event.target as HTMLElement).closest('[data-user-id]');
+        if (!cardElement) return;
+        const userId = cardElement.getAttribute('data-user-id');
+        const user = users.find((u) => u.id === userId);
+        if (user) onCardClick(user);
+      };
+      
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" onClick={handleGridClick}>
+          {users.map(user => (
+            <GradientBorderCard key={user.id} data-user-id={user.id} className="cursor-pointer">
+              {/* Card content */}
+            </GradientBorderCard>
+          ))}
+        </div>
+      );
+      ```
+    - Benefits: Single event listener (better performance), cleaner code, easier to maintain
   - **When to create reusable components**: If a pattern (styling, logic, or layout) appears 3+ times, extract it into a reusable component.
   - See `components/README.md` for full documentation on available reusable components.
+- **Schema and Type definitions**:
+  - **Validation schemas** are defined in the `schemas/` folder using Zod (e.g., `schemas/user.schema.ts`, `schemas/dashboard.schema.ts`).
+  - **TypeScript types** for API requests/responses are defined in `services/types/*.api.type.ts` (e.g., `auth.api.type.ts`, `users.api.type.ts`).
+  - When creating new schemas, follow the existing pattern: export Zod schemas and infer TypeScript types from them.
+  - When creating new API types, follow the `BaseResponse<T>` pattern from `services/types/base.api.type.ts`.
+  - NEVER define schemas or types inline in components or API routes—always create them in the appropriate folder.
+- **Form patterns**:
+  - ALWAYS use React Hook Form with `FormField`, `FormItem`, `FormLabel`, `FormControl`, and `FormMessage` components from `components/ui/form.tsx`.
+  - NEVER use plain `form.register()` with manual error display.
+  - Follow the pattern from `components/pages/auth/login-form.tsx`:
+    ```typescript
+    import { useForm } from 'react-hook-form';
+    import { zodResolver } from '@hookform/resolvers/zod';
+    import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+    
+    // ✅ Good - use FormField with render prop
+    <FormField
+      control={form.control}
+      name="username"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Username</FormLabel>
+          <FormControl>
+            <Input placeholder="Enter username" {...field} />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+    
+    // ❌ Bad - don't use form.register() directly
+    <div>
+      <Label htmlFor="username">Username</Label>
+      <Input id="username" {...form.register('username')} />
+      {form.formState.errors.username && (
+        <p className="text-red-500">{form.formState.errors.username.message}</p>
+      )}
+    </div>
+    ```
+  - Benefits: Automatic error handling, better accessibility, consistent styling, easier validation display.
 
 ## Build / dev / DB workflows (concrete commands)
 - Start dev: `npm run dev` (Next dev server). `package.json` contains `dev`, `build`, `start`, and `lint` scripts.
@@ -47,7 +117,7 @@ Short, focused instructions to help an AI code agent be productive in this repos
 - Environment variables you must set locally for auth and DB to work:
   - `DATABASE_URL` (Postgres connection string)
   - `JWT_SECRET` and `REFRESH_TOKEN_SECRET`
-  - `NEXT_PUBLIC_BASE_URL` (used by client axios; defaults to http://localhost:3000)
+  - `NEXT_PUBLIC_BASE_URL` (used by client axios and CORS; defaults to http://localhost:3000, set to https://bsgeartech.yahyatarique.dev in production)
 
 ## Editing guidance (concrete examples)
 - To add a new API route that uses the DB, follow the pattern in `api/auth/login/route.ts`:
@@ -94,6 +164,63 @@ Short, focused instructions to help an AI code agent be productive in this repos
   
   // ❌ Bad - manual checks
   {isAdmin && <AdminOnlyContent />}
+  ```
+- **For page layout**:
+  ```typescript
+  import { PageWrapper } from '@/components/ui/page-wrapper'
+  import { Users } from 'lucide-react'
+  
+  // ✅ Good - use PageWrapper for all pages
+  <PageWrapper
+    title="Buyers Management"
+    subtitle="Manage your buyer information and contacts"
+    icon={Users}
+    gradient="blue-cyan"
+    headerActions={<Button>Add Buyer</Button>}
+  >
+    <YourPageContent />
+  </PageWrapper>
+  
+  // ❌ Bad - manual container/padding
+  <div className="container mx-auto px-4 py-6">
+    <h1>Buyers Management</h1>
+    <YourPageContent />
+  </div>
+  ```
+- **For card-based list views with event delegation**:
+  ```typescript
+  import { GradientBorderCard } from '@/components/ui/gradient-border-card'
+  
+  // ✅ Good - use card grid with event delegation
+  const handleGridClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    const cardElement = (event.target as HTMLElement).closest('[data-buyer-id]');
+    if (!cardElement) return;
+    const buyerId = cardElement.getAttribute('data-buyer-id');
+    const buyer = buyers.find(b => b.id === buyerId);
+    if (buyer) onCardClick(buyer);
+  };
+  
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" onClick={handleGridClick}>
+      {buyers.map(buyer => (
+        <GradientBorderCard 
+          key={buyer.id} 
+          data-buyer-id={buyer.id}
+          className="cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all"
+        >
+          <h3>{buyer.name}</h3>
+          <p>{buyer.org_name}</p>
+        </GradientBorderCard>
+      ))}
+    </div>
+  );
+  
+  // ❌ Bad - individual click handlers on each card
+  {buyers.map(buyer => (
+    <Card key={buyer.id} onClick={() => handleClick(buyer)}>
+      ...
+    </Card>
+  ))}
   ```
 - **For consistent gradient styling**:
   ```typescript

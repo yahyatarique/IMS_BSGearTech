@@ -1,15 +1,20 @@
-import axios, { AxiosError, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from "axios";
-import { INVALID_CREDS, INVALID_PASSWORD } from "../utils/constants";
-import { refreshToken } from "../services/auth";
+import axios, {
+  AxiosError,
+  AxiosRequestConfig,
+  AxiosResponse,
+  InternalAxiosRequestConfig
+} from 'axios';
+import { INVALID_CREDS, INVALID_PASSWORD, StorageKeys } from '../utils/constants';
+import { refreshToken } from '../services/auth';
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
 const axiosInstance = axios.create({
   baseURL: `${BASE_URL}/api`,
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json'
   },
-  withCredentials: true, // Include cookies in requests
+  withCredentials: true // Include cookies in requests
 });
 
 // Token management
@@ -55,19 +60,25 @@ axiosInstance.interceptors.response.use(
 
     const requestUrl = originalRequest?.url || '';
 
-    //if the refresh token endpoint itself fails, clear tokens and redirect to login
-    if (requestUrl.includes('auth/refresh-token')) {
+    // If the refresh token endpoint itself fails, don't retry - clear tokens and redirect
+    if (requestUrl.includes('auth/refresh-token') || requestUrl.includes('refresh-token')) {
       tokenUtils.clearTokens();
 
       if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
         window.location.href = '/login';
+        localStorage.removeItem(StorageKeys.USER_STORAGE_KEY);
       }
 
       return Promise.reject(error);
     }
 
     // If error is 401 and we haven't already tried to refresh
-    if (error.response?.status === 401 && (error.response?.data as any)?.message !== INVALID_CREDS && (error.response?.data as any)?.message !== INVALID_PASSWORD && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      (error.response?.data as any)?.message !== INVALID_CREDS &&
+      (error.response?.data as any)?.message !== INVALID_PASSWORD &&
+      !originalRequest._retry
+    ) {
       if (isRefreshing) {
         // If refresh is already in progress, queue this request
         return new Promise((resolve, reject) => {
@@ -83,7 +94,6 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true;
 
       try {
-
         await refreshToken();
 
         // Cookies are set by the server in the response
@@ -92,7 +102,6 @@ axiosInstance.interceptors.response.use(
 
         return axiosInstance(originalRequest);
       } catch (refreshError) {
-
         // Refresh failed, process queue with error
         processQueue(refreshError);
 
@@ -108,6 +117,9 @@ axiosInstance.interceptors.response.use(
         isRefreshing = false;
       }
     }
+    if (error?.response?.data) {
+      return Promise.reject(error.response.data);
+    }
 
     return Promise.reject(error);
   }
@@ -121,7 +133,7 @@ export const tokenUtils = {
       document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;';
       document.cookie = 'refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;';
     }
-  },
+  }
 };
 
 export default axiosInstance;
