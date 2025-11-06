@@ -60,7 +60,6 @@ export async function proxy(request: NextRequest) {
   // Allow static files and API routes (except auth-related ones)
   if (
     pathname.startsWith('/_next/') ||
-    pathname.startsWith('/api/') ||
     pathname.startsWith('/static/') ||
     pathname.includes('.')
   ) {

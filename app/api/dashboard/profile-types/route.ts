@@ -7,21 +7,12 @@ import { DashboardProfileTypesQuerySchema } from '@/schemas/dashboard.schema';
 const TYPE_LABELS: Record<string, string> = {
   '0': 'Pinion',
   '1': 'Gear',
-  gear: 'Gear',
-  pinion: 'Pinion',
-  shaft: 'Shaft',
-  other: 'Other',
+
 };
 
 const MATERIAL_LABELS: Record<string, string> = {
   'CR-5': 'CR-5',
   'EN-9': 'EN-9',
-  steel: 'Steel',
-  aluminum: 'Aluminum',
-  brass: 'Brass',
-  bronze: 'Bronze',
-  plastic: 'Plastic',
-  other: 'Other',
 };
 
 const dimensionFormatter = new Intl.NumberFormat('en-IN', {

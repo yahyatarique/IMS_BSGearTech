@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const query = Object.fromEntries(request.nextUrl.searchParams.entries());
     const parsedQuery = DashboardStatsQuerySchema.safeParse(query);
 
-    if (!parsedQuery.success) {
+    if (!parsedQuery.   success) {
       return errorResponse('Invalid query parameters', 400, parsedQuery.error.flatten());
     }
 
