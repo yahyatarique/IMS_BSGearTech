@@ -4,6 +4,7 @@ import { ShoppingCart, Clock, CheckCircle2, XCircle, PauseCircle } from 'lucide-
 import { Badge } from '@/components/ui/badge';
 import { fetchRecentOrders } from '@/services/dashboard';
 import { DashboardCard } from '@/components/pages/dashboard/components/dashboard-card';
+import { formatDate } from '@/lib/utils';
 
 const STATUS_CONFIG: Record<
   string,
@@ -46,12 +47,6 @@ const currencyFormatter = new Intl.NumberFormat('en-IN', {
   maximumFractionDigits: 0,
 });
 
-const dateFormatter = new Intl.DateTimeFormat('en-IN', {
-  day: '2-digit',
-  month: 'short',
-  year: 'numeric',
-});
-
 function resolveStatusConfig(status: string) {
   return STATUS_CONFIG[status] ?? STATUS_CONFIG['0'];
 }
@@ -88,7 +83,7 @@ export default async function RecentOrders() {
           const buyerName = order.buyer?.name ?? 'Unknown buyer';
           const buyerCompany = order.buyer?.company ?? '—';
           const formattedAmount = currencyFormatter.format(order.amount);
-          const formattedDate = dateFormatter.format(new Date(order.date));
+          const formattedDate = formatDate(order.date);
 
           return (
             <div

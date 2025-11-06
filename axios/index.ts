@@ -60,14 +60,13 @@ axiosInstance.interceptors.response.use(
 
     const requestUrl = originalRequest?.url || '';
 
-    // if the refresh token endpoint itself fails, clear tokens and redirect to login
-    if (requestUrl.includes('auth/refresh-token')) {
+    // If the refresh token endpoint itself fails, don't retry - clear tokens and redirect
+    if (requestUrl.includes('auth/refresh-token') || requestUrl.includes('refresh-token')) {
       tokenUtils.clearTokens();
 
       if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
         window.location.href = '/login';
         localStorage.removeItem(StorageKeys.USER_STORAGE_KEY);
-        tokenUtils.clearTokens();
       }
 
       return Promise.reject(error);
@@ -117,6 +116,9 @@ axiosInstance.interceptors.response.use(
       } finally {
         isRefreshing = false;
       }
+    }
+    if (error?.response?.data) {
+      return Promise.reject(error.response.data);
     }
 
     return Promise.reject(error);

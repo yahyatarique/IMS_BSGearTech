@@ -29,17 +29,27 @@ export const fetchDashboardStats = async (): Promise<AxiosResponse<DashboardStat
 export const fetchRecentOrders = async (
   params?: DashboardRecentOrdersQuery,
 ): Promise<AxiosResponse<DashboardRecentOrdersResponse>> => {
-  return axiosInstance.get<DashboardRecentOrdersResponse>(endpoints.recentOrders, {
+ try {
+   return axiosInstance.get<DashboardRecentOrdersResponse>(endpoints.recentOrders, {
     params,
   });
+ } catch (error) {
+   console.error('Error fetching recent orders:', error);
+   throw error;
+ }
 };
 
 export const fetchRecentBuyers = async (
   params?: DashboardRecentBuyersQuery,
 ): Promise<AxiosResponse<DashboardRecentBuyersResponse>> => {
-  return axiosInstance.get<DashboardRecentBuyersResponse>(endpoints.recentBuyers, {
+  try {
+    return axiosInstance.get<DashboardRecentBuyersResponse>(endpoints.recentBuyers, {
     params,
-  });
+  }); 
+  } catch (error) {
+    console.error('Error fetching recent buyers:', error);
+    throw error;
+  }
 };
 
 export const fetchDashboardMaterials = async (

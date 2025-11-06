@@ -3,7 +3,7 @@ import { Users, Mail, Phone, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { DashboardCard } from '@/components/pages/dashboard/components/dashboard-card';
 import { fetchRecentBuyers } from '@/services/dashboard';
-import { cn } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 
 const gradients = [
   'from-blue-500 to-cyan-500',
@@ -12,12 +12,6 @@ const gradients = [
   'from-cyan-500 to-teal-500',
   'from-blue-600 to-indigo-600',
 ];
-
-const dateFormatter = new Intl.DateTimeFormat('en-IN', {
-  day: '2-digit',
-  month: 'short',
-  year: 'numeric',
-});
 
 const statusClasses: Record<string, string> = {
   active: 'bg-green-500/10 text-green-700 dark:text-green-500 border-green-500/20',
@@ -70,7 +64,7 @@ export async function RecentBuyers() {
           const gradient = gradients[index % gradients.length];
           const statusLabel = buyer.status?.charAt(0)?.toUpperCase() + buyer.status?.slice(1) || 'Unknown';
           const statusClass = getStatusClass(buyer.status);
-          const addedDate = dateFormatter.format(new Date(buyer.addedDate));
+          const addedDate = formatDate(buyer.addedDate);
 
           return (
             <div

@@ -1,4 +1,4 @@
-import { AxiosResponse } from "axios";
+import axios, { AxiosResponse } from "axios";
 import axiosInstance from "../axios";
 import { CreateUserInput, GetCurrentUserRes, LoginInput, LoginRes, RegisterRes, UpdateUserInput, UpdateUserRes } from "./types/auth.api.type";
 
@@ -56,8 +56,10 @@ export const logout = async (): Promise<AxiosResponse> => {
 
 
 export const refreshToken = async (): Promise<AxiosResponse> => {
-  return axiosInstance.post(endpoints.refreshToken, undefined, {
-    withCredentials: false,
+  // Use plain axios to avoid interceptor loops, but with proper config
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  return axios.post(`${BASE_URL}/api/${endpoints.refreshToken}`, undefined, {
+    withCredentials: true, // Include cookies with refresh token
   });
 }
 

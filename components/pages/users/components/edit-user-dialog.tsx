@@ -81,12 +81,13 @@ export function EditUserDialog({ user, onSuccess, disabled }: EditUserDialogProp
         variant: 'success'
       });
 
-      setOpen(false);
-
       // Call onSuccess callback to refresh the users list
       if (onSuccess) {
         onSuccess();
       }
+
+      // Close dialog after successful operation
+      setOpen(false);
     } catch (error) {
       const axiosError = error as AxiosError<{ message?: string; error?: string }>;
       const apiMessage = axiosError.response?.data?.message ?? axiosError.response?.data?.error;
@@ -102,7 +103,7 @@ export function EditUserDialog({ user, onSuccess, disabled }: EditUserDialogProp
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(newOpen) => !isLoading && setOpen(newOpen)}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" disabled={disabled}>
           <Edit2 className="h-3 w-3" />

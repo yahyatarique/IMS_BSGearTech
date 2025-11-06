@@ -32,11 +32,11 @@ export function AuthWrapper({ children, requireAuth = true }: AuthWrapperProps) 
         }
       } catch (error) {
         console.error('Authentication check failed:', error)
-        if (requireAuth) {
-          localStorage.removeItem('userInfo')
-          tokenUtils.clearTokens()
-          router.push('/login')
-        }
+        // if (requireAuth) {
+        //   localStorage.removeItem('userInfo')
+        //   tokenUtils.clearTokens()
+        //   router.push('/login')
+        // }
       } finally {
         setIsLoading(false)
       }

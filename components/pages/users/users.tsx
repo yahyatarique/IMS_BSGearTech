@@ -7,10 +7,13 @@ import { useToast } from '@/hooks/use-toast';
 import { USER_ROLES } from '@/enums/users.enum';
 import { fetchUsers, updateUser, deleteUser } from '@/services/users';
 import type { UserRecord, UsersListMeta } from '@/services/types/users.api.type';
-import { UsersHeader } from '@/components/pages/users/components/users-header';
 import { UsersStats } from '@/components/pages/users/components/users-stats';
-import { UsersTable } from '@/components/pages/users/components/users-table';
+import { UsersCardGrid } from '@/components/pages/users/components/users-card-grid';
+import { UserDetailsDialog } from '@/components/pages/users/components/user-details-dialog';
 import { CreateUserDialog } from '@/components/pages/users/components/create-user-dialog';
+import { PageWrapper } from '@/components/ui/page-wrapper';
+import { Button } from '@/components/ui/button';
+import { RefreshCw, UserCircle } from 'lucide-react';
 
 const USERS_PAGE_SIZE = 10;
 
@@ -34,6 +37,8 @@ export default function UsersPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserRecord | null>(null);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
 
   const handleApiError = useCallback(
     (error: unknown, fallbackMessage: string) => {
@@ -294,44 +299,90 @@ export default function UsersPage() {
     loadUsers({ page: meta.page + 1, append: true });
   }, [isLoadingMore, loadUsers, meta]);
 
+  const handleCardClick = (user: UserRecord) => {
+    setSelectedUser(user);
+    setIsDetailsDialogOpen(true);
+  };
+
+  const handleToggleStatusFromDetails = async (id: string, status: UserRecord['status']) => {
+    await handleToggleStatus(id, status);
+    // Refresh selected user data
+    const updatedUser = users.find((u) => u.id === id);
+    if (updatedUser) {
+      setSelectedUser(updatedUser);
+    }
+  };
+
+  const handleDeleteFromDetails = async (id: string) => {
+    await handleDelete(id);
+    setSelectedUser(null);
+  };
+
+  const handleEditFromDetails = () => {
+    // Close details dialog when edit is initiated
+    // The user will open edit dialog from details dialog
+    loadUsers({ page: meta?.page ?? 1, silent: true });
+  };
+
   if (isCheckingAuth) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex h-64 items-center justify-center">
-            <p className="text-muted-foreground">Loading…</p>
-          </div>
+      <PageWrapper>
+        <div className="flex h-64 items-center justify-center">
+          <p className="text-muted-foreground">Loading…</p>
         </div>
-      </div>
+      </PageWrapper>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      <main className="container mx-auto px-4 py-8">
-        <UsersHeader
-          onRefresh={handleRefresh}
-          isRefreshing={isRefreshing}
-          action={<CreateUserDialog onSuccess={() => loadUsers({ page: 1, silent: true })} />}
-        />
-        <UsersStats
+    <PageWrapper
+      title="User Management"
+      subtitle="Manage system users and their permissions"
+      icon={UserCircle}
+      gradient="blue-cyan"
+      headerActions={
+        <>
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className="h-4 w-4" />
+            {isRefreshing ? 'Refreshing' : 'Refresh'}
+          </Button>
+          <CreateUserDialog onSuccess={() => loadUsers({ page: 1, silent: true })} />
+        </>
+      }
+    >
+      <UsersStats
           total={stats.total}
           active={stats.active}
           admins={stats.admins}
           loading={isLoading && users.length === 0}
         />
-        <UsersTable
+        <UsersCardGrid
           users={users}
           meta={meta ?? undefined}
           isLoading={isLoading && users.length === 0}
           isLoadingMore={isLoadingMore}
           currentUserId={currentUser?.id}
-          onToggleStatus={handleToggleStatus}
-          onDelete={handleDelete}
-          onLoadMore={handleLoadMore}
-          onEdit={() => loadUsers({ page: meta?.page ?? 1, silent: true })}
-        />
-      </main>
-    </div>
+          onCardClick={handleCardClick}
+        onLoadMore={handleLoadMore}
+      />
+
+      <UserDetailsDialog
+        user={selectedUser}
+        open={isDetailsDialogOpen}
+        onClose={() => {
+          setIsDetailsDialogOpen(false);
+          setSelectedUser(null);
+        }}
+        currentUserId={currentUser?.id}
+        onToggleStatus={handleToggleStatusFromDetails}
+        onDelete={handleDeleteFromDetails}
+        onEdit={handleEditFromDetails}
+      />
+    </PageWrapper>
   );
 }

@@ -35,25 +35,36 @@ export function sendResponse<T = any>(
 }
 
 /**
- * Create a standardized error response
+ * Create a standardized error response (returns plain object for NextResponse.json)
  * @param message - Error message
- * @param statusCode - HTTP status code (default: 500)
- * @param error - Optional error details
- * @returns NextResponse with standardized format
+ * @param errorOrStatusCode - Either error details (string/object) or HTTP status code (number)
+ * @param error - Optional error details (when second param is status code)
+ * @returns ApiResponse object
  */
 export function errorResponse(
   message: string = 'An error occurred',
-  statusCode: number = 500,
+  errorOrStatusCode?: string | object | number,
   error?: string | object
-): NextResponse<ApiResponse> {
+): NextResponse<ApiResponse<null>> {
+  let statusCode = 500;
+  let errorDetails: string | object | undefined;
+
+  // Handle overloaded parameters
+  if (typeof errorOrStatusCode === 'number') {
+    statusCode = errorOrStatusCode;
+    errorDetails = error;
+  } else {
+    errorDetails = errorOrStatusCode;
+  }
+
   const response: ApiResponse = {
-    success: false  ,
+    success: false,
     status: statusCode,
     message,
   };
 
-  if (error) {
-    response.error = error;
+  if (errorDetails) {
+    response.error = errorDetails;
   }
 
   return NextResponse.json(response, { status: statusCode });
@@ -78,4 +89,22 @@ export function validationErrorResponse(
     },
     { status: 400 }
   );
+}
+
+/**
+ * Create a standardized success response (returns plain object for NextResponse.json)
+ * @param data - The response data
+ * @param message - Success message
+ * @returns ApiResponse object
+ */
+export function successResponse<T = any>(
+  data: T,
+  message: string = 'Success'
+): ApiResponse<T> {
+  return {
+    data,
+    success: true,
+    status: 200,
+    message,
+  };
 }

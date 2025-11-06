@@ -85,12 +85,14 @@ export function CreateUserDialog({ onSuccess }: CreateUserDialogProps) {
       });
 
       form.reset();
-      setOpen(false);
 
       // Call onSuccess callback to refresh the users list
       if (onSuccess) {
         onSuccess();
       }
+
+      // Close dialog after successful operation
+      setOpen(false);
     } catch (error) {
       const axiosError = error as AxiosError<{ message?: string; error?: string }>;
       const apiMessage = axiosError.response?.data?.message ?? axiosError.response?.data?.error;
@@ -113,7 +115,7 @@ export function CreateUserDialog({ onSuccess }: CreateUserDialogProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(newOpen) => !isLoading && setOpen(newOpen)}>
       <DialogTrigger asChild>
         <Button className="gap-2">
           <UserPlus className="h-4 w-4" />
