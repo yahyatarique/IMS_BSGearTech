@@ -4,7 +4,7 @@ import { GradientBorderCard } from '@/components/ui/gradient-border-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import type { BuyerRecord } from '@/services/types/buyer.api.type';
-import { Building2, Mail, Phone, FileText } from 'lucide-react';
+import { Building2, Mail, Phone, FileText, MapPin } from 'lucide-react';
 
 const statusClasses: Record<BuyerRecord['status'], string> = {
   active: 'bg-green-500/10 text-green-700 dark:text-green-500 border-green-500/20',
@@ -24,7 +24,7 @@ interface BuyersCardGridProps {
 
 function CardSkeleton() {
   return (
-    <GradientBorderCard >
+    <GradientBorderCard>
       <div className="space-y-4 p-6">
         <div className="flex items-start justify-between">
           <div className="space-y-2 flex-1">
@@ -67,14 +67,16 @@ export function BuyersCardGrid({ buyers, isLoading, onCardClick }: BuyersCardGri
 
   if (buyers.length === 0) {
     return (
-      <GradientBorderCard className="p-12 text-center">
-        <Building2 className="w-12 h-12 mx-auto text-slate-400 mb-4" />
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-          No Buyers Found
-        </h3>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          There are no buyers to display. Create your first buyer to get started.
-        </p>
+      <GradientBorderCard className="text-center">
+        <div className="py-12 text-center">
+          <Building2 className="w-12 h-12 mx-auto text-slate-400 mb-4" />
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+            No Buyers Found
+          </h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            There are no buyers to display. Create your first buyer to get started.
+          </p>
+        </div>
       </GradientBorderCard>
     );
   }
@@ -149,7 +151,8 @@ export function BuyersCardGrid({ buyers, isLoading, onCardClick }: BuyersCardGri
 
                 {/* Organization Address (truncated) */}
                 {buyer.org_address && (
-                  <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
+                  <div className="pt-2 border-t flex items-center gap-2 border-slate-200 dark:border-slate-700">
+                    <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0" />
                     <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">
                       {buyer.org_address}
                     </p>
