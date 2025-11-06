@@ -4,8 +4,8 @@ import sequelize from '../connection';
 interface ProfilesAttributes {
   id: string;
   name: string;
-  type: 'gear' | 'pinion' | 'shaft' | 'other';
-  material: 'steel' | 'aluminum' | 'brass' | 'bronze' | 'plastic' | 'other';
+  type:  '0' | '1';
+  material: 'CR-5' | 'EN-9';
   material_rate: number;
   cut_size_width_mm: number;
   cut_size_height_mm: number;
@@ -17,16 +17,16 @@ interface ProfilesAttributes {
 interface ProfilesCreationAttributes extends Optional<ProfilesAttributes, 'id'> {}
 
 class Profiles extends Model<ProfilesAttributes, ProfilesCreationAttributes> implements ProfilesAttributes {
-  public id!: string;
-  public name!: string;
-  public type!: 'gear' | 'pinion' | 'shaft' | 'other';
-  public material!: 'steel' | 'aluminum' | 'brass' | 'bronze' | 'plastic' | 'other';
-  public material_rate!: number;
-  public cut_size_width_mm!: number;
-  public cut_size_height_mm!: number;
-  public burning_wastage_percent!: number;
-  public heat_treatment_rate!: number;
-  public heat_treatment_inefficacy_percent!: number;
+  declare id: string;
+  declare name: string;
+  declare type: '0' | '1';
+  declare material: 'CR-5' | 'EN-9';
+  declare material_rate: number;
+  declare cut_size_width_mm: number;
+  declare cut_size_height_mm: number;
+  declare burning_wastage_percent: number;
+  declare heat_treatment_rate: number;
+  declare heat_treatment_inefficacy_percent: number;
 }
 
 Profiles.init(
@@ -41,11 +41,11 @@ Profiles.init(
       allowNull: false,
     },
     type: {
-      type: DataTypes.ENUM('gear', 'pinion', 'shaft', 'other'),
+      type: DataTypes.ENUM('0', '1'),
       allowNull: false,
     },
     material: {
-      type: DataTypes.ENUM('steel', 'aluminum', 'brass', 'bronze', 'plastic', 'other'),
+      type: DataTypes.ENUM('CR-5', 'EN-9'),
       allowNull: false,
     },
     material_rate: {

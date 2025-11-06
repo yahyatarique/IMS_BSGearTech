@@ -56,7 +56,7 @@ export const UpdateInventorySchema = z.object({
 export const InventoryListQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(10),
-  material_type: MaterialTypeEnum.or(z.literal('all')).default('all').optional(),
+  material_type: z.enum(['CR-5', 'EN-9', 'all']).default('CR-5').optional(),
   search: z.string().optional(),
 });
 

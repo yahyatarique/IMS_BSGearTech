@@ -18,7 +18,6 @@ export const fetchInventory = async (params?: InventoryListQuery): Promise<GetIn
   if (params?.page) queryParams.append('page', params.page.toString());
   if (params?.limit) queryParams.append('limit', params.limit.toString());
   if (params?.material_type) queryParams.append('material_type', params.material_type);
-  if (params?.status) queryParams.append('status', params.status);
   if (params?.search) queryParams.append('search', params.search);
 
   const url = queryParams.toString() ? `${INVENTORY_URL}?${queryParams}` : INVENTORY_URL;
@@ -59,14 +58,4 @@ export const updateInventoryItem = async (
 export const deleteInventoryItem = async (id: string): Promise<DeleteInventoryResponse> => {
   const response = await axiosInstance.delete<DeleteInventoryResponse>(`${INVENTORY_URL}/${id}`);
   return response.data;
-};
-
-/**
- * Update inventory item status
- */
-export const updateInventoryStatus = async (
-  id: string,
-  status: 'available' | 'reserved' | 'used' | 'damaged'
-): Promise<UpdateInventoryResponse> => {
-  return updateInventoryItem(id, { status });
 };
