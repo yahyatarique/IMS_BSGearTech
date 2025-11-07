@@ -2,9 +2,14 @@ import { NextRequest } from 'next/server';
 import { SignJWT } from 'jose';
 import { LoginSchema } from '@/schemas/user.schema';
 import { testConnection } from '@/db/connection';
-import { User } from '@/db/models';
 import type { User as UserType } from '@/services/types/auth.api.type';
 import { errorResponse, sendResponse } from '../../../../utils/api-response';
+
+// Lazy load User model to prevent module initialization errors
+const getUserModel = async () => {
+  const { User } = await import('@/db/models');
+  return User;
+};
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,6 +40,7 @@ export async function POST(request: NextRequest) {
     // Find user by username
     // Note: rolePermissions table has been removed
     // User roles are managed using enums from src/enums/userRoles.ts
+    const User = await getUserModel();
     const _user = await User.findOne({
       where: { username }
     });
