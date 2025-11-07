@@ -63,11 +63,14 @@ export async function POST(request: NextRequest) {
       return errorResponse('Authentication configuration error', 500);
     }
 
-    // Ensure database connection
+    // Test database connection (with retries for nano tier)
+    // Note: For serverless, we test connection but proceed anyway
+    // Sequelize will handle connection retries automatically
     const connectionTest = await testConnection();
     if (!connectionTest) {
-      console.error('Database connection test failed');
-      return errorResponse('Database connection failed', 500);
+      console.warn('Database connection test failed, but proceeding - Sequelize will retry on query');
+      // Don't fail immediately - let the actual query attempt the connection
+      // This helps with nano tier cold starts
     }
 
     const body = await request.json();
@@ -80,9 +83,36 @@ export async function POST(request: NextRequest) {
     // Note: rolePermissions table has been removed
     // User roles are managed using enums from src/enums/userRoles.ts
     const User = await getUserModel();
-    const _user = await User.findOne({
-      where: { username }
-    });
+    
+    // Wrap query in try-catch to handle connection errors gracefully
+    let _user;
+    try {
+      _user = await User.findOne({
+        where: { username }
+      });
+    } catch (dbError: any) {
+      console.error('Database query error:', {
+        message: dbError?.message,
+        name: dbError?.name,
+        code: dbError?.code
+      });
+      
+      // If it's a connection error and we didn't test connection successfully, retry once
+      if (!connectionTest && (
+        dbError?.name?.includes('Connection') ||
+        dbError?.message?.includes('connection') ||
+        dbError?.code === 'ETIMEDOUT' ||
+        dbError?.code === 'ECONNREFUSED'
+      )) {
+        console.log('Retrying database query after connection error...');
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+        _user = await User.findOne({
+          where: { username }
+        });
+      } else {
+        throw dbError;
+      }
+    }
 
     const user = _user?.get({plain: true});
 
