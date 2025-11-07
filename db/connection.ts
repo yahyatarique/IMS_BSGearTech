@@ -23,24 +23,27 @@ try {
   isBuildTime = true;
 }
 
+// Create a dummy object for build time
+const createDummySequelize = () => ({
+  authenticate: async () => {},
+  transaction: async (callback: any) => callback({}),
+  query: async () => [],
+  define: () => ({
+    init: () => {},
+    associate: () => {},
+    findOne: async () => null,
+    findAll: async () => [],
+    findByPk: async () => null,
+    create: async () => ({}),
+    update: async () => [0],
+    destroy: async () => 0,
+  }),
+});
+
 const getSequelize = () => {
   // During build, return a dummy object that satisfies model initialization
   if (isBuildTime) {
-    return {
-      authenticate: async () => {},
-      transaction: async (callback: any) => callback({}),
-      query: async () => [],
-      define: () => ({
-        init: () => {},
-        associate: () => {},
-        findOne: async () => null,
-        findAll: async () => [],
-        findByPk: async () => null,
-        create: async () => ({}),
-        update: async () => [0],
-        destroy: async () => 0,
-      }),
-    } as any;
+    return createDummySequelize();
   }
 
   if (!sequelizeInstance) {
@@ -65,18 +68,15 @@ const getSequelize = () => {
           idle: 10000
         }
       });
-    } catch (error) {
-      // If require fails (e.g., during build), return dummy object
+    } catch (error: any) {
+      // If require fails with pg error (e.g., during build), mark as build time
+      if (error?.message?.includes('pg') || error?.message?.includes('Please install')) {
+        isBuildTime = true;
+        return createDummySequelize();
+      }
+      // For other errors, still return dummy but log warning
       console.warn('Sequelize initialization skipped:', error);
-      return {
-        authenticate: async () => {},
-        transaction: async (callback: any) => callback({}),
-        query: async () => [],
-        define: () => ({
-          init: () => {},
-          associate: () => {},
-        }),
-      } as any;
+      return createDummySequelize();
     }
   }
   return sequelizeInstance;
@@ -94,25 +94,21 @@ export const testConnection = async () => {
   }
 };
 
-// Export as a getter property so it behaves like the instance but initializes lazily
-// During build, return dummy methods without calling getSequelize to avoid loading pg
-const sequelize = isBuildTime ? {
-  authenticate: async () => {},
-  transaction: async (callback: any) => callback({}),
-  query: async () => [],
-  define: () => ({
-    init: () => {},
-    associate: () => {},
-    findOne: async () => null,
-    findAll: async () => [],
-    findByPk: async () => null,
-    create: async () => ({}),
-    update: async () => [0],
-    destroy: async () => 0,
-  }),
-} as any : new Proxy({} as any, {
+// Export as a Proxy that safely handles build-time access
+// If Sequelize fails to load (e.g., during build), return dummy object
+const sequelize = new Proxy({} as any, {
   get(_target, prop) {
-    return getSequelize()[prop];
+    try {
+      const instance = getSequelize();
+      return instance[prop];
+    } catch (error: any) {
+      // If we get an error about pg or Sequelize, return dummy methods for build
+      if (error?.message?.includes('pg') || error?.message?.includes('Sequelize')) {
+        const dummy = createDummySequelize();
+        return dummy[prop as keyof typeof dummy];
+      }
+      throw error;
+    }
   }
 });
 
