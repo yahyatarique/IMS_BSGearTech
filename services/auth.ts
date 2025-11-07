@@ -1,3 +1,5 @@
+'use client'
+
 import axios, { AxiosResponse } from "axios";
 import axiosInstance from "../axios";
 import { CreateUserInput, GetCurrentUserRes, LoginInput, LoginRes, RegisterRes, UpdateUserInput, UpdateUserRes } from "./types/auth.api.type";
