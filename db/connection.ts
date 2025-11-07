@@ -28,10 +28,22 @@ if (isBuildTime) {
   sequelizeInstance = null; // Will be handled by getSequelize
 }
 
+// Create a dummy transaction object
+const createDummyTransaction = () => ({
+  commit: async () => {},
+  rollback: async () => {},
+});
+
 // Create a dummy object for build time
 const createDummySequelize = () => ({
   authenticate: async () => {},
-  transaction: async (callback: any) => callback({}),
+  transaction: async (callback?: any) => {
+    const tx = createDummyTransaction();
+    if (callback) {
+      return callback(tx);
+    }
+    return tx;
+  },
   query: async () => [],
   define: () => ({
     init: () => {},
