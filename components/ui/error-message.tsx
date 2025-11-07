@@ -155,8 +155,8 @@ export function InlineErrorMessage({
   return (
     <div className={`rounded-md bg-destructive/15 p-3 text-sm text-destructive border border-destructive/30 ${className}`}>
       <div className="flex items-start gap-2">
-        <XCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-        <p className="flex-1">{getErrorMessage()}</p>
+        <XCircle className="text-red-500 dark:text-red-700 h-4 w-4 mt-0.5 flex-shrink-0" />
+        <p className="flex-1 text-red-500 dark:text-red-700">{getErrorMessage()}</p>
       </div>
     </div>
   )

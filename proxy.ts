@@ -3,11 +3,11 @@ import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 
 // Define allowed origins for CORS
-const allowedOrigins = [
-  'https://bsgeartech.yahyatarique.dev/',
-  'http://localhost:3000',
-  process.env.NEXT_PUBLIC_BASE_URL,
-].filter(Boolean) as string[];
+// const allowedOrigins = [
+//   'https://bsgeartech.yahyatarique.dev/',
+//   'http://localhost:3000',
+//   process.env.NEXT_PUBLIC_BASE_URL,
+// ].filter(Boolean) as string[];
 
 // Define public routes that don't require authentication
 const publicRoutes = [
@@ -22,39 +22,39 @@ const publicRoutes = [
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const origin = request.headers.get('origin') || '';
-  const isAllowedOrigin = allowedOrigins.includes(origin);
+  // const origin = request.headers.get('origin') || '';
+  // const isAllowedOrigin = allowedOrigins.includes(origin);
 
   // Handle CORS preflight OPTIONS request
-  if (request.method === 'OPTIONS') {
-    const response = new NextResponse(null, { status: 204 });
+  // if (request.method === 'OPTIONS') {
+  //   const response = new NextResponse(null, { status: 204 });
     
-    if (isAllowedOrigin) {
-      response.headers.set('Access-Control-Allow-Origin', origin);
-    }
+  //   if (isAllowedOrigin) {
+  //     response.headers.set('Access-Control-Allow-Origin', origin);
+  //   }
     
-    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-User-Role, X-Requested-With');
-    response.headers.set('Access-Control-Allow-Credentials', 'true');
-    response.headers.set('Access-Control-Max-Age', '86400');
+  //   response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  //   response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-User-Role, X-Requested-With');
+  //   response.headers.set('Access-Control-Allow-Credentials', 'true');
+  //   response.headers.set('Access-Control-Max-Age', '86400');
     
-    return response;
-  }
+  //   return response;
+  // }
 
   // Helper function to add CORS headers to response
-  const addCorsHeaders = (response: NextResponse) => {
-    if (isAllowedOrigin) {
-      response.headers.set('Access-Control-Allow-Origin', origin);
-    }
-    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-User-Role, X-Requested-With');
-    response.headers.set('Access-Control-Allow-Credentials', 'true');
-    return response;
-  };
+  // const addCorsHeaders = (response: NextResponse) => {
+  //   if (isAllowedOrigin) {
+  //     response.headers.set('Access-Control-Allow-Origin', origin);
+  //   }
+  //   response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  //   response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-User-Role, X-Requested-With');
+  //   response.headers.set('Access-Control-Allow-Credentials', 'true');
+  //   return response;
+  // };
 
   // Allow public routes
   if (publicRoutes.some(route => pathname.startsWith(route))) {
-    return addCorsHeaders(NextResponse.next());
+    return NextResponse.next();
   }
 
   // Allow static files and API routes (except auth-related ones)
@@ -63,7 +63,7 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith('/static/') ||
     pathname.includes('.')
   ) {
-    return addCorsHeaders(NextResponse.next());
+    return NextResponse.next();
   }
 
   // Get token from cookies or Authorization header
@@ -73,7 +73,7 @@ export async function proxy(request: NextRequest) {
   if (!token) {
     // Redirect to login if no token is found
     const loginUrl = new URL('/login', request.url);
-    return addCorsHeaders(NextResponse.redirect(loginUrl));
+    return NextResponse.redirect(loginUrl);
   }
 
   try {
@@ -91,7 +91,7 @@ export async function proxy(request: NextRequest) {
     response.headers.set('x-user-role', userRole);
     response.headers.set('x-user-username', payload.username as string);
 
-    return addCorsHeaders(response);
+    return response;
   } catch (error) {
     console.error('JWT verification failed:', error);
     
@@ -132,7 +132,7 @@ export async function proxy(request: NextRequest) {
             }
           });
           
-          return addCorsHeaders(response);
+          return response;
         }
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError);
@@ -145,7 +145,7 @@ export async function proxy(request: NextRequest) {
     response.cookies.delete('accessToken');
     response.cookies.delete('refreshToken');
     
-    return addCorsHeaders(response);
+    return response;
   }
 }
 
