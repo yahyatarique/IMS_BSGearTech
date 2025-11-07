@@ -55,8 +55,8 @@ export async function POST(request: NextRequest) {
       .setExpirationTime('2m')
       .sign(secret);
 
-    // Refresh token (7 days or 30 days if "remember me")
-    const refreshTokenExpiry = rememberMe ? '30d' : '7d';
+    // Refresh token (20 days or 30 days if "remember me")
+    const refreshTokenExpiry = rememberMe ? '30d' : '20d';
     const refreshToken = await new SignJWT({
       userId,
       role,
@@ -92,13 +92,13 @@ export async function POST(request: NextRequest) {
       path: '/'
     });
 
-    // Refresh token - long lived (7 days or 30 days if "remember me")
-    const refreshTokenMaxAge = rememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60;
+    // Refresh token - long lived (20 days or 30 days if "remember me")
+    const refreshTokenMaxAge = rememberMe ? 30 * 24 * 60 * 60 : 20 * 24 * 60 * 60;
     response.cookies.set('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: refreshTokenMaxAge, // 7 or 30 days in seconds
+      maxAge: refreshTokenMaxAge, // 20 or 30 days in seconds
       path: '/'
     });
 

@@ -22,7 +22,9 @@ import {
   FormMessage
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { fetchMaterialDimensions } from '@/services/inventory';
+import { error as errorToast } from '@/hooks/use-toast';
 
 interface ProfileFormDialogProps {
   open: boolean;
@@ -38,6 +40,14 @@ export function ProfileFormDialog({
   profile
 }: ProfileFormDialogProps) {
   const isEditMode = !!profile;
+  const [availableDimensions, setAvailableDimensions] = useState<
+    Array<{
+      width: number;
+      height: number;
+      available_count: number;
+    }>
+  >([]);
+  const [isLoadingDimensions, setIsLoadingDimensions] = useState(false);
 
   const form = useForm<CreateProfileInput>({
     resolver: zodResolver(CreateProfileSchema),
@@ -54,24 +64,50 @@ export function ProfileFormDialog({
     }
   });
 
-
   useEffect(() => {
     if (profile) {
       form.reset({
         name: profile.name,
         type: profile.type,
         material: profile.material,
-        material_rate: profile.material_rate,
-        cut_size_width_mm: profile.cut_size_width_mm,
-        cut_size_height_mm: profile.cut_size_height_mm,
-        burning_wastage_percent: profile.burning_wastage_percent,
-        heat_treatment_rate: profile.heat_treatment_rate,
-        heat_treatment_inefficacy_percent: profile.heat_treatment_inefficacy_percent
+        material_rate: Number(profile.material_rate),
+        cut_size_width_mm: Number(profile.cut_size_width_mm),
+        cut_size_height_mm: Number(profile.cut_size_height_mm),
+        burning_wastage_percent: Number(profile.burning_wastage_percent),
+        heat_treatment_rate: Number(profile.heat_treatment_rate),
+        heat_treatment_inefficacy_percent: Number(profile.heat_treatment_inefficacy_percent)
       });
     } else {
       form.reset();
     }
   }, [profile, form]);
+
+  // Fetch material dimensions when material type changes
+  const loadMaterialDimensions = async (materialType: 'CR-5' | 'EN-9') => {
+    setIsLoadingDimensions(true);
+    try {
+      const res = await fetchMaterialDimensions(materialType);
+      if (res.data.success && res.data) {
+        setAvailableDimensions(res.data?.data?.dimensions || []);
+
+        // If there's only one dimension available, auto-populate the fields
+        if (res.data.data.dimensions?.length === 1) {
+          const dim = res.data.data.dimensions[0];
+          form.setValue('cut_size_width_mm', dim.width);
+          form.setValue('cut_size_height_mm', dim.height);
+        }
+      }
+    } catch (error: any) {
+      console.error('Error loading material dimensions:', error);
+      errorToast({
+        title: 'Error',
+        description: 'Failed to load available dimensions for this material'
+      });
+      setAvailableDimensions([]);
+    } finally {
+      setIsLoadingDimensions(false);
+    }
+  };
 
   const handleSubmit = async (data: CreateProfileInput) => {
     try {
@@ -141,6 +177,11 @@ export function ProfileFormDialog({
                     <FormControl>
                       <select
                         {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          const materialType = e.target.value as 'CR-5' | 'EN-9';
+                          loadMaterialDimensions(materialType);
+                        }}
                         className="w-full rounded-md border border-input bg-background px-3 py-2"
                       >
                         <option value="CR-5">CR-5</option>
@@ -163,7 +204,6 @@ export function ProfileFormDialog({
                     <FormControl>
                       <Input
                         type="number"
-                    
                         placeholder="0.00"
                         {...field}
                         onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
@@ -183,7 +223,6 @@ export function ProfileFormDialog({
                     <FormControl>
                       <Input
                         type="number"
-                    
                         placeholder="0.00"
                         {...field}
                         onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
@@ -201,15 +240,37 @@ export function ProfileFormDialog({
                 name="cut_size_width_mm"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Cut Size Width (mm)</FormLabel>
+                    <FormLabel>
+                      Cut Size Width (mm)
+                      {isLoadingDimensions && (
+                        <span className="text-xs text-muted-foreground"> (Loading...)</span>
+                      )}
+                    </FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                    
-                        placeholder="0.00"
-                        {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                      />
+                      {availableDimensions.length > 0 ? (
+                        <select
+                          {...field}
+                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          className="w-full rounded-md border border-input bg-background px-3 py-2"
+                        >
+                          <option value="">Select width</option>
+                          {availableDimensions
+                            .map((dim) => dim.width)
+                            .filter((value, index, self) => self.indexOf(value) === index)
+                            .map((width) => (
+                              <option key={width} value={width}>
+                                {width} mm
+                              </option>
+                            ))}
+                        </select>
+                      ) : (
+                        <Input
+                          type="number"
+                          placeholder="0.00"
+                          {...field}
+                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        />
+                      )}
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -221,21 +282,73 @@ export function ProfileFormDialog({
                 name="cut_size_height_mm"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Cut Size Height (mm)</FormLabel>
+                    <FormLabel>
+                      Cut Size Height (mm)
+                      {isLoadingDimensions && (
+                        <span className="text-xs text-muted-foreground"> (Loading...)</span>
+                      )}
+                    </FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                    
-                        placeholder="0.00"
-                        {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                      />
+                      {availableDimensions.length > 0 ? (
+                        <select
+                          {...field}
+                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          className="w-full rounded-md border border-input bg-background px-3 py-2"
+                        >
+                          <option value="">Select height</option>
+                          {availableDimensions
+                            .map((dim) => dim.height)
+                            .filter((value, index, self) => self.indexOf(value) === index)
+                            .map((height) => (
+                              <option key={height} value={height}>
+                                {height} mm
+                              </option>
+                            ))}
+                        </select>
+                      ) : (
+                        <Input
+                          type="number"
+                          placeholder="0.00"
+                          {...field}
+                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        />
+                      )}
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
+
+            {availableDimensions.length > 0 && (
+              <div className="text-xs text-muted-foreground bg-blue-50 dark:bg-blue-950/20 p-3 rounded-md border border-blue-200 dark:border-blue-900">
+                <p className="font-medium mb-1">Available dimensions from inventory:</p>
+                <div className="flex flex-wrap gap-2">
+                  {availableDimensions.map((dim, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => {
+                        form.setValue('cut_size_width_mm', dim.width);
+                        form.setValue('cut_size_height_mm', dim.height);
+                      }}
+                      className="px-2 py-1 bg-white dark:bg-slate-800 border border-blue-300 dark:border-blue-700 rounded hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
+                    >
+                      {dim.width} × {dim.height} mm ({dim.available_count} available)
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {availableDimensions.length === 0 && !isLoadingDimensions && (
+              <div className="text-xs text-muted-foreground bg-yellow-50 dark:bg-yellow-950/20 p-3 rounded-md border border-yellow-200 dark:border-yellow-900">
+                <p className="font-medium mb-1">
+                  No available dimensions found in inventory for the selected material.
+                </p>
+                <p>You can still enter custom dimensions.</p>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <FormField
@@ -247,7 +360,6 @@ export function ProfileFormDialog({
                     <FormControl>
                       <Input
                         type="number"
-                    
                         placeholder="0.00"
                         {...field}
                         onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
@@ -267,7 +379,6 @@ export function ProfileFormDialog({
                     <FormControl>
                       <Input
                         type="number"
-                    
                         placeholder="0.00"
                         {...field}
                         onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}

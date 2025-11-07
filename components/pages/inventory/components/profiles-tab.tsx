@@ -3,21 +3,17 @@
 import { useState, useEffect } from 'react';
 import { ProfileRecord } from '@/services/types/profile.api.type';
 import { CreateProfileInput, UpdateProfileInput } from '@/schemas/profile.schema';
-import {
-  fetchProfiles,
-  createProfile,
-  updateProfile,
-  deleteProfile,
-} from '@/services/profiles';
+import { fetchProfiles, createProfile, updateProfile, deleteProfile } from '@/services/profiles';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, IndianRupee, Ruler } from 'lucide-react';
 import { success, error as errorToast } from '@/hooks/use-toast';
 import { GradientBorderCard } from '@/components/ui/gradient-border-card';
 import { Badge } from '@/components/ui/badge';
 import { ProfileFormDialog } from './profile-form-dialog';
 import { ProfileDetailsDialog } from './profile-details-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { createPortal } from 'react-dom';
 
 export function ProfilesTab() {
   const [profiles, setProfiles] = useState<ProfileRecord[]>([]);
@@ -35,7 +31,7 @@ export function ProfilesTab() {
       const params: any = {
         page: 1,
         limit: 100,
-        search: searchQuery || undefined,
+        search: searchQuery || undefined
       };
       if (typeFilter !== 'all') {
         params.type = typeFilter;
@@ -48,7 +44,7 @@ export function ProfilesTab() {
     } catch (error: any) {
       errorToast({
         title: 'Error',
-        description: error.message || 'Failed to load profiles',
+        description: error.message || 'Failed to load profiles'
       });
     } finally {
       setIsLoading(false);
@@ -127,10 +123,9 @@ export function ProfilesTab() {
             className="rounded-md border border-input bg-background px-3 py-2 text-sm"
           >
             <option value="all">All Types</option>
-            <option value="gear">Gear</option>
-            <option value="pinion">Pinion</option>
-            <option value="shaft">Shaft</option>
-            <option value="other">Other</option>
+            <option value="0">Gear</option>
+            <option value="1">Pinion</option>
+           
           </select>
         </div>
         <Button
@@ -167,13 +162,18 @@ export function ProfilesTab() {
               <div className="space-y-3 p-4 ">
                 <div className="flex items-start justify-between">
                   <h3 className="font-semibold text-lg">{profile.name}</h3>
-                  <Badge variant="outline">{profile.type}</Badge>
                 </div>
                 <div className="space-y-1 text-sm text-muted-foreground">
-                  <p>Material: {profile.material}</p>
-                  <p>Rate: ₹{profile.material_rate}</p>
-                  <p>
-                    Size: {profile.cut_size_width_mm} × {profile.cut_size_height_mm} mm
+                  <p className="flex items-center gap-2">
+                    Material: {profile.material}
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <IndianRupee className="h-3 w-3" />
+                    Rate: ₹{Number(profile.material_rate).toFixed(2)}
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <Ruler className="h-3 w-3" />
+                    Size: {Number(profile.cut_size_width_mm).toFixed(2)} × {Number(profile.cut_size_height_mm).toFixed(2)} mm
                   </p>
                 </div>
               </div>
@@ -183,19 +183,28 @@ export function ProfilesTab() {
       )}
 
       {/* Dialogs */}
-      <ProfileFormDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        profile={selectedProfile}
-        onSubmit={handleSubmit}
-      />
-      <ProfileDetailsDialog
-        open={isDetailsDialogOpen}
-        onOpenChange={setIsDetailsDialogOpen}
-        profile={selectedProfile}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
+      {createPortal(
+        <ProfileFormDialog
+          key={String(isDialogOpen)}
+          open={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+          profile={selectedProfile}
+          onSubmit={handleSubmit}
+        />,
+        document.body
+      )}
+
+      {createPortal(
+        <ProfileDetailsDialog
+          key={String(isDetailsDialogOpen)}
+          open={isDetailsDialogOpen}
+          onOpenChange={setIsDetailsDialogOpen}
+          profile={selectedProfile}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />,
+        document.body
+      )}
     </div>
   );
 }

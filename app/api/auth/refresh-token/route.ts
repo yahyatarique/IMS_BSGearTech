@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
       .setSubject(userId)
-      .setExpirationTime('3m')
+      .setExpirationTime('10m')
       .sign(secret);
 
     // Generate new refresh token (optional - for token rotation)
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
       .setSubject(userId)
-      .setExpirationTime('7d')
+      .setExpirationTime('20d')
       .sign(refreshSecret);
 
     // Return success response without tokens in body
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
+      maxAge: 20 * 24 * 60 * 60, // 20 days in seconds
       path: '/'
     });
 

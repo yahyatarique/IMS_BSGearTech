@@ -14,6 +14,7 @@ import { CreateUserDialog } from '@/components/pages/users/components/create-use
 import { PageWrapper } from '@/components/ui/page-wrapper';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, UserCircle } from 'lucide-react';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 const USERS_PAGE_SIZE = 10;
 
@@ -39,6 +40,8 @@ export default function UsersPage() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserRecord | null>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
 
   const handleApiError = useCallback(
     (error: unknown, fallbackMessage: string) => {
@@ -218,22 +221,22 @@ export default function UsersPage() {
   };
 
   const handleDelete = async (id: string) => {
-    const proceed = window.confirm(
-      'Are you sure you want to delete this user? This action cannot be undone.'
-    );
-    if (!proceed) {
-      return;
-    }
+    setUserToDelete(id);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!userToDelete) return;
 
     try {
-      await deleteUser(id);
-      setUsers((prev) => prev.filter((user) => user.id !== id));
+      await deleteUser(userToDelete);
+      setUsers((prev) => prev.filter((user) => user.id !== userToDelete));
       setMeta((prev) => {
         if (!prev) {
           return prev;
         }
 
-        const deletedUser = users.find((user) => user.id === id);
+        const deletedUser = users.find((user) => user.id === userToDelete);
         const nextCounts = { ...prev.counts };
 
         if (deletedUser) {
@@ -267,6 +270,9 @@ export default function UsersPage() {
           }
         };
       });
+      
+      setUserToDelete(null);
+      
       toast({
         title: 'User deleted',
         description: 'The user account has been removed.',
@@ -382,6 +388,17 @@ export default function UsersPage() {
         onToggleStatus={handleToggleStatusFromDetails}
         onDelete={handleDeleteFromDetails}
         onEdit={handleEditFromDetails}
+      />
+
+      <ConfirmationDialog
+        open={isDeleteConfirmOpen}
+        onOpenChange={setIsDeleteConfirmOpen}
+        title="Delete User"
+        description="Are you sure you want to delete this user? This action cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        variant="destructive"
+        onConfirm={confirmDelete}
       />
     </PageWrapper>
   );

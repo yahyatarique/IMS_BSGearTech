@@ -5,10 +5,26 @@ import {
   CreateInventoryResponse,
   UpdateInventoryResponse,
   DeleteInventoryResponse,
+  GetInventoryMaterialsResponse,
+  MaterialDimensionsResponse,
 } from './types/inventory.api.type';
 import { CreateInventoryInput, UpdateInventoryInput, InventoryListQuery } from '@/schemas/inventory.schema';
+import { AxiosResponse } from 'axios';
 
 const INVENTORY_URL = '/inventory';
+
+/**
+ * Fetch materials summary from inventory
+ */
+export const fetchInventoryMaterials = async (params?: { limit?: number }): Promise<GetInventoryMaterialsResponse> => {
+  const queryParams = new URLSearchParams();
+  queryParams.append('view', 'materials');
+  if (params?.limit) queryParams.append('limit', params.limit.toString());
+
+  const url = `${INVENTORY_URL}?${queryParams}`;
+  const response = await axiosInstance.get<GetInventoryMaterialsResponse>(url);
+  return response.data;
+};
 
 /**
  * Fetch list of inventory items with meta (pagination) and filters
@@ -58,4 +74,14 @@ export const updateInventoryItem = async (
 export const deleteInventoryItem = async (id: string): Promise<DeleteInventoryResponse> => {
   const response = await axiosInstance.delete<DeleteInventoryResponse>(`${INVENTORY_URL}/${id}`);
   return response.data;
+};
+
+/**
+ * Fetch available material dimensions for a specific material type
+ */
+export const fetchMaterialDimensions = async (materialType: 'CR-5' | 'EN-9'): Promise<AxiosResponse<MaterialDimensionsResponse>> => {
+  const response = await axiosInstance.get(`${INVENTORY_URL}/material-dimensions`, {
+    params: { material_type: materialType },
+  });
+  return response;
 };

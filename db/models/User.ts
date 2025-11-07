@@ -28,14 +28,14 @@ interface UserAttributes {
 interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'created_at' | 'role' | 'status'> {}
 
 class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
-  public id!: string;
-  public username!: string;
-  public password!: string;
-  public role!: '0' | '1' | '2';
-  public first_name!: string;
-  public last_name!: string;
-  public status!: 'active' | 'inactive' | 'suspended';
-  public readonly created_at!: Date;
+  declare id: string;
+  declare username: string;
+  declare password: string;
+  declare role: '0' | '1' | '2';
+  declare first_name: string;
+  declare last_name: string;
+  declare status: 'active' | 'inactive' | 'suspended';
+  declare readonly created_at: Date;
 
   // Instance methods
   public async comparePassword(candidatePassword: string, userPassword: string): Promise<boolean> {

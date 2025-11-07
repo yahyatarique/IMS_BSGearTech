@@ -67,13 +67,10 @@ export type DashboardMaterial = {
   material: string;
   type: string;
   stock: number;
+  pendingDelivery: number;
   unit: string;
-  reorderLevel: number;
   status: DashboardMaterialStatus;
   profileCount: number;
-  averageRate: number;
-  minRate: number;
-  maxRate: number;
 };
 
 export type DashboardMaterialsData = DashboardMaterial[];
@@ -91,9 +88,6 @@ export type DashboardProfileType = {
   material: string;
   type: string;
   materialRate: number;
-  inStock: number;
-  reserved: number;
-  available: number;
   burningWastagePercent: number;
   heatTreatmentRate: number;
   heatTreatmentInefficacyPercent: number;

@@ -17,6 +17,11 @@ function formatTrend(value: number): string {
 
 export default async function StatsSection() {
   const response = await fetchDashboardStats();
+
+  if (!response.data) {
+    return null;
+  }
+  
   const { orders, buyers, products } = response.data.data;
 
   const cards = [

@@ -19,11 +19,6 @@ export const CreateInventorySchema = z.object({
     .positive('Height must be positive')
     .max(999999.9999, 'Height is too large'),
   po_number: z.string().max(100, 'PO number is too long').optional(),
-  quantity: z
-    .number()
-    .int('Quantity must be an integer')
-    .positive('Quantity must be positive')
-    .default(1)
 });
 
 // Update inventory schema (all fields optional)
@@ -45,11 +40,6 @@ export const UpdateInventorySchema = z.object({
     .max(999999.9999, 'Height is too large')
     .optional(),
   po_number: z.string().max(100, 'PO number is too long').optional(),
-  quantity: z
-    .number()
-    .int('Quantity must be an integer')
-    .positive('Quantity must be positive')
-    .optional()
 });
 
 // Inventory list query schema

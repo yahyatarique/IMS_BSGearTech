@@ -1,7 +1,8 @@
 import { NextRequest } from 'next/server';
 import { testConnection } from '@/db/connection';
-import { Profiles } from '@/db/models';
+import { Profiles, Inventory, OrderInventory, Orders } from '@/db/models';
 import sequelize from '@/db/connection';
+import { QueryTypes } from 'sequelize';
 import { errorResponse, sendResponse } from '@/utils/api-response';
 import { DashboardMaterialsQuerySchema } from '@/schemas/dashboard.schema';
 
@@ -33,30 +34,34 @@ function toFixedNumber(value: unknown, fractionDigits = 2): number {
   return Number(parsed.toFixed(fractionDigits));
 }
 
-function calculateStock(totalArea: number, averageRate: number, profileCount: number): number {
-  const stockFromArea = totalArea > 0 ? totalArea / 10 : 0;
-  const stockFromRate = averageRate > 0 ? averageRate * profileCount : 0;
-  const stock = Math.max(stockFromArea, stockFromRate);
-  return Math.max(Math.round(stock), 0);
-}
-
-function calculateReorderLevel(stock: number): number {
-  if (stock <= 0) {
-    return 25;
+async function calculatePendingWeight(materialType: string): Promise<number> {
+  try {
+    // Get weight from OrderInventory for orders that are pending ('0') or accepted ('1')
+    const result = await sequelize.query(`
+      SELECT COALESCE(SUM(oi.material_weight), 0) as total_weight
+      FROM order_inventory oi
+      INNER JOIN orders o ON oi.order_id = o.id
+      WHERE oi.material_type = :materialType 
+      AND o.status IN ('0', '1')
+    `, {
+      replacements: { materialType },
+      type: QueryTypes.SELECT
+    }) as { total_weight: string }[];
+    
+    return Number(result[0]?.total_weight) || 0;
+  } catch (error) {
+    console.error(`Error calculating pending weight for ${materialType}:`, error);
+    return 0;
   }
-
-  const baseline = Math.max(Math.round(stock * 0.3), 25);
-  const cap = Math.max(stock - Math.max(Math.round(stock * 0.2), 1), 1);
-
-  return Math.min(baseline, cap);
 }
 
-function resolveMaterialStatus(stock: number, reorderLevel: number): 'in-stock' | 'low-stock' | 'out-of-stock' {
+function resolveMaterialStatus(stock: number): 'in-stock' | 'low-stock' | 'out-of-stock' {
   if (stock <= 0) {
     return 'out-of-stock';
   }
 
-  if (stock <= reorderLevel) {
+  // Simple low stock threshold of 50kg
+  if (stock <= 50) {
     return 'low-stock';
   }
 
@@ -76,57 +81,49 @@ export async function GET(request: NextRequest) {
 
     const limit = parsedQuery.data.limit ?? 5;
 
-    const materialsRaw = await Profiles.findAll({
+    // Get distinct material types from inventory
+    const materialTypesRaw = await Inventory.findAll({
       attributes: [
-        'material',
-        [sequelize.fn('COUNT', sequelize.col('id')), 'profileCount'],
-        [sequelize.fn('AVG', sequelize.col('material_rate')), 'averageRate'],
-        [sequelize.fn('MIN', sequelize.col('material_rate')), 'minRate'],
-        [sequelize.fn('MAX', sequelize.col('material_rate')), 'maxRate'],
-        [
-          sequelize.fn(
-            'SUM',
-            sequelize.literal('"cut_size_width_mm" * "cut_size_height_mm"')
-          ),
-          'totalArea',
-        ],
+        'material_type',
+        [sequelize.fn('SUM', sequelize.col('material_weight')), 'totalWeight']
       ],
-      group: ['material'],
-      order: [[sequelize.fn('AVG', sequelize.col('material_rate')), 'DESC']],
+      group: ['material_type'],
+      order: [[sequelize.fn('SUM', sequelize.col('material_weight')), 'DESC']],
       limit,
       raw: true,
     });
 
-    const materials = materialsRaw as Array<Record<string, any>>;
+    const materialTypes = materialTypesRaw as unknown as Array<{
+      material_type: string;
+      totalWeight: string;
+    }>;
 
-    const formattedMaterials = materials.map((material, index) => {
-      const materialCode = typeof material.material === 'string' ? material.material : String(material.material ?? '');
-  const profileCount = Number(material.profileCount) || 0;
-  const rawAverageRate = Number(material.averageRate) || 0;
-  const averageRate = toFixedNumber(rawAverageRate);
-  const minRate = toFixedNumber(material.minRate);
-  const maxRate = toFixedNumber(material.maxRate);
-      const totalArea = Number(material.totalArea) || 0;
+    const formattedMaterials = await Promise.all(
+      materialTypes.map(async (material, index) => {
+        const materialType = material.material_type;
+        const inStock = toFixedNumber(material.totalWeight);
+        const pendingWeight = await calculatePendingWeight(materialType);
+        
+        // Get profile count for this material type
+        const profileCountResult = await Profiles.count({
+          where: { material: materialType }
+        });
+        
+        const status = resolveMaterialStatus(inStock);
 
-  const stock = calculateStock(totalArea, rawAverageRate, profileCount);
-      const reorderLevel = calculateReorderLevel(stock);
-      const status = resolveMaterialStatus(stock, reorderLevel);
-
-      return {
-        id: materialCode || `material-${index + 1}`,
-        name: formatMaterialName(materialCode),
-        material: materialCode,
-        type: 'Raw Material',
-        stock,
-        unit: DEFAULT_UNIT,
-        reorderLevel,
-        status,
-        profileCount,
-        averageRate,
-        minRate,
-        maxRate,
-      };
-    });
+        return {
+          id: materialType || `material-${index + 1}`,
+          name: formatMaterialName(materialType),
+          material: materialType,
+          type: 'Raw Material',
+          stock: inStock,
+          pendingDelivery: toFixedNumber(pendingWeight),
+          unit: DEFAULT_UNIT,
+          status,
+          profileCount: profileCountResult || 0,
+        };
+      })
+    );
 
     return sendResponse(formattedMaterials, 'Materials retrieved successfully');
   } catch (error) {

@@ -8,7 +8,6 @@ export interface InventoryAttributes {
   cut_size_width: number;
   cut_size_height: number;
   po_number?: string;
-  quantity: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -23,12 +22,14 @@ class Inventory extends Model<InventoryAttributes, InventoryCreationAttributes> 
   public cut_size_width!: number;
   public cut_size_height!: number;
   public po_number?: string;
-  public quantity!: number;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 
   static associate(models: any): void {
-    // Define associations here if needed
+    Inventory.hasMany(models.OrderInventory, {
+      foreignKey: 'inventory_id',
+      as: 'orderInventories',
+    });
   }
 
   // Timestamps
@@ -68,12 +69,6 @@ Inventory.init(
       type: DataTypes.STRING(100),
       allowNull: true,
       comment: 'Related Purchase Order number'
-    },
-    quantity: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 1,
-      comment: 'Quantity of items in inventory'
     },
     created_at: {
       type: DataTypes.DATE,
