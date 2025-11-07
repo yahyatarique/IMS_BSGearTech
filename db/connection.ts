@@ -45,12 +45,13 @@ const createSequelizeInstance = () => {
       })
     },
     logging: process.env.NODE_ENV === 'development' ? console.log : false,
-    // Optimize pool for serverless (Supabase handles pooling)
+    // Optimize pool for serverless + Supabase nano tier
+    // Nano tier: 60 direct connections, 200 pooled connections limit
     pool: {
-      max: 1,        // One connection per function invocation
+      max: 1,        // One connection per function invocation (conservative for nano tier)
       min: 0,        // Allow pool to shrink to 0
       idle: 0,       // Close idle connections immediately
-      acquire: 3000, // Fail fast (3 seconds)
+      acquire: 10000, // Longer timeout for nano tier (10 seconds)
       evict: 10000   // Clean up after 10s (Vercel default timeout)
     }
   });
@@ -106,7 +107,7 @@ const getSequelize = () => {
   throw new Error('DATABASE_URL environment variable is required but not set');
 };
 
-export const testConnection = async () => {
+export const testConnection = async (retries = 2): Promise<boolean> => {
   try {
     // Check DATABASE_URL first
     if (!process.env.DATABASE_URL) {
@@ -116,18 +117,19 @@ export const testConnection = async () => {
 
     const sequelize = getSequelize();
     
-    // Test connection with timeout
+    // Test connection with longer timeout for nano tier (10 seconds)
+    // Nano tier has shared resources and may take longer to establish connections
     await Promise.race([
       sequelize.authenticate(),
       new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Connection timeout after 5 seconds')), 5000)
+        setTimeout(() => reject(new Error('Connection timeout after 10 seconds')), 10000)
       )
     ]);
     
     console.log('Database connection has been established successfully.');
     return true;
   } catch (error: any) {
-    console.error('Unable to connect to the database:', {
+    const errorDetails = {
       message: error?.message || String(error),
       name: error?.name || 'Unknown',
       code: error?.code || 'N/A',
@@ -136,7 +138,25 @@ export const testConnection = async () => {
       hostname: error?.hostname || 'N/A',
       port: error?.port || 'N/A',
       stack: error?.stack || 'No stack trace'
-    });
+    };
+    
+    console.error('Unable to connect to the database:', errorDetails);
+    
+    // Retry logic for nano tier connection limits
+    // Supabase nano tier has connection limits (60 direct, 200 pooled)
+    // Retry with exponential backoff if we have retries left
+    if (retries > 0 && (
+      error?.code === 'ETIMEDOUT' || 
+      error?.code === 'ECONNREFUSED' ||
+      error?.message?.includes('timeout') ||
+      error?.message?.includes('too many connections')
+    )) {
+      const delay = Math.pow(2, 3 - retries) * 1000; // 1s, 2s, 4s
+      console.log(`Retrying connection in ${delay}ms... (${retries} retries left)`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return testConnection(retries - 1);
+    }
+    
     return false;
   }
 };
