@@ -49,7 +49,7 @@
     
     **Recents**
     
-    - up to 5 recent buyers with orders created in last 15 days, (*excluding the current day)*
+    - up to 5 recent buyers with orders created in last 15 days, *(excluding the current day)*
         - with below info:
         - Buyer name: `Buyer.**name**` 
         - Total Order Value: `*Order.**grandTotal**` where `Order.**createdAt**` < 90days 

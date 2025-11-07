@@ -104,14 +104,13 @@ export const LoginPage = ({
             radius="bottom"
             onChange={(e) => setPassword(e.target.value)}
             value={password}
-          // validate={validateLogin}
+            // validate={validateLogin}
           />
         </Column>
-        {/* Login Button */}
+        Login Button
         <Button onClick={handleLogin} size="l" variant="primary">
           Log in
         </Button>
-
         <SmartLink href="/forgot-password" color="neutral-medium">
           Forgot password?
         </SmartLink>
