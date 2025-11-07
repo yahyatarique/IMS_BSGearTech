@@ -3,7 +3,9 @@
 import { INVALID_CREDS, INVALID_PASSWORD, StorageKeys } from '../utils/constants';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-const API_BASE_URL = `${BASE_URL}/api`;
+// Ensure BASE_URL doesn't have trailing slash, then add /api
+const cleanBaseUrl = BASE_URL.replace(/\/+$/, '');
+const API_BASE_URL = `${cleanBaseUrl}/api`;
 
 // Types
 export interface ApiResponse<T = any> {
@@ -72,7 +74,14 @@ async function request<T = any>(
   const { params, ...fetchConfig } = config;
 
   // Build full URL
-  let fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+  // Ensure url starts with / and API_BASE_URL doesn't end with /
+  const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+  let fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${cleanUrl}`;
+  
+  // Debug logging in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[API Client] Request URL:', { url, cleanUrl, API_BASE_URL, fullUrl });
+  }
 
   // Add query parameters
   if (params) {
