@@ -1,9 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // These packages should NOT be externalized - they need to be bundled
-  // Remove 'pg' and 'pg-hstore' from serverExternalPackages
-  serverExternalPackages: ['sequelize', 'sequelize-cli', 'bcryptjs', 'jsonwebtoken'],
+  // Keep only sequelize-cli external, bundle everything else including pg
+  // This ensures pg and pg-hstore are properly bundled for Vercel serverless functions
+  serverExternalPackages: ['sequelize-cli'],
  
 };
 
