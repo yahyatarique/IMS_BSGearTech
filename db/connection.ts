@@ -45,10 +45,13 @@ const createDummySequelize = () => ({
   }),
 });
 
+// Create dummy instance early so it can be referenced
+const dummySequelize = createDummySequelize();
+
 const getSequelize = () => {
   // During build, return a dummy object that satisfies model initialization
   if (isBuildTime) {
-    return createDummySequelize();
+    return dummySequelize;
   }
 
   if (!sequelizeInstance) {
@@ -74,17 +77,18 @@ const getSequelize = () => {
         }
       });
     } catch (error: any) {
-      // If require fails with pg error (e.g., during build), mark as build time
+      // If require fails (e.g., during build when pg can't load), return dummy
+      // This catches the "Please install pg package manually" error
       if (error?.message?.includes('pg') || error?.message?.includes('Please install')) {
         isBuildTime = true;
-        return createDummySequelize();
+        return dummySequelize;
       }
       // For other errors, still return dummy but log warning
-      console.warn('Sequelize initialization skipped:', error);
-      return createDummySequelize();
+      console.warn('Sequelize initialization skipped:', error?.message || error);
+      return dummySequelize;
     }
   }
-  return sequelizeInstance;
+  return sequelizeInstance || dummySequelize;
 };
 
 export const testConnection = async () => {
@@ -99,23 +103,31 @@ export const testConnection = async () => {
   }
 };
 
-// During build, export dummy object directly to avoid any require() calls
-// At runtime, use Proxy to lazily load Sequelize
-const dummySequelize = createDummySequelize();
+// Always start with dummy to prevent build-time errors
+// Switch to real Sequelize only when successfully loaded at runtime
+let realSequelizeLoaded = false;
 
-const sequelize = isBuildTime ? dummySequelize : new Proxy({} as any, {
-  get(_target, prop) {
-    try {
-      const instance = getSequelize();
-      if (instance && typeof instance[prop] !== 'undefined') {
-        return instance[prop];
+const sequelize = new Proxy(dummySequelize, {
+  get(target, prop) {
+    // If we haven't tried loading real Sequelize yet, try now
+    if (!realSequelizeLoaded) {
+      try {
+        const instance = getSequelize();
+        // If we got a real instance (not dummy), use it
+        if (instance && instance !== dummySequelize) {
+          realSequelizeLoaded = true;
+          // Replace the target with the real instance
+          Object.setPrototypeOf(target, instance);
+          return instance[prop as keyof typeof instance];
+        }
+      } catch (error: any) {
+        // On any error, continue using dummy
+        // Don't mark as loaded so we can retry later
       }
-      // Fallback to dummy if property doesn't exist
-      return dummySequelize[prop as keyof typeof dummySequelize];
-    } catch (error: any) {
-      // On any error, return dummy to prevent failures
-      return dummySequelize[prop as keyof typeof dummySequelize];
     }
+    
+    // Return from current target (dummy or real)
+    return target[prop as keyof typeof target];
   }
 });
 
