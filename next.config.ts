@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ['sequelize', 'pg', 'pg-hstore', 'sequelize-cli', 'bcryptjs', 'jsonwebtoken'],
+  // These packages should NOT be externalized - they need to be bundled
+  // Remove 'pg' and 'pg-hstore' from serverExternalPackages
+  serverExternalPackages: ['sequelize', 'sequelize-cli', 'bcryptjs', 'jsonwebtoken'],
  
 };
 
