@@ -4,7 +4,7 @@ import apiClient, { ApiResponse } from "../lib/api-client";
 import { CreateUserInput, GetCurrentUserRes, LoginInput, LoginRes, RegisterRes, UpdateUserInput, UpdateUserRes } from "./types/auth.api.type";
 
 
-const BASE_URL = 'auth';
+const BASE_URL = '/auth';
 
 export const endpoints = {
   login: `${BASE_URL}/login`,
