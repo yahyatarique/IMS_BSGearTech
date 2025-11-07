@@ -4,7 +4,7 @@ import { jwtVerify } from 'jose';
 
 // Define allowed origins for CORS
 const allowedOrigins = [
-  'https://bsgeartech.yahyatarique.dev',
+  'https://bsgeartech.yahyatarique.dev/',
   'http://localhost:3000',
   process.env.NEXT_PUBLIC_BASE_URL,
 ].filter(Boolean) as string[];
