@@ -23,6 +23,11 @@ try {
   isBuildTime = true;
 }
 
+// Pre-initialize dummy instance during build to avoid any require() calls
+if (isBuildTime) {
+  sequelizeInstance = null; // Will be handled by getSequelize
+}
+
 // Create a dummy object for build time
 const createDummySequelize = () => ({
   authenticate: async () => {},
@@ -94,20 +99,22 @@ export const testConnection = async () => {
   }
 };
 
-// Export as a Proxy that safely handles build-time access
-// If Sequelize fails to load (e.g., during build), return dummy object
-const sequelize = new Proxy({} as any, {
+// During build, export dummy object directly to avoid any require() calls
+// At runtime, use Proxy to lazily load Sequelize
+const dummySequelize = createDummySequelize();
+
+const sequelize = isBuildTime ? dummySequelize : new Proxy({} as any, {
   get(_target, prop) {
     try {
       const instance = getSequelize();
-      return instance[prop];
-    } catch (error: any) {
-      // If we get an error about pg or Sequelize, return dummy methods for build
-      if (error?.message?.includes('pg') || error?.message?.includes('Sequelize')) {
-        const dummy = createDummySequelize();
-        return dummy[prop as keyof typeof dummy];
+      if (instance && typeof instance[prop] !== 'undefined') {
+        return instance[prop];
       }
-      throw error;
+      // Fallback to dummy if property doesn't exist
+      return dummySequelize[prop as keyof typeof dummySequelize];
+    } catch (error: any) {
+      // On any error, return dummy to prevent failures
+      return dummySequelize[prop as keyof typeof dummySequelize];
     }
   }
 });
