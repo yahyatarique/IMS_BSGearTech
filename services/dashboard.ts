@@ -23,7 +23,12 @@ export const endpoints = {
 };
 
 export const fetchDashboardStats = async (): Promise<AxiosResponse<DashboardStatsResponse>> => {
-  return axiosInstance.get<DashboardStatsResponse>(endpoints.stats);
+  try {
+    const res = await axiosInstance.get<DashboardStatsResponse>(endpoints.stats);
+    return res;
+  } catch (error) {
+    throw error;
+  }
 };
 
 export const fetchRecentOrders = async (

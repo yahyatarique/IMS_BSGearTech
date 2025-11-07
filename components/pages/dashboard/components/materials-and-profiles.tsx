@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Package, Layers } from 'lucide-react'
+import { Package, Layers, Info, Weight, Clock, IndianRupee, Flame } from 'lucide-react'
 import { DashboardCard } from '@/components/pages/dashboard/components/dashboard-card'
 import { Badge } from '@/components/ui/badge'
 import { fetchDashboardMaterials, fetchDashboardProfileTypes } from '@/services/dashboard'
@@ -36,25 +36,17 @@ function resolveMaterialStatus(status: string) {
   return MATERIAL_STATUS[status] ?? MATERIAL_STATUS['low-stock']
 }
 
-function calculateStockFill(stock: number, reorderLevel: number) {
+function calculateStockFill(stock: number) {
   if (stock <= 0) {
     return 0
   }
 
-  const target = reorderLevel > 0 ? reorderLevel * 1.4 : stock
+  // Use a fixed target of 200kg for the progress bar
+  const target = 200
   const ratio = stock / target
   return Math.min(Math.round(ratio * 100), 100)
 }
 
-function calculateAvailabilityFill(inStock: number, reserved: number) {
-  if (inStock <= 0) {
-    return 0
-  }
-
-  const available = Math.max(inStock - reserved, 0)
-  const ratio = available / inStock
-  return Math.min(Math.round(ratio * 100), 100)
-}
 
 export async function MaterialsAndProfiles() {
   const [materialsResponse, profileTypesResponse] = await Promise.all([
@@ -74,7 +66,7 @@ export async function MaterialsAndProfiles() {
         gradient="from-green-500 to-emerald-500"
         action={
           <Link
-            href="#"
+            href="/inventory?tab=materials"
             className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
           >
             Manage
@@ -90,7 +82,7 @@ export async function MaterialsAndProfiles() {
 
           {materials.map((material) => {
             const status = resolveMaterialStatus(material.status)
-            const stockFill = calculateStockFill(material.stock, material.reorderLevel)
+            const stockFill = calculateStockFill(material.stock)
 
             return (
               <div
@@ -105,23 +97,25 @@ export async function MaterialsAndProfiles() {
                     <p className="text-xs text-slate-600 dark:text-slate-400">
                       {material.type}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Avg rate {rateFormatter.format(material.averageRate)} · {material.profileCount}{' '}
-                      profiles
+                    <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                      <Info className="h-3 w-3" />
+                      {material.profileCount} profiles using this material
                     </p>
                   </div>
                   <Badge className={status.className}>{status.label}</Badge>
                 </div>
 
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-600 dark:text-slate-400">
-                    Stock:{' '}
+                  <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                    <Weight className="h-3 w-3" />
+                    In Stock:{' '}
                     <span className="font-semibold text-slate-900 dark:text-white">
                       {quantityFormatter.format(material.stock)} {material.unit}
                     </span>
                   </span>
-                  <span className="text-slate-600 dark:text-slate-400">
-                    Reorder: {quantityFormatter.format(material.reorderLevel)} {material.unit}
+                  <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    Pending: {quantityFormatter.format(material.pendingDelivery)} {material.unit}
                   </span>
                 </div>
 
@@ -138,8 +132,7 @@ export async function MaterialsAndProfiles() {
                 </div>
 
                 <div className="mt-3 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                  <span>Min ₹{quantityFormatter.format(Math.round(material.minRate))}</span>
-                  <span>Max ₹{quantityFormatter.format(Math.round(material.maxRate))}</span>
+                  <span>Available: {quantityFormatter.format(Math.max(0, material.stock - material.pendingDelivery))} {material.unit}</span>
                 </div>
               </div>
             )
@@ -154,7 +147,7 @@ export async function MaterialsAndProfiles() {
         gradient="from-orange-500 to-red-500"
         action={
           <Link
-            href="#"
+            href="/inventory?tab=profiles"
             className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
           >
             Manage
@@ -168,63 +161,39 @@ export async function MaterialsAndProfiles() {
             </div>
           )}
 
-          {profiles.map((profile) => {
-            const availabilityFill = calculateAvailabilityFill(profile.inStock, profile.reserved)
-            const available = Math.max(profile.inStock - profile.reserved, 0)
-
-            return (
-              <div
-                key={profile.id}
-                className="rounded-lg border bg-white p-3 transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md dark:border-slate-800 dark:bg-slate-800"
-              >
-                <div className="mb-2 flex items-start justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                      {profile.name}
-                    </p>
-                    <p className="text-xs text-slate-600 dark:text-slate-400">
-                      {profile.specification}
-                    </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      HT Rate {rateFormatter.format(profile.heatTreatmentRate)} · Wastage{' '}
-                      {profile.burningWastagePercent}%
-                    </p>
-                  </div>
+          {profiles.map((profile) => (
+            <div
+              key={profile.id}
+              className="rounded-lg border bg-white p-3 transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md dark:border-slate-800 dark:bg-slate-800"
+            >
+              <div className="mb-2 flex items-start justify-between">
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                    {profile.name}
+                  </p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
+                    {profile.specification}
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                    <IndianRupee className="h-3 w-3" />
+                    Material Rate: {rateFormatter.format(profile.materialRate)} · HT Rate: {rateFormatter.format(profile.heatTreatmentRate)}
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                    <Flame className="h-3 w-3" />
+                    Wastage: {profile.burningWastagePercent}% · HT Inefficacy: {profile.heatTreatmentInefficacyPercent}%
+                  </p>
+                </div>
+                <div className="flex flex-col items-end gap-1">
                   <Badge variant="outline" className={PROFILE_BADGE_CLASS}>
                     {profile.material}
                   </Badge>
-                </div>
-
-                <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
-                  <div>
-                    <p className="text-slate-600 dark:text-slate-400">In Stock</p>
-                    <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                      {quantityFormatter.format(profile.inStock)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-slate-600 dark:text-slate-400">Reserved</p>
-                    <p className="text-sm font-semibold text-orange-600 dark:text-orange-500">
-                      {quantityFormatter.format(profile.reserved)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-slate-600 dark:text-slate-400">Available</p>
-                    <p className="text-sm font-semibold text-green-600 dark:text-green-500">
-                      {quantityFormatter.format(available)}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-green-500 to-emerald-500 transition-all duration-300"
-                    style={{ width: `${availabilityFill}%` }}
-                  />
+                  <Badge variant="outline" className="text-xs">
+                    {profile.type}
+                  </Badge>
                 </div>
               </div>
-            )
-          })}
+            </div>
+          ))}
         </div>
       </DashboardCard>
     </div>

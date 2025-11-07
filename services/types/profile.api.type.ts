@@ -7,12 +7,12 @@ export interface ProfileRecord {
   name: string;
   type: PROFILE_TYPES;
   material: MATERIALS;
-  material_rate: number;
-  cut_size_width_mm: number;
-  cut_size_height_mm: number;
-  burning_wastage_percent: number;
-  heat_treatment_rate: number;
-  heat_treatment_inefficacy_percent: number;
+  material_rate: string;
+  cut_size_width_mm: string;
+  cut_size_height_mm: string;
+  burning_wastage_percent: string;
+  heat_treatment_rate: string;
+  heat_treatment_inefficacy_percent: string;
 }
 
 // Profile list metadata structure

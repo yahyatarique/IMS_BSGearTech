@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { testConnection } from '@/db/connection';
 import Inventory from '@/db/models/Inventory';
 import { UpdateInventorySchema } from '@/schemas/inventory.schema';
-import { successResponse, errorResponse } from '@/utils/api-response';
+import { successResponse, errorResponse, sendResponse } from '@/utils/api-response';
 import sequelize from '@/db/connection';
 
 // GET /api/inventory/[id] - Get single inventory item
@@ -18,15 +18,13 @@ export async function GET(
     const inventoryItem = await Inventory.findByPk(id);
 
     if (!inventoryItem) {
-      return NextResponse.json(errorResponse('Inventory item not found'), { status: 404 });
+      return errorResponse('Inventory item not found', 404);
     }
 
-    return NextResponse.json(successResponse(inventoryItem.toJSON()));
+    return successResponse(inventoryItem.toJSON());
   } catch (error: any) {
     console.error('Error fetching inventory item:', error);
-    return NextResponse.json(errorResponse(error.message || 'Failed to fetch inventory item'), {
-      status: 500,
-    });
+    return errorResponse(error.message || 'Failed to fetch inventory item', 500);
   }
 }
 
@@ -50,28 +48,26 @@ export async function PUT(
 
     if (!inventoryItem) {
       await transaction.rollback();
-      return NextResponse.json(errorResponse('Inventory item not found'), { status: 404 });
+      return errorResponse('Inventory item not found', 404);
     }
 
     // Update inventory item with validated data
     await inventoryItem.update(validatedData, { transaction });
 
+    await inventoryItem.reload({ transaction });
+
     await transaction.commit();
 
-    return NextResponse.json(successResponse(inventoryItem.toJSON()));
+    return sendResponse(inventoryItem.toJSON(), 'Inventory item updated successfully');
   } catch (error: any) {
     await transaction.rollback();
     console.error('Error updating inventory item:', error);
 
     if (error.name === 'ZodError') {
-      return NextResponse.json(errorResponse('Validation failed', 400, error.errors), {
-        status: 400,
-      });
+      return errorResponse('Validation failed', 400, error.errors);
     }
 
-    return NextResponse.json(errorResponse(error.message || 'Failed to update inventory item'), {
-      status: 500,
-    });
+    return errorResponse(error.message || 'Failed to update inventory item', 500);
   }
 }
 
@@ -91,7 +87,7 @@ export async function DELETE(
 
     if (!inventoryItem) {
       await transaction.rollback();
-      return NextResponse.json(errorResponse('Inventory item not found'), { status: 404 });
+      return errorResponse('Inventory item not found', 404);
     }
 
     // Delete inventory item
@@ -99,12 +95,10 @@ export async function DELETE(
 
     await transaction.commit();
 
-    return NextResponse.json(successResponse({ message: 'Inventory item deleted successfully' }));
+    return sendResponse(null, 'Inventory item deleted successfully');
   } catch (error: any) {
     await transaction.rollback();
     console.error('Error deleting inventory item:', error);
-    return NextResponse.json(errorResponse(error.message || 'Failed to delete inventory item'), {
-      status: 500,
-    });
+    return errorResponse(error.message || 'Failed to delete inventory item', 500);
   }
 }

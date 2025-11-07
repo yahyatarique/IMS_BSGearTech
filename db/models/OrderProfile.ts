@@ -1,9 +1,11 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from '../connection';
+import type Profiles from './Profiles';
 
 interface OrderProfileAttributes {
   id: string;
   order_id: string;
+  profile_id: string;
   quantity: number;
   unit_price: number;
   total_price: number;
@@ -18,6 +20,7 @@ interface OrderProfileCreationAttributes extends Optional<OrderProfileAttributes
 class OrderProfile extends Model<OrderProfileAttributes, OrderProfileCreationAttributes> implements OrderProfileAttributes {
   public id!: string;
   public order_id!: string;
+  public profile_id!: string;
   public quantity!: number;
   public unit_price!: number;
   public total_price!: number;
@@ -32,6 +35,10 @@ class OrderProfile extends Model<OrderProfileAttributes, OrderProfileCreationAtt
       foreignKey: 'order_id', 
       as: 'order' 
     });
+    OrderProfile.belongsTo(models.Profiles, {
+      foreignKey: 'profile_id',
+      as: 'profile',
+    });
   }
 }
 
@@ -45,6 +52,22 @@ OrderProfile.init(
     order_id: {
       type: DataTypes.UUID,
       allowNull: false,
+      references: {
+        model: 'orders',
+        key: 'id',
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'CASCADE',
+    },
+    profile_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: 'profiles',
+        key: 'id',
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'RESTRICT',
     },
     quantity: {
       type: DataTypes.INTEGER,

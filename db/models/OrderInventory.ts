@@ -11,17 +11,18 @@ import {
 } from 'sequelize';
 import sequelize from '../connection';
 import type Orders from './Orders';
+import type Inventory from './Inventory';
 
 // Define attributes interface
 export interface OrderInventoryAttributes {
   id: string;
   order_id: string;
+  inventory_id: string;
   material_type: 'CR-5' | 'EN-9';
   material_weight: number;
   cut_size_width: number;
   cut_size_height: number;
   po_number?: string | null;
-  quantity: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -40,26 +41,32 @@ export class OrderInventory extends Model<
 > {
   declare id: CreationOptional<string>;
   declare order_id: ForeignKey<Orders['id']>;
+  declare inventory_id: ForeignKey<Inventory['id']>;
   declare material_type: 'CR-5' | 'EN-9';
   declare material_weight: number;
   declare cut_size_width: number;
   declare cut_size_height: number;
   declare po_number: string | null;
-  declare quantity: number;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
 
   // Associations
   declare order?: NonAttribute<Orders>;
+  declare inventory?: NonAttribute<Inventory>;
 
   declare static associations: {
     order: Association<OrderInventory, Orders>;
+    inventory: Association<OrderInventory, Inventory>;
   };
 
   static associate(models: any): void {
     OrderInventory.belongsTo(models.Orders, {
       foreignKey: 'order_id',
       as: 'order',
+    });
+    OrderInventory.belongsTo(models.Inventory, {
+      foreignKey: 'inventory_id',
+      as: 'inventory',
     });
   }
 }
@@ -82,6 +89,16 @@ OrderInventory.init(
       },
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE',
+    },
+    inventory_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: 'inventory',
+        key: 'id',
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'RESTRICT',
     },
     material_type: {
       type: DataTypes.ENUM('CR-5', 'EN-9'),
@@ -107,15 +124,6 @@ OrderInventory.init(
       type: DataTypes.STRING(100),
       allowNull: true,
       comment: 'Related Purchase Order number'
-    },
-    quantity: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 1,
-      validate: {
-        min: 1,
-      },
-      comment: 'Quantity of items'
     },
     created_at: {
       type: DataTypes.DATE,

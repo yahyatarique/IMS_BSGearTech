@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { testConnection } from '@/db/connection';
 import Profiles from '@/db/models/Profiles';
 import { CreateProfileSchema, ProfileListQuerySchema } from '@/schemas/profile.schema';
-import { successResponse, errorResponse } from '@/utils/api-response';
+import {  errorResponse, sendResponse } from '@/utils/api-response';
 import sequelize from '@/db/connection';
 import { Op } from 'sequelize';
 
@@ -20,19 +20,17 @@ export async function GET(request: NextRequest) {
 
     // Build where clause
     const whereClause: any = {};
-    
+
     if (type && type !== 'all') {
       whereClause.type = type;
     }
-    
+
     if (material && material !== 'all') {
       whereClause.material = material;
     }
-    
+
     if (search) {
-      whereClause[Op.or] = [
-        { name: { [Op.iLike]: `%${search}%` } },
-      ];
+      whereClause[Op.or] = [{ name: { [Op.iLike]: `%${search}%` } }];
     }
 
     // Fetch profiles with meta pagination
@@ -41,13 +39,14 @@ export async function GET(request: NextRequest) {
       where: whereClause,
       limit,
       offset,
-      order: [['name', 'ASC']],
+      order: [['name', 'ASC']]
     });
 
     const totalPages = Math.ceil(total / limit);
 
-    return NextResponse.json(
-      successResponse({
+
+    return sendResponse(
+      {
         profiles: profiles.map((profile) => profile.toJSON()),
         meta: {
           page,
@@ -55,22 +54,19 @@ export async function GET(request: NextRequest) {
           totalItems: total,
           totalPages,
           hasNext: page < totalPages,
-          hasPrev: page > 1,
-        },
-      })
+          hasPrev: page > 1
+        }
+      },
+      'Profiles fetched successfully'
     );
   } catch (error: any) {
     console.error('Error fetching profiles:', error);
-    
+
     if (error.name === 'ZodError') {
-      return NextResponse.json(errorResponse('Validation failed', 400, error.errors), {
-        status: 400,
-      });
+      return errorResponse('Validation failed', 400, error.errors);
     }
-    
-    return NextResponse.json(errorResponse(error.message || 'Failed to fetch profiles'), {
-      status: 500,
-    });
+
+    return errorResponse(error.message || 'Failed to fetch profiles', 500);
   }
 }
 
@@ -89,26 +85,26 @@ export async function POST(request: NextRequest) {
     // Create profile
     const profile = await Profiles.create(
       {
-        ...validatedData,
+        ...validatedData
       } as any,
       { transaction }
     );
 
+    await profile.reload({ transaction });
+
+    const profileData = profile.get({ plain: true });
+
     await transaction.commit();
 
-    return NextResponse.json(successResponse(profile.toJSON()), { status: 201 });
+    return sendResponse(profileData, 'Profile created successfully', 201);
   } catch (error: any) {
     await transaction.rollback();
     console.error('Error creating profile:', error);
 
     if (error.name === 'ZodError') {
-      return NextResponse.json(errorResponse('Validation failed', 400, error.errors), {
-        status: 400,
-      });
+      return errorResponse('Validation failed', 400, error.errors);
     }
 
-    return NextResponse.json(errorResponse(error.message || 'Failed to create profile'), {
-      status: 500,
-    });
+    return errorResponse('Validation failed', 400, error.errors);
   }
 }

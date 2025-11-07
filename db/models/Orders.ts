@@ -28,7 +28,7 @@ class Orders extends Model<OrdersAttributes, OrdersCreationAttributes> implement
   public order_number!: string;
   public readonly created_at!: Date;
   public buyer_id?: string;
-  public status!: '0' | '1' | '2' | '3' | '4';
+  public status!: '0' | '1' | '2';
   public grand_total!: number;
   public material_cost!: number;
   public process_costs!: number;
@@ -92,7 +92,7 @@ Orders.init(
       },
     },
     status: {
-      type: DataTypes.ENUM('0', '1', '2', '3', '4'),
+      type: DataTypes.ENUM('0', '1', '2'),
       allowNull: false,
       defaultValue: '0',
     },

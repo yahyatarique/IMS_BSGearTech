@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { testConnection } from '@/db/connection';
 import Profiles from '@/db/models/Profiles';
 import { UpdateProfileSchema } from '@/schemas/profile.schema';
-import { successResponse, errorResponse } from '@/utils/api-response';
+import { successResponse, errorResponse, sendResponse } from '@/utils/api-response';
 import sequelize from '@/db/connection';
 
 // GET /api/profiles/[id] - Get single profile
@@ -18,15 +18,13 @@ export async function GET(
     const profile = await Profiles.findByPk(id);
 
     if (!profile) {
-      return NextResponse.json(errorResponse('Profile not found'), { status: 404 });
+      return errorResponse('Profile not found', 404);
     }
 
-    return NextResponse.json(successResponse(profile.toJSON()));
+    return successResponse(profile.toJSON());
   } catch (error: any) {
     console.error('Error fetching profile:', error);
-    return NextResponse.json(errorResponse(error.message || 'Failed to fetch profile'), {
-      status: 500,
-    });
+    return errorResponse(error.message || 'Failed to fetch profile', 500);
   }
 }
 
@@ -50,28 +48,26 @@ export async function PUT(
 
     if (!profile) {
       await transaction.rollback();
-      return NextResponse.json(errorResponse('Profile not found'), { status: 404 });
+      return errorResponse('Profile not found', 404);
     }
 
     // Update profile with validated data
     await profile.update(validatedData, { transaction });
 
+    await profile.reload({ transaction });
+
     await transaction.commit();
 
-    return NextResponse.json(successResponse(profile.toJSON()));
+    return sendResponse(profile.toJSON(), 'Profile updated successfully');
   } catch (error: any) {
     await transaction.rollback();
     console.error('Error updating profile:', error);
 
     if (error.name === 'ZodError') {
-      return NextResponse.json(errorResponse('Validation failed', 400, error.errors), {
-        status: 400,
-      });
+      return errorResponse('Validation failed', 400, error.errors);
     }
 
-    return NextResponse.json(errorResponse(error.message || 'Failed to update profile'), {
-      status: 500,
-    });
+    return errorResponse(error.message || 'Failed to update profile', 500);
   }
 }
 
@@ -91,7 +87,7 @@ export async function DELETE(
 
     if (!profile) {
       await transaction.rollback();
-      return NextResponse.json(errorResponse('Profile not found'), { status: 404 });
+      return errorResponse('Profile not found', 404);
     }
 
     // Delete profile
@@ -99,12 +95,10 @@ export async function DELETE(
 
     await transaction.commit();
 
-    return NextResponse.json(successResponse({ message: 'Profile deleted successfully' }));
+    return sendResponse(null, 'Profile deleted successfully');
   } catch (error: any) {
     await transaction.rollback();
     console.error('Error deleting profile:', error);
-    return NextResponse.json(errorResponse(error.message || 'Failed to delete profile'), {
-      status: 500,
-    });
+    return errorResponse(error.message || 'Failed to delete profile', 500);
   }
 }

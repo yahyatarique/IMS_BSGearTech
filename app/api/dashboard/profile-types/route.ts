@@ -43,22 +43,6 @@ function formatSpecification(width: number, height: number): string {
   return `${formattedWidth}mm × ${formattedHeight}mm`;
 }
 
-function calculateInStock(width: number, height: number, materialRate: number): number {
-  const areaUnits = width > 0 && height > 0 ? (width * height) / 5 : 0;
-  const rateUnits = materialRate > 0 ? materialRate / 2 : 0;
-  const stock = Math.max(areaUnits, rateUnits);
-  return Math.max(Math.round(stock), 0);
-}
-
-function calculateReserved(stock: number, wastagePercent: number): number {
-  if (stock <= 0 || wastagePercent <= 0) {
-    return 0;
-  }
-
-  const reserved = stock * (wastagePercent / 100);
-  return Math.max(Math.round(reserved), 0);
-}
-
 export async function GET(request: NextRequest) {
   try {
     await testConnection();
@@ -89,10 +73,6 @@ export async function GET(request: NextRequest) {
         plainProfile.heat_treatment_inefficacy_percent,
       );
 
-      const inStock = calculateInStock(width, height, materialRate);
-      const reserved = calculateReserved(inStock, burningWastagePercent);
-      const available = Math.max(inStock - reserved, 0);
-
       return {
         id: plainProfile.id,
         name: plainProfile.name,
@@ -100,9 +80,6 @@ export async function GET(request: NextRequest) {
         material: formatLabel(plainProfile.material, MATERIAL_LABELS, 'Unknown'),
         type: formatLabel(plainProfile.type, TYPE_LABELS, 'Custom'),
         materialRate,
-        inStock,
-        reserved,
-        available,
         burningWastagePercent,
         heatTreatmentRate,
         heatTreatmentInefficacyPercent,
