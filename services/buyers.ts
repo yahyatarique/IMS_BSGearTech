@@ -1,4 +1,4 @@
-import axiosInstance from '@/axios';
+import apiClient from '@/lib/api-client';
 import {
   GetBuyersResponse,
   GetBuyerResponse,
@@ -14,14 +14,7 @@ const BUYERS_URL = '/buyers';
  * Fetch list of buyers with meta (pagination) and filters
  */
 export const fetchBuyers = async (params?: BuyerListQuery): Promise<GetBuyersResponse> => {
-  const queryParams = new URLSearchParams();
-  if (params?.page) queryParams.append('page', params.page.toString());
-  if (params?.limit) queryParams.append('limit', params.limit.toString());
-  if (params?.status) queryParams.append('status', params.status);
-  if (params?.search) queryParams.append('search', params.search);
-
-  const url = queryParams.toString() ? `${BUYERS_URL}?${queryParams}` : BUYERS_URL;
-  const response = await axiosInstance.get<GetBuyersResponse>(url);
+  const response = await apiClient.get<GetBuyersResponse>(BUYERS_URL, { params });
   return response.data;
 };
 
@@ -29,7 +22,7 @@ export const fetchBuyers = async (params?: BuyerListQuery): Promise<GetBuyersRes
  * Fetch a single buyer by ID
  */
 export const fetchBuyer = async (id: string): Promise<GetBuyerResponse> => {
-  const response = await axiosInstance.get<GetBuyerResponse>(`${BUYERS_URL}/${id}`);
+  const response = await apiClient.get<GetBuyerResponse>(`${BUYERS_URL}/${id}`);
   return response.data;
 };
 
@@ -37,7 +30,7 @@ export const fetchBuyer = async (id: string): Promise<GetBuyerResponse> => {
  * Create a new buyer
  */
 export const createBuyer = async (data: CreateBuyerInput): Promise<CreateBuyerResponse> => {
-  const response = await axiosInstance.post<CreateBuyerResponse>(BUYERS_URL, data);
+  const response = await apiClient.post<CreateBuyerResponse>(BUYERS_URL, data);
   return response.data;
 };
 
@@ -48,7 +41,7 @@ export const updateBuyer = async (
   id: string,
   data: UpdateBuyerInput
 ): Promise<UpdateBuyerResponse> => {
-  const response = await axiosInstance.put<UpdateBuyerResponse>(`${BUYERS_URL}/${id}`, data);
+  const response = await apiClient.put<UpdateBuyerResponse>(`${BUYERS_URL}/${id}`, data);
   return response.data;
 };
 
@@ -56,7 +49,7 @@ export const updateBuyer = async (
  * Delete a buyer (soft delete by setting status to inactive)
  */
 export const deleteBuyer = async (id: string): Promise<DeleteBuyerResponse> => {
-  const response = await axiosInstance.delete<DeleteBuyerResponse>(`${BUYERS_URL}/${id}`);
+  const response = await apiClient.delete<DeleteBuyerResponse>(`${BUYERS_URL}/${id}`);
   return response.data;
 };
 

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, MouseEventHandler } from 'react';
 import { useRouter } from 'next/navigation';
-import { AxiosError } from 'axios';
+// Removed axios import - using native fetch
 import { useToast } from '@/hooks/use-toast';
 import { USER_ROLES } from '@/enums/users.enum';
 import { fetchUsers, updateUser, deleteUser } from '@/services/users';
@@ -45,38 +45,32 @@ export default function UsersPage() {
 
   const handleApiError = useCallback(
     (error: unknown, fallbackMessage: string) => {
-      if (error instanceof AxiosError) {
-        const status = error.response?.status;
-        const responseBody = error.response?.data as
-          | { message?: string; error?: string }
-          | undefined;
-        const description = responseBody?.message ?? responseBody?.error ?? fallbackMessage;
+      // Handle API error response (from our fetch client)
+      const apiError = error as { status?: number; message?: string; error?: string };
+      const status = apiError.status;
+      const description = apiError.message ?? apiError.error ?? fallbackMessage;
 
-        if (status === 401) {
-          toast({
-            title: 'Unauthorized',
-            description: 'Please sign in again to continue.',
-            variant: 'destructive'
-          });
-          router.push('/login');
-          return;
-        }
-
-        if (status === 403) {
-          toast({
-            title: 'Access denied',
-            description: 'You do not have permission to view this resource.',
-            variant: 'destructive'
-          });
-          router.push('/');
-          return;
-        }
-
-        toast({ title: 'Request failed', description, variant: 'destructive' });
+      if (status === 401) {
+        toast({
+          title: 'Unauthorized',
+          description: 'Please sign in again to continue.',
+          variant: 'destructive'
+        });
+        router.push('/login');
         return;
       }
 
-      toast({ title: 'Request failed', description: fallbackMessage, variant: 'destructive' });
+      if (status === 403) {
+        toast({
+          title: 'Access denied',
+          description: 'You do not have permission to view this resource.',
+          variant: 'destructive'
+        });
+        router.push('/');
+        return;
+      }
+
+      toast({ title: 'Request failed', description, variant: 'destructive' });
     },
     [router, toast]
   );

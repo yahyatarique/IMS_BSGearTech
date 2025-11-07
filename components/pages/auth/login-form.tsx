@@ -63,7 +63,9 @@ export function LoginForm() {
       }
     } catch (err: any) {
       console.error('Login error:', err);
-      setError(err);
+      // Extract error message from API error response
+      const errorMessage = err?.message || err?.error || 'Login failed. Please try again.';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

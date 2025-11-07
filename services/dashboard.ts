@@ -1,5 +1,4 @@
-import { AxiosResponse } from 'axios';
-import axiosInstance from '@/axios';
+import apiClient, { ApiResponse } from '@/lib/api-client';
 import {
   DashboardStatsResponse,
   DashboardRecentOrdersResponse,
@@ -22,9 +21,9 @@ export const endpoints = {
   profileTypes: `${BASE_URL}/profile-types`,
 };
 
-export const fetchDashboardStats = async (): Promise<AxiosResponse<DashboardStatsResponse>> => {
+export const fetchDashboardStats = async (): Promise<ApiResponse<DashboardStatsResponse>> => {
   try {
-    const res = await axiosInstance.get<DashboardStatsResponse>(endpoints.stats);
+    const res = await apiClient.get<DashboardStatsResponse>(endpoints.stats);
     return res;
   } catch (error) {
     throw error;
@@ -33,9 +32,9 @@ export const fetchDashboardStats = async (): Promise<AxiosResponse<DashboardStat
 
 export const fetchRecentOrders = async (
   params?: DashboardRecentOrdersQuery,
-): Promise<AxiosResponse<DashboardRecentOrdersResponse>> => {
+): Promise<ApiResponse<DashboardRecentOrdersResponse>> => {
  try {
-   return axiosInstance.get<DashboardRecentOrdersResponse>(endpoints.recentOrders, {
+   return apiClient.get<DashboardRecentOrdersResponse>(endpoints.recentOrders, {
     params,
   });
  } catch (error) {
@@ -46,9 +45,9 @@ export const fetchRecentOrders = async (
 
 export const fetchRecentBuyers = async (
   params?: DashboardRecentBuyersQuery,
-): Promise<AxiosResponse<DashboardRecentBuyersResponse>> => {
+): Promise<ApiResponse<DashboardRecentBuyersResponse>> => {
   try {
-    return axiosInstance.get<DashboardRecentBuyersResponse>(endpoints.recentBuyers, {
+    return apiClient.get<DashboardRecentBuyersResponse>(endpoints.recentBuyers, {
     params,
   }); 
   } catch (error) {
@@ -59,16 +58,16 @@ export const fetchRecentBuyers = async (
 
 export const fetchDashboardMaterials = async (
   params?: DashboardMaterialsQuery,
-): Promise<AxiosResponse<DashboardMaterialsResponse>> => {
-  return axiosInstance.get<DashboardMaterialsResponse>(endpoints.materials, {
+): Promise<ApiResponse<DashboardMaterialsResponse>> => {
+  return apiClient.get<DashboardMaterialsResponse>(endpoints.materials, {
     params,
   });
 };
 
 export const fetchDashboardProfileTypes = async (
   params?: DashboardProfileTypesQuery,
-): Promise<AxiosResponse<DashboardProfileTypesResponse>> => {
-  return axiosInstance.get<DashboardProfileTypesResponse>(endpoints.profileTypes, {
+): Promise<ApiResponse<DashboardProfileTypesResponse>> => {
+  return apiClient.get<DashboardProfileTypesResponse>(endpoints.profileTypes, {
     params,
   });
 };

@@ -1,4 +1,3 @@
-import { AxiosResponse } from 'axios';
 import { BaseResponse } from './base.api.type';
 import { MaterialType } from '../../schemas/inventory.schema';
 

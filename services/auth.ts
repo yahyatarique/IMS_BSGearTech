@@ -1,7 +1,6 @@
 'use client'
 
-import axios, { AxiosResponse } from "axios";
-import axiosInstance from "../axios";
+import apiClient, { ApiResponse } from "../lib/api-client";
 import { CreateUserInput, GetCurrentUserRes, LoginInput, LoginRes, RegisterRes, UpdateUserInput, UpdateUserRes } from "./types/auth.api.type";
 
 
@@ -15,41 +14,18 @@ export const endpoints = {
   me: `${BASE_URL}/me`,
 }
 
-export const login = async (payload: LoginInput): Promise<AxiosResponse<LoginRes>> => {
+export const login = async (payload: LoginInput): Promise<ApiResponse<LoginRes>> => {
   try {
-    const res: AxiosResponse<LoginRes> = await axiosInstance.post(endpoints.login, payload, {
-      withCredentials: false
-    });
+    const res = await apiClient.post<LoginRes>(endpoints.login, payload);
     return res;
   } catch (error) {
     throw error;
   }
 }
 
-export const register = async (payload: CreateUserInput): Promise<AxiosResponse<RegisterRes>> => {
+export const register = async (payload: CreateUserInput): Promise<ApiResponse<RegisterRes>> => {
   try {
-    const res = await axiosInstance.post(endpoints.register, payload, {
-      withCredentials: false
-    });
-    return res;
-  } catch (error) {
-    throw error;
-  }
-}
-
-
-export const updateUser = async (payload: UpdateUserInput): Promise<AxiosResponse<UpdateUserRes>> => {
-  try {
-    const res = await axiosInstance.put(endpoints.register, payload);
-    return res;
-  } catch (error) {
-    throw error;
-  }
-}
-
-export const logout = async (): Promise<AxiosResponse> => {
-  try {
-    const res = await axiosInstance.post(endpoints.logout);
+    const res = await apiClient.post<RegisterRes>(endpoints.register, payload);
     return res;
   } catch (error) {
     throw error;
@@ -57,17 +33,32 @@ export const logout = async (): Promise<AxiosResponse> => {
 }
 
 
-export const refreshToken = async (): Promise<AxiosResponse> => {
-  // Use plain axios to avoid interceptor loops, but with proper config
-  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-  return axios.post(`${BASE_URL}/api/${endpoints.refreshToken}`, undefined, {
-    withCredentials: true, // Include cookies with refresh token
-  });
+export const updateUser = async (payload: UpdateUserInput): Promise<ApiResponse<UpdateUserRes>> => {
+  try {
+    const res = await apiClient.put<UpdateUserRes>(endpoints.register, payload);
+    return res;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export const logout = async (): Promise<ApiResponse> => {
+  try {
+    const res = await apiClient.post(endpoints.logout);
+    return res;
+  } catch (error) {
+    throw error;
+  }
+}
+
+
+export const refreshToken = async (): Promise<ApiResponse> => {
+  return apiClient.post(endpoints.refreshToken);
 }
 
 export const getCurrentUser = async (): Promise<GetCurrentUserRes> => {
   try {
-    const res = await axiosInstance.get<GetCurrentUserRes>(endpoints.me);
+    const res = await apiClient.get<GetCurrentUserRes>(endpoints.me);
     return res.data;
   } catch (error) {
     throw error;
@@ -76,7 +67,7 @@ export const getCurrentUser = async (): Promise<GetCurrentUserRes> => {
 
 export const updateProfile = async (payload: Pick<UpdateUserInput, 'firstName' | 'lastName'>): Promise<UpdateUserRes> => {
   try {
-    const res = await axiosInstance.put<UpdateUserRes>(endpoints.me, payload);
+    const res = await apiClient.put<UpdateUserRes>(endpoints.me, payload);
     return res.data;
   } catch (error) {
     throw error;

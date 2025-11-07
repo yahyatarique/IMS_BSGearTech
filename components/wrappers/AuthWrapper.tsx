@@ -3,7 +3,7 @@
 import { useEffect, useState, ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { getCurrentUser } from '@/services/auth'
-import { tokenUtils } from '@/axios'
+import { tokenUtils } from '@/lib/api-client'
 
 interface AuthWrapperProps {
   children: ReactNode

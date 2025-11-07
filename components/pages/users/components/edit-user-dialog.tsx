@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { AxiosError } from 'axios';
+// Removed axios import - using native fetch
 import { Edit2 } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -89,8 +89,8 @@ export function EditUserDialog({ user, onSuccess, disabled }: EditUserDialogProp
       // Close dialog after successful operation
       setOpen(false);
     } catch (error) {
-      const axiosError = error as AxiosError<{ message?: string; error?: string }>;
-      const apiMessage = axiosError.response?.data?.message ?? axiosError.response?.data?.error;
+      const apiError = error as { message?: string; error?: string };
+      const apiMessage = apiError.message ?? apiError.error;
 
       toast({
         title: 'Error',

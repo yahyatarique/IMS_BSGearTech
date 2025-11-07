@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AxiosError } from 'axios';
+// Removed axios import - using native fetch
 import { UserPlus } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -94,10 +94,10 @@ export function CreateUserDialog({ onSuccess }: CreateUserDialogProps) {
       // Close dialog after successful operation
       setOpen(false);
     } catch (error) {
-      const axiosError = error as AxiosError<{ message?: string; error?: string }>;
-      const apiMessage = axiosError.response?.data?.message ?? axiosError.response?.data?.error;
+      const apiError = error as { status?: number; message?: string; error?: string };
+      const apiMessage = apiError.message ?? apiError.error;
 
-      if (axiosError.response?.status === 409) {
+      if (apiError.status === 409) {
         form.setError('username', {
           type: 'manual',
           message: apiMessage ?? 'Username already exists'

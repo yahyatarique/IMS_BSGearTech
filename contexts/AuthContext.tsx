@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { useRouter } from 'next/navigation';
 import { getCurrentUser, logout as logoutService } from '@/services/auth';
 import { User } from '@/services/types/auth.api.type';
-import { tokenUtils } from '@/axios';
+import { tokenUtils } from '@/lib/api-client';
 import { StorageKeys } from '../utils/constants';
 
 interface AuthContextType {

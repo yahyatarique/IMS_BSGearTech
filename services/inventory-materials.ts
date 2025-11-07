@@ -1,4 +1,4 @@
-import apiClient from '@/axios';
+import apiClient from '@/lib/api-client';
 import { BaseResponse } from './types/base.api.type';
 
 export interface InventoryMaterial {
@@ -20,19 +20,8 @@ export interface FetchInventoryMaterialsResponse extends BaseResponse<InventoryM
 export const fetchInventoryMaterials = async (
   params: FetchInventoryMaterialsParams = {}
 ): Promise<FetchInventoryMaterialsResponse> => {
-  const queryParams = new URLSearchParams();
-  
-  if (params.limit) {
-    queryParams.append('limit', params.limit.toString());
-  }
-  
-  if (params.search) {
-    queryParams.append('search', params.search);
-  }
-
-  const queryString = queryParams.toString();
-  const url = `/api/inventory/materials${queryString ? `?${queryString}` : ''}`;
-
-  const response = await apiClient.get<FetchInventoryMaterialsResponse>(url);
+  const response = await apiClient.get<FetchInventoryMaterialsResponse>('/inventory/materials', {
+    params: params as Record<string, string | number | boolean | undefined>,
+  });
   return response.data;
 };

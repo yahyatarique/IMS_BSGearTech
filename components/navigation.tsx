@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { logout } from '@/services/auth'
 import { Button } from '@/components/ui/button'
-import { tokenUtils } from '@/axios'
+import { tokenUtils } from '@/lib/api-client'
 
 export function Navigation() {
   const router = useRouter()
