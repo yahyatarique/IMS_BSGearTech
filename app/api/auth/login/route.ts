@@ -1,9 +1,46 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { SignJWT } from 'jose';
 import { LoginSchema } from '@/schemas/user.schema';
 import { testConnection } from '@/db/connection';
 import type { User as UserType } from '@/services/types/auth.api.type';
 import { errorResponse, sendResponse } from '../../../../utils/api-response';
+
+// Helper function to add CORS headers
+const addCorsHeaders = <T = any>(response: NextResponse<T>, origin: string | null): NextResponse<T> => {
+  const allowedOrigins = [
+    'https://bsgeartech.yahyatarique.dev',
+    'http://localhost:3000',
+    process.env.NEXT_PUBLIC_BASE_URL
+  ].filter(Boolean) as string[];
+
+  const isAllowedOrigin = origin && allowedOrigins.includes(origin);
+  
+  if (isAllowedOrigin) {
+    response.headers.set('Access-Control-Allow-Origin', origin);
+  } else if (origin) {
+    // For development, allow the origin if it's localhost
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      response.headers.set('Access-Control-Allow-Origin', origin);
+    } else {
+      response.headers.set('Access-Control-Allow-Origin', '*');
+    }
+  } else {
+    response.headers.set('Access-Control-Allow-Origin', '*');
+  }
+  
+  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-User-Role, X-Requested-With');
+  response.headers.set('Access-Control-Allow-Credentials', 'true');
+  
+  return response;
+};
+
+// Handle OPTIONS preflight request
+export async function OPTIONS(request: NextRequest) {
+  const origin = request.headers.get('origin');
+  const response = new NextResponse(null, { status: 204 });
+  return addCorsHeaders(response, origin);
+}
 
 // Lazy load User model to prevent module initialization errors
 const getUserModel = async () => {
@@ -12,6 +49,8 @@ const getUserModel = async () => {
 };
 
 export async function POST(request: NextRequest) {
+  const origin = request.headers.get('origin');
+  
   try {
     // Check environment variables first
     if (!process.env.DATABASE_URL) {
@@ -101,7 +140,10 @@ export async function POST(request: NextRequest) {
     };
 
     // Create response with user data only (tokens will be in cookies)
-    const response = sendResponse({ user: userData }, 'Login successful');
+    let response = sendResponse({ user: userData }, 'Login successful');
+    
+    // Add CORS headers
+    response = addCorsHeaders(response, origin);
 
     // Set HTTP-only cookies for tokens
     // Access token - short lived (15 minutes)
@@ -132,20 +174,24 @@ export async function POST(request: NextRequest) {
       stack: error instanceof Error ? error.stack : undefined
     });
 
+    let errorResp: NextResponse;
+    
     if (error instanceof Error && error.name === 'ZodError') {
-      return errorResponse('Invalid request data', 400, error.message);
-    }
-
-    // Check for Sequelize/database errors
-    if (error instanceof Error) {
+      errorResp = errorResponse('Invalid request data', 400, error.message);
+    } else if (error instanceof Error) {
+      // Check for Sequelize/database errors
       if (error.message.includes('DATABASE_URL') || error.message.includes('database')) {
-        return errorResponse('Database configuration error', 500);
+        errorResp = errorResponse('Database configuration error', 500);
+      } else if (error.message.includes('Cannot find module') || error.message.includes('pg')) {
+        errorResp = errorResponse('Database driver error', 500);
+      } else {
+        errorResp = errorResponse('Internal server error', 500);
       }
-      if (error.message.includes('Cannot find module') || error.message.includes('pg')) {
-        return errorResponse('Database driver error', 500);
-      }
+    } else {
+      errorResp = errorResponse('Internal server error', 500);
     }
-
-    return errorResponse('Internal server error', 500);
+    
+    // Add CORS headers to error response
+    return addCorsHeaders(errorResp, origin);
   }
 }
