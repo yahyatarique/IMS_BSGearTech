@@ -61,73 +61,138 @@ const getSequelize = () => {
     return sequelizeInstance;
   }
   
-  // Try to initialize - if it fails during build, return a proxy
+  // If DATABASE_URL is available, try to initialize immediately
+  // This is needed for Model.init() calls at module load time
+  if (process.env.DATABASE_URL) {
+    try {
+      sequelizeInstance = createSequelizeInstance();
+      return sequelizeInstance;
+    } catch (error: any) {
+      // Only use proxy if pg is not available (build-time)
+      const errorMessage = error?.message || '';
+      if (
+        errorMessage.includes('pg') || 
+        errorMessage.includes('Please install') ||
+        errorMessage.includes('Cannot find module')
+      ) {
+        // During build, pg might not be available - return proxy for runtime
+        console.warn('Sequelize initialization deferred (pg not available during build)');
+        return new Proxy({} as any, {
+          get(_target, prop) {
+            // Initialize on first property access (should work at runtime)
+            if (!sequelizeInstance) {
+              try {
+                sequelizeInstance = createSequelizeInstance();
+              } catch (e: any) {
+                console.error('Failed to initialize Sequelize at runtime:', e.message);
+                throw e;
+              }
+            }
+            const value = sequelizeInstance[prop];
+            // If it's a function, bind it to the instance
+            if (typeof value === 'function') {
+              return value.bind(sequelizeInstance);
+            }
+            return value;
+          }
+        });
+      }
+      // Re-throw other errors (like connection failures)
+      throw error;
+    }
+  }
+  
+  // No DATABASE_URL - return proxy that will fail at runtime with clear error
+  throw new Error('DATABASE_URL environment variable is required but not set');
+};
+
+export const testConnection = async () => {
   try {
-    sequelizeInstance = createSequelizeInstance();
-    return sequelizeInstance;
+    // Check DATABASE_URL first
+    if (!process.env.DATABASE_URL) {
+      console.error('DATABASE_URL environment variable is not set');
+      return false;
+    }
+
+    const sequelize = getSequelize();
+    
+    // Test connection with timeout
+    await Promise.race([
+      sequelize.authenticate(),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Connection timeout after 5 seconds')), 5000)
+      )
+    ]);
+    
+    console.log('Database connection has been established successfully.');
+    return true;
   } catch (error: any) {
-    // During build or if pg is not available, return a proxy
+    console.error('Unable to connect to the database:', {
+      message: error?.message || String(error),
+      name: error?.name || 'Unknown',
+      code: error?.code || 'N/A',
+      errno: error?.errno || 'N/A',
+      syscall: error?.syscall || 'N/A',
+      hostname: error?.hostname || 'N/A',
+      port: error?.port || 'N/A',
+      stack: error?.stack || 'No stack trace'
+    });
+    return false;
+  }
+};
+
+// Export sequelize instance
+// For Model.init() calls at module load time, we need the actual instance
+// The lazy loading happens in getSequelize() which handles build-time vs runtime
+let exportedSequelize: any = null;
+
+// Try to initialize immediately if DATABASE_URL is available
+// This ensures Model.init() works correctly
+if (process.env.DATABASE_URL) {
+  try {
+    exportedSequelize = getSequelize();
+  } catch (error: any) {
+    // If initialization fails (e.g., during build), use Proxy
     const errorMessage = error?.message || '';
-    if (
-      errorMessage.includes('pg') || 
-      errorMessage.includes('Please install') ||
-      errorMessage.includes('Cannot find module') ||
-      !process.env.DATABASE_URL
-    ) {
-      // Return a proxy that initializes on first actual use
-      return new Proxy({} as any, {
+    if (errorMessage.includes('pg') || errorMessage.includes('Please install') || errorMessage.includes('Cannot find module')) {
+      // Use Proxy for build-time compatibility
+      exportedSequelize = new Proxy({} as any, {
         get(_target, prop) {
-          // Initialize on first property access (should work at runtime)
+          // Initialize on first access
           if (!sequelizeInstance) {
             try {
               sequelizeInstance = createSequelizeInstance();
             } catch (e: any) {
               console.error('Failed to initialize Sequelize:', e.message);
-              // If it's a method call, return a function that will retry
-              if (typeof prop === 'string' && (prop === 'define' || prop === 'authenticate' || prop === 'query' || prop === 'transaction')) {
-                return async (...args: any[]) => {
-                  if (!sequelizeInstance) {
-                    sequelizeInstance = createSequelizeInstance();
-                  }
-                  const method = sequelizeInstance[prop];
-                  if (typeof method === 'function') {
-                    return method.apply(sequelizeInstance, args);
-                  }
-                  return method;
-                };
-              }
               throw e;
             }
           }
           const value = sequelizeInstance[prop];
-          // If it's a function, bind it to the instance
           if (typeof value === 'function') {
             return value.bind(sequelizeInstance);
           }
           return value;
         }
       });
+    } else {
+      // Re-throw connection errors
+      throw error;
     }
-    // Re-throw other errors
-    throw error;
   }
-};
+} else {
+  // No DATABASE_URL - use Proxy that will initialize at runtime
+  exportedSequelize = new Proxy({} as any, {
+    get(_target, prop) {
+      if (!sequelizeInstance) {
+        sequelizeInstance = createSequelizeInstance();
+      }
+      const value = sequelizeInstance[prop];
+      if (typeof value === 'function') {
+        return value.bind(sequelizeInstance);
+      }
+      return value;
+    }
+  });
+}
 
-export const testConnection = async () => {
-  try {
-    const sequelize = getSequelize();
-    await sequelize.authenticate();
-    console.log('Database connection has been established successfully.');
-    return true;
-  } catch (error) {
-    console.error('Unable to connect to the database:', error);
-    return false;
-  }
-};
-
-// Export a getter that initializes on first access
-export default new Proxy({} as any, {
-  get(_target, prop) {
-    return getSequelize()[prop];
-  }
-});
+export default exportedSequelize;

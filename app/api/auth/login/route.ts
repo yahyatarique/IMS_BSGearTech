@@ -8,8 +8,23 @@ import { errorResponse, sendResponse } from '../../../../utils/api-response';
 
 export async function POST(request: NextRequest) {
   try {
+    // Check environment variables first
+    if (!process.env.DATABASE_URL) {
+      console.error('DATABASE_URL is not set in environment');
+      return errorResponse('Database configuration error', 500);
+    }
+
+    if (!process.env.JWT_SECRET || !process.env.REFRESH_TOKEN_SECRET) {
+      console.error('JWT secrets are not set in environment');
+      return errorResponse('Authentication configuration error', 500);
+    }
+
     // Ensure database connection
-    await testConnection();
+    const connectionTest = await testConnection();
+    if (!connectionTest) {
+      console.error('Database connection test failed');
+      return errorResponse('Database connection failed', 500);
+    }
 
     const body = await request.json();
 
@@ -105,9 +120,24 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     console.error('Login error:', error);
+    console.error('Error details:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    });
 
     if (error instanceof Error && error.name === 'ZodError') {
       return errorResponse('Invalid request data', 400, error.message);
+    }
+
+    // Check for Sequelize/database errors
+    if (error instanceof Error) {
+      if (error.message.includes('DATABASE_URL') || error.message.includes('database')) {
+        return errorResponse('Database configuration error', 500);
+      }
+      if (error.message.includes('Cannot find module') || error.message.includes('pg')) {
+        return errorResponse('Database driver error', 500);
+      }
     }
 
     return errorResponse('Internal server error', 500);
