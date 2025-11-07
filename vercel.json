@@ -16,5 +16,4 @@
       "destination": "/api/:path*"
     }
   ],
-    "trailingSlash": undefined
 }
