@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { testConnection } from '@/db/connection';
 import Profiles from '@/db/models/Profiles';
 import { UpdateProfileSchema } from '@/schemas/profile.schema';
-import { successResponse, errorResponse, sendResponse } from '@/utils/api-response';
+import {  errorResponse, sendResponse } from '@/utils/api-response';
 import sequelize from '@/db/connection';
 
 // GET /api/profiles/[id] - Get single profile
@@ -21,7 +21,7 @@ export async function GET(
       return errorResponse('Profile not found', 404);
     }
 
-    return successResponse(profile.toJSON());
+    return sendResponse(profile.toJSON(), 'Profile fetched successfully');
   } catch (error: any) {
     console.error('Error fetching profile:', error);
     return errorResponse(error.message || 'Failed to fetch profile', 500);

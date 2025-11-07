@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, } from 'next/server';
 import { testConnection } from '@/db/connection';
 import Inventory from '@/db/models/Inventory';
 import { UpdateInventorySchema } from '@/schemas/inventory.schema';
-import { successResponse, errorResponse, sendResponse } from '@/utils/api-response';
+import {  errorResponse, sendResponse } from '@/utils/api-response';
 import sequelize from '@/db/connection';
 
 // GET /api/inventory/[id] - Get single inventory item
@@ -21,7 +21,7 @@ export async function GET(
       return errorResponse('Inventory item not found', 404);
     }
 
-    return successResponse(inventoryItem.toJSON());
+    return sendResponse(inventoryItem.toJSON(), 'Inventory item fetched successfully');
   } catch (error: any) {
     console.error('Error fetching inventory item:', error);
     return errorResponse(error.message || 'Failed to fetch inventory item', 500);
