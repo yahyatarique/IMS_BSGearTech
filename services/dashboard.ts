@@ -1,3 +1,5 @@
+'use client'
+
 import apiClient, { ApiResponse } from '@/lib/api-client';
 import {
   DashboardStatsResponse,
