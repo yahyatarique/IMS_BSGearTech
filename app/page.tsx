@@ -11,9 +11,6 @@ import { RecentBuyersBoundary } from '@/components/pages/dashboard/components/re
 import { MaterialsAndProfiles } from '@/components/pages/dashboard/components/materials-and-profiles';
 import { MateraiAndProfilesBoundary } from '../components/pages/dashboard/components/materials-and-profiles-boundary';
 
-// Force dynamic rendering to prevent prerendering during build
-export const dynamic = 'force-dynamic';
-
 export default function Home() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
