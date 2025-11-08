@@ -1,5 +1,7 @@
 import dotenv from 'dotenv';
 
+const pg = require('pg');
+
 const nodeEnv = process.env.NODE_ENV || 'development';
 const envFile = nodeEnv === 'production' ? '.env' : `.env.${nodeEnv}`;
 
@@ -19,17 +21,19 @@ const createSequelizeInstance = () => {
   if (!process.env.DATABASE_URL) {
     throw new Error('DATABASE_URL environment variable is required but not set');
   }
-  
+
   if (!SequelizeClass) {
     SequelizeClass = require('sequelize').Sequelize;
   }
-  
+
   // Parse DATABASE_URL to check if it's using Supabase pooler
-  const isPooler = process.env.DATABASE_URL.includes('pooler.supabase.com') || 
-                   process.env.DATABASE_URL.includes('pgbouncer=true');
-  
+  const isPooler =
+    process.env.DATABASE_URL.includes('pooler.supabase.com') ||
+    process.env.DATABASE_URL.includes('pgbouncer=true');
+
   return new SequelizeClass(process.env.DATABASE_URL, {
     dialect: 'postgres',
+    dialectModule: pg,
     dialectOptions: {
       ssl: {
         require: true,
@@ -50,11 +54,11 @@ const createSequelizeInstance = () => {
     // For serverless, we want minimal pooling since Supabase handles it
     // Transaction mode pooler (port 6543) requires different settings than session mode
     pool: {
-      max: 1,        // One connection per function invocation (conservative for nano tier)
-      min: 0,        // Allow pool to shrink to 0
-      idle: 0,       // Close idle connections immediately
+      max: 1, // One connection per function invocation (conservative for nano tier)
+      min: 0, // Allow pool to shrink to 0
+      idle: 0, // Close idle connections immediately
       acquire: 20000, // Longer timeout for nano tier (20 seconds)
-      evict: 5000,   // Clean up quickly (5 seconds)
+      evict: 5000, // Clean up quickly (5 seconds)
       handleDisconnects: true, // Automatically reconnect on disconnect
       // For transaction mode pooler, we need to be more careful
       ...(isPooler && {
@@ -72,7 +76,7 @@ const getSequelize = () => {
   if (sequelizeInstance) {
     return sequelizeInstance;
   }
-  
+
   // If DATABASE_URL is available, try to initialize immediately
   // This is needed for Model.init() calls at module load time
   if (process.env.DATABASE_URL) {
@@ -83,7 +87,7 @@ const getSequelize = () => {
       // Only use proxy if pg is not available (build-time)
       const errorMessage = error?.message || '';
       if (
-        errorMessage.includes('pg') || 
+        errorMessage.includes('pg') ||
         errorMessage.includes('Please install') ||
         errorMessage.includes('Cannot find module')
       ) {
@@ -113,7 +117,7 @@ const getSequelize = () => {
       throw error;
     }
   }
-  
+
   // No DATABASE_URL - return proxy that will fail at runtime with clear error
   throw new Error('DATABASE_URL environment variable is required but not set');
 };
@@ -130,8 +134,16 @@ export const testConnection = async (retries = 5): Promise<boolean> => {
     const dbUrl = process.env.DATABASE_URL;
     const isTransactionMode = dbUrl.includes(':6543') || dbUrl.includes('pgbouncer=true');
     const isSessionMode = dbUrl.includes(':5432') && !dbUrl.includes('pooler');
-    
-    console.log(`Database connection type: ${isTransactionMode ? 'Transaction Mode (6543)' : isSessionMode ? 'Session Mode (5432)' : 'Direct Connection'}`);
+
+    console.log(
+      `Database connection type: ${
+        isTransactionMode
+          ? 'Transaction Mode (6543)'
+          : isSessionMode
+          ? 'Session Mode (5432)'
+          : 'Direct Connection'
+      }`
+    );
 
     // Get a fresh sequelize instance for each attempt to avoid stale connections
     // In serverless, we want a new connection each time
@@ -144,22 +156,22 @@ export const testConnection = async (retries = 5): Promise<boolean> => {
       console.error('Failed to initialize Sequelize:', initError.message);
       return false;
     }
-    
+
     // For nano tier, use shorter timeout per attempt but more retries
     // Transaction mode pooler can be slower, so we adjust timeout
     const timeout = isTransactionMode ? 10000 : 8000; // 10s for transaction mode, 8s for session
-    
+
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
         console.log(`Connection attempt ${attempt + 1}/${retries + 1}...`);
-        
+
         await Promise.race([
           sequelize.authenticate(),
-          new Promise((_, reject) => 
+          new Promise((_, reject) =>
             setTimeout(() => reject(new Error(`Connection timeout after ${timeout}ms`)), timeout)
           )
         ]);
-        
+
         console.log('Database connection has been established successfully.');
         return true;
       } catch (authError: any) {
@@ -172,23 +184,23 @@ export const testConnection = async (retries = 5): Promise<boolean> => {
           hostname: authError?.hostname || 'N/A',
           port: authError?.port || 'N/A'
         };
-        
+
         console.error(`Connection attempt ${attempt + 1} failed:`, errorDetails);
-        
+
         // Check if we should retry
-        const shouldRetry = attempt < retries && (
-          authError?.code === 'ETIMEDOUT' || 
-          authError?.code === 'ECONNREFUSED' ||
-          authError?.code === 'ENOTFOUND' ||
-          authError?.code === 'ECONNRESET' ||
-          authError?.code === 'EAI_AGAIN' ||
-          authError?.message?.includes('timeout') ||
-          authError?.message?.includes('too many connections') ||
-          authError?.message?.includes('connection') ||
-          authError?.message?.includes('ECONN') ||
-          authError?.message?.includes('ENOTFOUND')
-        );
-        
+        const shouldRetry =
+          attempt < retries &&
+          (authError?.code === 'ETIMEDOUT' ||
+            authError?.code === 'ECONNREFUSED' ||
+            authError?.code === 'ENOTFOUND' ||
+            authError?.code === 'ECONNRESET' ||
+            authError?.code === 'EAI_AGAIN' ||
+            authError?.message?.includes('timeout') ||
+            authError?.message?.includes('too many connections') ||
+            authError?.message?.includes('connection') ||
+            authError?.message?.includes('ECONN') ||
+            authError?.message?.includes('ENOTFOUND'));
+
         if (shouldRetry) {
           // Close existing connection before retry to free up resources
           try {
@@ -199,12 +211,12 @@ export const testConnection = async (retries = 5): Promise<boolean> => {
             // Ignore close errors - connection might already be closed
             console.log('Connection close warning (ignored):', closeError.message);
           }
-          
+
           // Exponential backoff: 500ms, 1s, 2s, 4s, 8s
           const delay = Math.min(Math.pow(2, attempt) * 500, 8000);
           console.log(`Retrying connection in ${delay}ms... (${retries - attempt} retries left)`);
-          await new Promise(resolve => setTimeout(resolve, delay));
-          
+          await new Promise((resolve) => setTimeout(resolve, delay));
+
           // Create a new sequelize instance for the retry
           try {
             sequelizeInstance = null;
@@ -224,7 +236,7 @@ export const testConnection = async (retries = 5): Promise<boolean> => {
         }
       }
     }
-    
+
     return false;
   } catch (error: any) {
     const errorDetails = {
@@ -237,7 +249,7 @@ export const testConnection = async (retries = 5): Promise<boolean> => {
       port: error?.port || 'N/A',
       stack: error?.stack || 'No stack trace'
     };
-    
+
     console.error('Unexpected error in testConnection:', errorDetails);
     return false;
   }
@@ -256,7 +268,11 @@ if (process.env.DATABASE_URL) {
   } catch (error: any) {
     // If initialization fails (e.g., during build), use Proxy
     const errorMessage = error?.message || '';
-    if (errorMessage.includes('pg') || errorMessage.includes('Please install') || errorMessage.includes('Cannot find module')) {
+    if (
+      errorMessage.includes('pg') ||
+      errorMessage.includes('Please install') ||
+      errorMessage.includes('Cannot find module')
+    ) {
       // Use Proxy for build-time compatibility
       exportedSequelize = new Proxy({} as any, {
         get(_target, prop) {
