@@ -63,14 +63,16 @@ export async function POST(request: NextRequest) {
       return errorResponse('Authentication configuration error', 500);
     }
 
-    // Test database connection (with retries for nano tier)
-    // Note: For serverless, we test connection but proceed anyway
-    // Sequelize will handle connection retries automatically
-    const connectionTest = await testConnection();
+    // Test database connection with aggressive retries for nano tier
+    // Nano tier has connection limits and may need multiple attempts
+    const connectionTest = await testConnection(5); // 5 retries for nano tier
     if (!connectionTest) {
-      console.warn('Database connection test failed, but proceeding - Sequelize will retry on query');
-      // Don't fail immediately - let the actual query attempt the connection
-      // This helps with nano tier cold starts
+      console.error('Database connection test failed after all retries');
+      // Return error with CORS headers
+      return addCorsHeaders(
+        errorResponse('Database connection failed. Please try again in a moment.', 503),
+        origin
+      );
     }
 
     const body = await request.json();
@@ -106,10 +108,28 @@ export async function POST(request: NextRequest) {
       )) {
         console.log('Retrying database query after connection error...');
         await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
-        _user = await User.findOne({
-          where: { username }
-        });
+        try {
+          _user = await User.findOne({
+            where: { username }
+          });
+        } catch (retryError: any) {
+          console.error('Retry also failed:', {
+            message: retryError?.message,
+            name: retryError?.name,
+            code: retryError?.code,
+            stack: retryError?.stack
+          });
+          throw retryError;
+        }
       } else {
+        // Log the full error for debugging
+        console.error('Database query failed:', {
+          message: dbError?.message,
+          name: dbError?.name,
+          code: dbError?.code,
+          stack: dbError?.stack,
+          originalError: dbError
+        });
         throw dbError;
       }
     }

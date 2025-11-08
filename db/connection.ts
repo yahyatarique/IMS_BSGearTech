@@ -48,13 +48,22 @@ const createSequelizeInstance = () => {
     // Optimize pool for serverless + Supabase nano tier
     // Nano tier: 60 direct connections, 200 pooled connections limit
     // For serverless, we want minimal pooling since Supabase handles it
+    // Transaction mode pooler (port 6543) requires different settings than session mode
     pool: {
       max: 1,        // One connection per function invocation (conservative for nano tier)
       min: 0,        // Allow pool to shrink to 0
       idle: 0,       // Close idle connections immediately
-      acquire: 15000, // Longer timeout for nano tier (15 seconds)
+      acquire: 20000, // Longer timeout for nano tier (20 seconds)
       evict: 5000,   // Clean up quickly (5 seconds)
-      handleDisconnects: true // Automatically reconnect on disconnect
+      handleDisconnects: true, // Automatically reconnect on disconnect
+      // For transaction mode pooler, we need to be more careful
+      ...(isPooler && {
+        // Additional settings for transaction mode pooler
+        validate: (client: any) => {
+          // Quick validation - just check if client exists
+          return client !== null && client !== undefined;
+        }
+      })
     }
   });
 };
@@ -109,7 +118,7 @@ const getSequelize = () => {
   throw new Error('DATABASE_URL environment variable is required but not set');
 };
 
-export const testConnection = async (retries = 3): Promise<boolean> => {
+export const testConnection = async (retries = 5): Promise<boolean> => {
   try {
     // Check DATABASE_URL first
     if (!process.env.DATABASE_URL) {
@@ -117,60 +126,106 @@ export const testConnection = async (retries = 3): Promise<boolean> => {
       return false;
     }
 
-    const sequelize = getSequelize();
+    // Parse DATABASE_URL to understand connection type
+    const dbUrl = process.env.DATABASE_URL;
+    const isTransactionMode = dbUrl.includes(':6543') || dbUrl.includes('pgbouncer=true');
+    const isSessionMode = dbUrl.includes(':5432') && !dbUrl.includes('pooler');
     
-    // For serverless environments, use a shorter timeout but allow retries
-    // Nano tier may have cold starts, so we retry more aggressively
-    const timeout = 8000; // 8 seconds per attempt
-    
+    console.log(`Database connection type: ${isTransactionMode ? 'Transaction Mode (6543)' : isSessionMode ? 'Session Mode (5432)' : 'Direct Connection'}`);
+
+    // Get a fresh sequelize instance for each attempt to avoid stale connections
+    // In serverless, we want a new connection each time
+    let sequelize: any;
     try {
-      await Promise.race([
-        sequelize.authenticate(),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Connection timeout')), timeout)
-        )
-      ]);
-      
-      console.log('Database connection has been established successfully.');
-      return true;
-    } catch (authError: any) {
-      // If authentication fails, log and retry
-      const errorDetails = {
-        message: authError?.message || String(authError),
-        name: authError?.name || 'Unknown',
-        code: authError?.code || 'N/A',
-        errno: authError?.errno || 'N/A',
-        syscall: authError?.syscall || 'N/A',
-        hostname: authError?.hostname || 'N/A',
-        port: authError?.port || 'N/A'
-      };
-      
-      console.error(`Connection attempt failed (${retries} retries left):`, errorDetails);
-      
-      // Retry logic for nano tier connection limits
-      // Supabase nano tier has connection limits (60 direct, 200 pooled)
-      // Retry with exponential backoff for various connection errors
-      if (retries > 0) {
-        const shouldRetry = 
+      // Force a new instance by clearing the cached one
+      sequelizeInstance = null;
+      sequelize = getSequelize();
+    } catch (initError: any) {
+      console.error('Failed to initialize Sequelize:', initError.message);
+      return false;
+    }
+    
+    // For nano tier, use shorter timeout per attempt but more retries
+    // Transaction mode pooler can be slower, so we adjust timeout
+    const timeout = isTransactionMode ? 10000 : 8000; // 10s for transaction mode, 8s for session
+    
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        console.log(`Connection attempt ${attempt + 1}/${retries + 1}...`);
+        
+        await Promise.race([
+          sequelize.authenticate(),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error(`Connection timeout after ${timeout}ms`)), timeout)
+          )
+        ]);
+        
+        console.log('Database connection has been established successfully.');
+        return true;
+      } catch (authError: any) {
+        const errorDetails = {
+          message: authError?.message || String(authError),
+          name: authError?.name || 'Unknown',
+          code: authError?.code || 'N/A',
+          errno: authError?.errno || 'N/A',
+          syscall: authError?.syscall || 'N/A',
+          hostname: authError?.hostname || 'N/A',
+          port: authError?.port || 'N/A'
+        };
+        
+        console.error(`Connection attempt ${attempt + 1} failed:`, errorDetails);
+        
+        // Check if we should retry
+        const shouldRetry = attempt < retries && (
           authError?.code === 'ETIMEDOUT' || 
           authError?.code === 'ECONNREFUSED' ||
           authError?.code === 'ENOTFOUND' ||
           authError?.code === 'ECONNRESET' ||
+          authError?.code === 'EAI_AGAIN' ||
           authError?.message?.includes('timeout') ||
           authError?.message?.includes('too many connections') ||
           authError?.message?.includes('connection') ||
-          authError?.message?.includes('ECONN');
+          authError?.message?.includes('ECONN') ||
+          authError?.message?.includes('ENOTFOUND')
+        );
         
         if (shouldRetry) {
-          const delay = Math.pow(2, 4 - retries) * 500; // 500ms, 1s, 2s, 4s
-          console.log(`Retrying connection in ${delay}ms... (${retries} retries left)`);
+          // Close existing connection before retry to free up resources
+          try {
+            if (sequelize && typeof sequelize.close === 'function') {
+              await sequelize.close();
+            }
+          } catch (closeError: any) {
+            // Ignore close errors - connection might already be closed
+            console.log('Connection close warning (ignored):', closeError.message);
+          }
+          
+          // Exponential backoff: 500ms, 1s, 2s, 4s, 8s
+          const delay = Math.min(Math.pow(2, attempt) * 500, 8000);
+          console.log(`Retrying connection in ${delay}ms... (${retries - attempt} retries left)`);
           await new Promise(resolve => setTimeout(resolve, delay));
-          return testConnection(retries - 1);
+          
+          // Create a new sequelize instance for the retry
+          try {
+            sequelizeInstance = null;
+            sequelize = getSequelize();
+          } catch (e: any) {
+            console.error('Failed to reinitialize Sequelize for retry:', e.message);
+            // Continue with existing instance if reinit fails
+          }
+        } else {
+          // Don't retry - log final error
+          const finalErrorDetails = {
+            ...errorDetails,
+            stack: authError?.stack || 'No stack trace'
+          };
+          console.error('Unable to connect to the database after all retries:', finalErrorDetails);
+          return false;
         }
       }
-      
-      throw authError;
     }
+    
+    return false;
   } catch (error: any) {
     const errorDetails = {
       message: error?.message || String(error),
@@ -183,7 +238,7 @@ export const testConnection = async (retries = 3): Promise<boolean> => {
       stack: error?.stack || 'No stack trace'
     };
     
-    console.error('Unable to connect to the database after all retries:', errorDetails);
+    console.error('Unexpected error in testConnection:', errorDetails);
     return false;
   }
 };
