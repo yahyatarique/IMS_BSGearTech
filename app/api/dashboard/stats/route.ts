@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { testConnection } from '@/db/connection';
-import { Buyer, Orders, Inventory } from '@/db/models';
+import { Buyer, OrderProfile, Orders } from '@/db/models';
 import { errorResponse, sendResponse } from '@/utils/api-response';
 import { Op } from 'sequelize';
 import { DashboardStatsQuerySchema } from '@/schemas/dashboard.schema';
@@ -77,17 +77,17 @@ export async function GET(request: NextRequest) {
       ? (currentMonthBuyers > 0 ? 100 : 0)
       : ((currentMonthBuyers - previousMonthBuyers) / previousMonthBuyers) * 100;
 
-    // Total Products (calculated from inventory)
+    // Total Products (calculated from order profiles activity)
     const [totalProducts, currentMonthProducts, previousMonthProducts] = await Promise.all([
-      Inventory.count(),
-      Inventory.count({
+      OrderProfile.count(),
+      OrderProfile.count({
         where: {
           created_at: {
             [Op.gte]: currentMonthStart
           }
         }
       }),
-      Inventory.count({
+      OrderProfile.count({
         where: {
           created_at: {
             [Op.between]: [previousMonthStart, previousMonthEnd]
