@@ -1,5 +1,3 @@
-'use client'
-
 import { INVALID_CREDS, INVALID_PASSWORD, StorageKeys } from '../utils/constants';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
