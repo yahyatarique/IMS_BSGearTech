@@ -7,7 +7,7 @@ import axios, {
 import { INVALID_CREDS, INVALID_PASSWORD, StorageKeys } from '../utils/constants';
 import { refreshToken } from '../services/auth';
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 const axiosInstance = axios.create({
   baseURL: `${BASE_URL}/api`,
