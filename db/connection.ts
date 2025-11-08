@@ -1,5 +1,7 @@
 import dotenv from 'dotenv';
 
+import pg from 'pg';
+
 const nodeEnv = process.env.NODE_ENV || 'development';
 const envFile = nodeEnv === 'production' ? '.env' : `.env.${nodeEnv}`;
 
@@ -30,6 +32,7 @@ const createSequelizeInstance = () => {
   
   return new SequelizeClass(process.env.DATABASE_URL, {
     dialect: 'postgres',
+    dialectModule: pg,
     dialectOptions: {
       ssl: {
         require: true,
