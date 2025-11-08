@@ -133,16 +133,3 @@ Processes: -** Process Type: `Order.process.**type\*\*`=`Milling - Fitting - Key
 
 - Total Order Value: `Order.**totalOrderValue**` = \*\*`{Material}+{Turning}+{TC+TG}+{HT}+{Process1}+{Process2}`
 - Grand Total:** `Order.**grandTotal**` = **`{FinalOV} + {Profit Margin, number, %}`\*\*
-- Convert to Order
-- Status: `Draft/Accepted/RawMaterialFinalize/`
-
-### **Inventory**
-
-- Material Type: `CR-5`
-- Material Weight: `weight` kg
-- Cut-Size: `Width` X `Height`
-- Related POs: `PO Number`
-
-# Related Docs
-
-[Types Documentation](/TypesDocumentation.md)
