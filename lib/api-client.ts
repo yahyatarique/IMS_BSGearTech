@@ -5,7 +5,7 @@ import { INVALID_CREDS, INVALID_PASSWORD, StorageKeys } from '../utils/constants
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 // Ensure BASE_URL doesn't have trailing slash, then add /api
 const cleanBaseUrl = BASE_URL.replace(/\/+$/, '');
-const API_BASE_URL = `${cleanBaseUrl}/api`;
+const API_BASE_URL = `/api`;
 
 // Types
 export interface ApiResponse<T = any> {
