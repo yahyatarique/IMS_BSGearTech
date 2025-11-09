@@ -1,8 +1,8 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
 /**
@@ -31,4 +31,15 @@ export function formatDateTime(date: Date | string): string {
     hour: '2-digit',
     minute: '2-digit'
   }).format(dateObj);
+}
+
+/**
+ * Format number as INR currency
+ * Example: "₹1,23,456.00"
+ */
+export function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR'
+  }).format(amount);
 }

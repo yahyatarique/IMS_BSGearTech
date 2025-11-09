@@ -21,37 +21,58 @@ interface OrdersAttributes {
   user_id?: string;
 }
 
-interface OrdersCreationAttributes extends Optional<OrdersAttributes, 'id' | 'created_at' | 'status' | 'grand_total' | 'material_cost' | 'process_costs' | 'turning_rate' | 'ht_cost' | 'total_order_value' | 'profit_margin'> {}
+interface OrdersCreationAttributes
+  extends Optional<
+    OrdersAttributes,
+    | 'id'
+    | 'created_at'
+    | 'status'
+    | 'grand_total'
+    | 'material_cost'
+    | 'process_costs'
+    | 'turning_rate'
+    | 'ht_cost'
+    | 'total_order_value'
+    | 'profit_margin'
+  > {}
 
 class Orders extends Model<OrdersAttributes, OrdersCreationAttributes> implements OrdersAttributes {
-  public id!: string;
-  public order_number!: string;
-  public readonly created_at!: Date;
-  public buyer_id?: string;
-  public status!: '0' | '1' | '2';
-  public grand_total!: number;
-  public material_cost!: number;
-  public process_costs!: number;
-  public turning_rate!: number;
-  public teeth_count?: number;
-  public module?: number;
-  public face?: number;
-  public weight?: number;
-  public ht_cost!: number;
-  public total_order_value!: number;
-  public profit_margin!: number;
-  public user_id?: string;
+  declare id: string;
+  declare order_number: string;
+  declare readonly created_at: Date;
+  declare buyer_id?: string;
+  declare status: '0' | '1' | '2';
+  declare grand_total: number;
+  declare material_cost: number;
+  declare process_costs: number;
+  declare turning_rate: number;
+  declare teeth_count?: number;
+  declare module?: number;
+  declare face?: number;
+  declare weight?: number;
+  declare ht_cost: number;
+  declare total_order_value: number;
+  declare profit_margin: number;
+  declare user_id?: string;
 
   // Association method
   static associate(models: any) {
-    Orders.belongsTo(models.User, { 
-      foreignKey: 'user_id', 
-      as: 'user' 
+    Orders.belongsTo(models.User, {
+      foreignKey: 'user_id',
+      targetKey: 'id',
+      as: 'user'
     });
-    
-    Orders.belongsTo(models.Buyer, { 
-      foreignKey: 'buyer_id', 
-      as: 'buyer' 
+
+    // Define Buyer relationship
+    Orders.belongsTo(models.Buyer, {
+      foreignKey: {
+        name: 'buyer_id',
+        allowNull: true
+      },
+      targetKey: 'id',
+      as: 'buyer',
+      onDelete: 'SET NULL',
+      onUpdate: 'CASCADE'
     });
 
     Orders.hasMany(models.OrderProfile, {
@@ -61,7 +82,7 @@ class Orders extends Model<OrdersAttributes, OrdersCreationAttributes> implement
 
     Orders.hasMany(models.OrderInventory, {
       foreignKey: 'order_id',
-      as: 'orderInventoryItems',
+      as: 'orderInventoryItems'
     });
   }
 }
@@ -71,96 +92,96 @@ Orders.init(
     id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
+      primaryKey: true
     },
     order_number: {
       type: DataTypes.TEXT,
       allowNull: false,
-      unique: true,
+      unique: true
     },
     created_at: {
       type: DataTypes.DATE,
       allowNull: false,
-      defaultValue: DataTypes.NOW,
+      defaultValue: DataTypes.NOW
     },
     buyer_id: {
       type: DataTypes.UUID,
       allowNull: true,
       references: {
         model: 'buyer',
-        key: 'id',
-      },
+        key: 'id'
+      }
     },
     status: {
       type: DataTypes.ENUM('0', '1', '2'),
       allowNull: false,
-      defaultValue: '0',
+      defaultValue: '0'
     },
     grand_total: {
       type: DataTypes.DECIMAL(14, 2),
       allowNull: false,
-      defaultValue: 0,
+      defaultValue: 0
     },
     material_cost: {
       type: DataTypes.DECIMAL(14, 2),
       allowNull: false,
-      defaultValue: 0,
+      defaultValue: 0
     },
     process_costs: {
       type: DataTypes.DECIMAL(14, 2),
       allowNull: false,
-      defaultValue: 0,
+      defaultValue: 0
     },
     turning_rate: {
       type: DataTypes.DECIMAL(14, 2),
       allowNull: false,
-      defaultValue: 0,
+      defaultValue: 0
     },
     teeth_count: {
       type: DataTypes.INTEGER,
-      allowNull: true,
+      allowNull: true
     },
     module: {
       type: DataTypes.DECIMAL(8, 3),
-      allowNull: true,
+      allowNull: true
     },
     face: {
       type: DataTypes.DECIMAL(8, 3),
-      allowNull: true,
+      allowNull: true
     },
     weight: {
       type: DataTypes.DECIMAL(10, 3),
-      allowNull: true,
+      allowNull: true
     },
     ht_cost: {
       type: DataTypes.DECIMAL(14, 2),
       allowNull: false,
-      defaultValue: 0,
+      defaultValue: 0
     },
     total_order_value: {
       type: DataTypes.DECIMAL(14, 2),
       allowNull: false,
-      defaultValue: 0,
+      defaultValue: 0
     },
     profit_margin: {
       type: DataTypes.DECIMAL(5, 2),
       allowNull: false,
-      defaultValue: 0,
+      defaultValue: 0
     },
     user_id: {
       type: DataTypes.UUID,
       allowNull: true,
       references: {
         model: 'users',
-        key: 'id',
-      },
-    },
+        key: 'id'
+      }
+    }
   },
   {
     sequelize,
     tableName: 'orders',
     modelName: 'Orders',
-    timestamps: false,
+    timestamps: false
   }
 );
 

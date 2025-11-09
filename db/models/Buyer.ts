@@ -15,26 +15,34 @@ interface BuyerAttributes {
   updated_at: Date;
 }
 
-interface BuyerCreationAttributes extends Optional<BuyerAttributes, 'id' | 'created_at' | 'updated_at' | 'status'> {}
+interface BuyerCreationAttributes
+  extends Optional<BuyerAttributes, 'id' | 'created_at' | 'updated_at' | 'status'> {}
 
 class Buyer extends Model<BuyerAttributes, BuyerCreationAttributes> implements BuyerAttributes {
-  public id!: string;
-  public name!: string;
-  public contact_details!: object;
-  public gst_number?: string;
-  public pan_number?: string;
-  public tin_number?: string;
-  public org_name!: string;
-  public org_address!: string;
-  public status!: 'active' | 'inactive';
-  public readonly created_at!: Date;
-  public readonly updated_at!: Date;
+  declare id: string;
+  declare name: string;
+  declare contact_details: object;
+  declare gst_number?: string;
+  declare pan_number?: string;
+  declare tin_number?: string;
+  declare org_name: string;
+  declare org_address: string;
+  declare status: 'active' | 'inactive';
+  declare readonly created_at: Date;
+  declare readonly updated_at: Date;
 
   // Association method
   static associate(models: any) {
-    Buyer.hasMany(models.Orders, { 
-      foreignKey: 'buyer_id', 
-      as: 'orders' 
+    // Define Orders relationship
+    Buyer.hasMany(models.Orders, {
+      foreignKey: {
+        name: 'buyer_id',
+        allowNull: true
+      },
+      sourceKey: 'id',
+      as: 'orders',
+      onDelete: 'SET NULL',
+      onUpdate: 'CASCADE'
     });
   }
 }
@@ -44,51 +52,51 @@ Buyer.init(
     id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
+      primaryKey: true
     },
     name: {
       type: DataTypes.TEXT,
-      allowNull: false,
+      allowNull: false
     },
     contact_details: {
       type: DataTypes.JSONB,
-      allowNull: false,
+      allowNull: false
     },
     gst_number: {
       type: DataTypes.TEXT,
-      allowNull: true,
+      allowNull: true
     },
     pan_number: {
       type: DataTypes.TEXT,
-      allowNull: true,
+      allowNull: true
     },
     tin_number: {
       type: DataTypes.TEXT,
-      allowNull: true,
+      allowNull: true
     },
     org_name: {
       type: DataTypes.TEXT,
-      allowNull: false,
+      allowNull: false
     },
     org_address: {
       type: DataTypes.TEXT,
-      allowNull: false,
+      allowNull: false
     },
     status: {
       type: DataTypes.ENUM('active', 'inactive', 'blocked'),
       allowNull: false,
-      defaultValue: 'active',
+      defaultValue: 'active'
     },
     created_at: {
       type: DataTypes.DATE,
       allowNull: false,
-      defaultValue: DataTypes.NOW,
+      defaultValue: DataTypes.NOW
     },
     updated_at: {
       type: DataTypes.DATE,
       allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
+      defaultValue: DataTypes.NOW
+    }
   },
   {
     sequelize,
@@ -96,7 +104,7 @@ Buyer.init(
     modelName: 'Buyer',
     timestamps: true,
     createdAt: 'created_at',
-    updatedAt: 'updated_at',
+    updatedAt: 'updated_at'
   }
 );
 
