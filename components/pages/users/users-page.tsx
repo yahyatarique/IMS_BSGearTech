@@ -10,7 +10,7 @@ import type { UserRecord, UsersListMeta } from '@/services/types/users.api.type'
 import { UsersStats } from '@/components/pages/users/components/users-stats';
 import { UsersCardGrid } from '@/components/pages/users/components/users-card-grid';
 import { UserDetailsDialog } from '@/components/pages/users/components/user-details-dialog';
-import { CreateUserDialog } from '@/components/pages/users/components/create-user-dialog';
+import { UserFormDialog } from '@/components/pages/users/components/user-form-dialog';
 import { PageWrapper } from '@/components/ui/page-wrapper';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, UserCircle } from 'lucide-react';
@@ -357,7 +357,7 @@ export default function UsersPage() {
             <RefreshCw className="h-4 w-4" />
             {isRefreshing ? 'Refreshing' : 'Refresh'}
           </Button>
-          <CreateUserDialog onSuccess={() => loadUsers({ page: 1, silent: true })} />
+          <UserFormDialog onSuccess={() => loadUsers({ page: 1, silent: true })} />
         </>
       }
     >

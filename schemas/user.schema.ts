@@ -39,3 +39,28 @@ export const UsersListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(10),
 });
+
+
+
+//FORM SCHEMA
+export const userFormSchema = z
+  .object({
+    username: z.string().min(3, 'Username must be at least 3 characters'),
+    password: z.string().min(6, 'Password must be at least 6 characters').optional(),
+    confirmPassword: z.string().optional(),
+    firstName: z.string().min(2, 'First name must be at least 2 characters'),
+    lastName: z.string().min(2, 'Last name must be at least 2 characters')
+  })
+  .refine(
+    (data) => {
+      if (data.password || data.confirmPassword) {
+        return data.password === data.confirmPassword;
+      }
+      return true;
+    },
+    {
+      message: "Passwords don't match",
+      path: ['confirmPassword']
+    }
+  );
+  
