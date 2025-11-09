@@ -9,12 +9,13 @@ import { sendResponse, errorResponse } from '@/utils/api-response';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await testConnection();
 
-    const order = await Orders.findByPk(params.id, {
+    const paramsPromise = await params;
+    const order = await Orders.findByPk(paramsPromise.id, {
       include: [
         { model: Buyer, as: 'buyer', attributes: ['id', 'name', 'org_name'] },
         { model: User, as: 'user', attributes: ['id', 'username', 'first_name', 'last_name'] }
@@ -33,14 +34,15 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const transaction = await sequelize.transaction();
+  const paramsPromise = await params;
   
   try {
     await testConnection();
 
-    const order = await Orders.findByPk(params.id);
+    const order = await Orders.findByPk(paramsPromise.id);
 
     if (!order) {
       await transaction.rollback();
@@ -53,7 +55,7 @@ export async function PUT(
     await order.update(validatedData, { transaction });
     await transaction.commit();
 
-    const updatedOrder = await Orders.findByPk(params.id, {
+    const updatedOrder = await Orders.findByPk(paramsPromise.id, {
       include: [
         { model: Buyer, as: 'buyer', attributes: ['id', 'name', 'org_name'] },
         { model: User, as: 'user', attributes: ['id', 'username', 'first_name', 'last_name'] }
@@ -74,14 +76,15 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const transaction = await sequelize.transaction();
+  const paramsPromise = await params;
   
   try {
     await testConnection();
 
-    const order = await Orders.findByPk(params.id);
+    const order = await Orders.findByPk(paramsPromise.id);
 
     if (!order) {
       await transaction.rollback();
