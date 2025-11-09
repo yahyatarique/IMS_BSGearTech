@@ -77,17 +77,17 @@ export function LoginForm() {
         <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
         <div className="relative z-10 flex h-full flex-col items-center justify-center p-12 text-white">
           <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center">
-                <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                </svg>
-              </div>
-              <div>
-                <h1 className="text-4xl font-bold">BS GearTech</h1>
-                <p className="text-sm text-slate-300">Precision Engineering Solutions</p>
-              </div>
+            <div className="flex justify-center mb-6">
+              <Image
+                src="/images/logo/bs_geartech_logo.png"
+                alt="BS GearTech Logo"
+                width={300}
+                height={90}
+                unoptimized
+                className="h-16 w-auto"
+              />
             </div>
+            <p className="text-center text-sm text-slate-300">Precision Engineering Solutions</p>
           </div>
 
           <div className="max-w-md text-center space-y-4">
@@ -131,16 +131,15 @@ export function LoginForm() {
 
         <Card className="w-full max-w-md relative z-10 shadow-2xl">
           <CardHeader className="space-y-1">
-            <div className="flex items-center gap-2 mb-4 lg:hidden">
-              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                </svg>
-              </div>
-              <div>
-                <div className="font-bold text-lg">BS GearTech</div>
-                <div className="text-xs text-muted-foreground">IMS Portal</div>
-              </div>
+            <div className="flex justify-center mb-6 lg:hidden">
+              <Image
+                src="/images/logo/bs_geartech_logo.png"
+                alt="BS GearTech Logo"
+                width={200}
+                height={60}
+                unoptimized
+                className="h-12 w-auto"
+              />
             </div>
             <CardTitle className="text-2xl">Welcome Back</CardTitle>
             <CardDescription>Enter your credentials to access the inventory system</CardDescription>
