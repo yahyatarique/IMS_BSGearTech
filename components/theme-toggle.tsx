@@ -11,19 +11,50 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
-export function ThemeToggle() {
+interface ThemeToggleProps {
+  variant?: 'dropdown' | 'cycle'
+}
+
+export function ThemeToggle({ variant = 'dropdown' }: ThemeToggleProps) {
   const { setTheme, theme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
 
-  // useEffect only runs on the client, so now we can safely show the UI
   React.useEffect(() => {
     setMounted(true)
   }, [])
+
+  const cycleTheme = () => {
+    if (theme === 'light') setTheme('dark')
+    else if (theme === 'dark') setTheme('system')
+    else setTheme('light')
+  }
 
   if (!mounted) {
     return (
       <Button variant="ghost" size="sm" className="gap-2">
         <Sun className="h-4 w-4" />
+      </Button>
+    )
+  }
+
+  if (variant === 'cycle') {
+    return (
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={cycleTheme}
+        className="gap-2 text-gray-300 hover:text-white hover:bg-white/5"
+      >
+        {theme === 'light' ? (
+          <Sun className="h-4 w-4" />
+        ) : theme === 'dark' ? (
+          <Moon className="h-4 w-4" />
+        ) : (
+          <Monitor className="h-4 w-4" />
+        )}
+        <span className="text-sm">
+          {theme === 'light' ? 'Light' : theme === 'dark' ? 'Dark' : 'System'}
+        </span>
       </Button>
     )
   }

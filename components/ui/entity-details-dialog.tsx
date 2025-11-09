@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 interface Status {
-  label: string;
+  label: string | ReactNode;
   value: string;
   className?: string;
 }
@@ -28,8 +28,9 @@ interface EntityDetailsDialogProps {
   children?: ReactNode;
   renderFooter?: () => ReactNode;
   isOperating?: boolean;
-  leftSectionHeading?: string;
+  leftSectionHeading?: ReactNode;
   leftSectionSubheading?: string;
+  leftSectionExtra?: string;
 }
 
 export function EntityDetailsDialog({
@@ -39,8 +40,9 @@ export function EntityDetailsDialog({
   children,
   renderFooter,
   isOperating = false,
-    leftSectionHeading,
-    leftSectionSubheading
+  leftSectionHeading,
+  leftSectionSubheading,
+  leftSectionExtra
 }: EntityDetailsDialogProps) {
   return (
     <Dialog open={open} onOpenChange={(newOpen) => !isOperating && newOpen === false && onClose()}>
@@ -56,11 +58,14 @@ export function EntityDetailsDialog({
             <div className="flex items-start justify-between pb-4 border-b">
               {leftSectionHeading && (
                 <div>
-                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
+                  <div className="text-xl font-semibold text-slate-900 dark:text-white">
                     {leftSectionHeading}
-                  </h3>
+                  </div>
                   {leftSectionSubheading && (
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{leftSectionSubheading}</p>
+                  )}
+                  {leftSectionExtra && (
+                    <p className="text-sm font-semibold text-blue-600 dark:text-blue-400 mt-1">{leftSectionExtra}</p>
                   )}
                 </div>
               )}
@@ -80,8 +85,8 @@ export function EntityDetailsDialog({
             </div>
           )}
 
-          {/* Main Content */}
-          <div className="min-h-[100px]">{children}</div>
+          {/* Main Content - Scrollable */}
+          <div className="max-h-[400px] overflow-y-auto scrollbar-thin">{children}</div>
 
           {/* Footer */}
           {renderFooter && (
