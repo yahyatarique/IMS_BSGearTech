@@ -1,10 +1,10 @@
 import InventoryPage from '@/components/pages/inventory/inventory';
-import { AuthWrapper } from '@/components/wrappers';
+import { Suspense } from 'react';
 
 export default function Inventory() {
   return (
-    <AuthWrapper>
+    <Suspense fallback={<div>Loading...</div>}>
       <InventoryPage />
-    </AuthWrapper>
+    </Suspense>
   );
 }

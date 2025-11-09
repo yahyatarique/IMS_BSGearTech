@@ -18,6 +18,59 @@ Short, focused instructions to help an AI code agent be productive in this repos
 - Front-end HTTP client: `axios/index.ts` (with token refresh behavior).
 
 ## Project-specific conventions and patterns
+- **API Response Handling**:
+  - ALWAYS use `sendResponse` and `errorResponse` functions from `utils/api-response.ts` in API routes for consistent error handling and response format.
+  - Initial limit for pagination APIs is 10 items per page.
+  - Example API route pattern:
+    ```typescript
+    // ✅ Good - using sendResponse and errorResponse
+    export async function GET(request: NextRequest) {
+      try {
+        await testConnection();
+        const { searchParams } = new URL(request.url);
+        const page = parseInt(searchParams.get('page') || '1');
+        const limit = parseInt(searchParams.get('limit') || '10');
+        
+        const data = await YourModel.findAndCountAll({ limit, offset: (page - 1) * limit });
+        
+        return sendResponse(data, 'Data retrieved successfully');
+      } catch (error: any) {
+        return errorResponse(error.message || 'Failed to fetch data', 500);
+      }
+    }
+
+    // ❌ Bad - directly returning response or not using standard format
+    return new Response(JSON.stringify({ data }));
+    ```
+
+- **Service Layer Type Safety**:
+  - ALWAYS use `BaseResponse<T>` from `services/types/base.api.type.ts` when creating API response types.
+  - Define response types in `services/types/*.api.type.ts`.
+  - Example:
+    ```typescript
+    // types/users.api.type.ts
+    import { BaseResponse } from './base.api.type';
+    
+    export interface User {
+      id: string;
+      name: string;
+    }
+
+    export type UsersResponse = BaseResponse<{
+      users: User[];
+      meta: {
+        page: number;
+        totalItems: number;
+      };
+    }>;
+
+    // services/users.ts
+    export async function fetchUsers(): Promise<UsersResponse> {
+      const response = await axiosInstance.get('/users');
+      return response.data;
+    }
+    ```
+
 - Role values are string enums: `'0'` = super/admin, `'1'` = admin/manager, `'2'` = user. See `enums/users.enum.ts`.
 - Passwords are hashed inside the Sequelize model via `beforeCreate` / `beforeUpdate` hooks (see `db/models/User.ts`). Password validation uses an alphanumeric regex in `schemas/user.schema.ts`. Note: Model-level password validation was removed to allow bcrypt hashed passwords (which contain special characters).
 - DB calls commonly call `testConnection()` (in `db/connection.ts`) at the start of API handlers to ensure DB reachable.

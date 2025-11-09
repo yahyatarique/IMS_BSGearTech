@@ -10,7 +10,7 @@ import type { UserRecord, UsersListMeta } from '@/services/types/users.api.type'
 import { UsersStats } from '@/components/pages/users/components/users-stats';
 import { UsersCardGrid } from '@/components/pages/users/components/users-card-grid';
 import { UserDetailsDialog } from '@/components/pages/users/components/user-details-dialog';
-import { CreateUserDialog } from '@/components/pages/users/components/create-user-dialog';
+import { UserFormDialog } from '@/components/pages/users/components/user-form-dialog';
 import { PageWrapper } from '@/components/ui/page-wrapper';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, UserCircle } from 'lucide-react';
@@ -357,25 +357,40 @@ export default function UsersPage() {
             <RefreshCw className="h-4 w-4" />
             {isRefreshing ? 'Refreshing' : 'Refresh'}
           </Button>
-          <CreateUserDialog onSuccess={() => loadUsers({ page: 1, silent: true })} />
+          <UserFormDialog onSuccess={() => loadUsers({ page: 1, silent: true })} />
         </>
       }
     >
-      <UsersStats
-          total={stats.total}
-          active={stats.active}
-          admins={stats.admins}
-          loading={isLoading && users.length === 0}
-        />
-        <UsersCardGrid
-          users={users}
-          meta={meta ?? undefined}
-          isLoading={isLoading && users.length === 0}
-          isLoadingMore={isLoadingMore}
-          currentUserId={currentUser?.id}
-          onCardClick={handleCardClick}
-        onLoadMore={handleLoadMore}
-      />
+      <div className="space-y-8">
+        <section className="rounded-xl bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-100 dark:from-slate-900 dark:to-slate-800 border-l-4 border-l-blue-500 border border-blue-100 dark:border-slate-700 p-6 shadow-lg">
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Overview</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Quick statistics about your users</p>
+          </div>
+          <UsersStats
+            total={stats.total}
+            active={stats.active}
+            admins={stats.admins}
+            loading={isLoading && users.length === 0}
+          />
+        </section>
+
+        <section className="rounded-xl bg-white dark:bg-slate-900 border-l-4 border-l-slate-400 border border-slate-200 dark:border-slate-700 p-6 shadow-lg">
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">All Users</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Browse and manage user accounts</p>
+          </div>
+          <UsersCardGrid
+            users={users}
+            meta={meta ?? undefined}
+            isLoading={isLoading && users.length === 0}
+            isLoadingMore={isLoadingMore}
+            currentUserId={currentUser?.id}
+            onCardClick={handleCardClick}
+            onLoadMore={handleLoadMore}
+          />
+        </section>
+      </div>
 
       <UserDetailsDialog
         user={selectedUser}

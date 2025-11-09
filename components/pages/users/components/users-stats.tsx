@@ -36,7 +36,7 @@ export function UsersStats({ total, active, admins, loading }: UsersStatsProps) 
   const values = { total, active, admins }
 
   return (
-    <div className="mb-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {statsConfig.map(({ title, icon: Icon, gradient, description, key }) => (
         <Card key={title} className="overflow-hidden border shadow-sm dark:border-slate-800">
           <div className={`h-1 bg-gradient-to-r ${gradient}`} />

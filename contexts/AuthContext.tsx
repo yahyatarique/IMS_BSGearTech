@@ -1,11 +1,13 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { getCurrentUser, logout as logoutService } from '@/services/auth';
 import { User } from '@/services/types/auth.api.type';
 import { tokenUtils } from '@/axios';
 import { StorageKeys } from '../utils/constants';
+
+const PUBLIC_ROUTES = ['/login', '/register', '/forgot-password'];
 
 interface AuthContextType {
   user: User | null;
@@ -24,6 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
 
   // Load user from localStorage on mount
   useEffect(() => {
@@ -61,10 +64,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [router]);
 
-  // Fetch user on mount
+  // Fetch user on mount (skip on public routes)
   useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
+    const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
+    if (!isPublicRoute) {
+      fetchUser();
+    } else {
+      setIsLoading(false);
+    }
+  }, [fetchUser, pathname]);
 
   // Update user in state and localStorage
   const updateUser = useCallback((updatedUser: User) => {

@@ -2,12 +2,12 @@ import { forwardRef, HTMLAttributes, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
 const GRADIENT_PRESETS = {
-  primary: 'from-blue-500 to-cyan-500',
-  'blue-cyan': 'from-blue-600 to-cyan-500',
-  green: 'from-green-500 to-emerald-500',
-  orange: 'from-orange-500 to-red-500',
-  'purple-pink': 'from-purple-500 to-pink-500',
-  'indigo-blue': 'from-indigo-500 to-blue-500'
+  primary: 'from-blue-500 to-cyan-500 dark:from-blue-700 dark:to-cyan-700',
+  'blue-cyan': 'from-blue-600 to-cyan-500 dark:from-blue-800 dark:to-cyan-700',
+  green: 'from-green-500 to-emerald-500 dark:from-green-700 dark:to-emerald-700',
+  orange: 'from-orange-500 to-red-500 dark:from-orange-700 dark:to-red-700',
+  'purple-pink': 'from-purple-500 to-pink-500 dark:from-purple-700 dark:to-pink-700',
+  'indigo-blue': 'from-indigo-500 to-blue-500 dark:from-indigo-700 dark:to-blue-700'
 } as const;
 
 type GradientKey = keyof typeof GRADIENT_PRESETS;

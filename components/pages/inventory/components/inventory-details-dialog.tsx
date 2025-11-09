@@ -1,12 +1,5 @@
 'use client';
 
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { InventoryRecord } from '@/services/types/inventory.api.type';
 import {
@@ -25,6 +18,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import { EntityDetailsDialog } from '@/components/ui/entity-details-dialog';
 import { cn } from '@/lib/utils';
 
 interface InventoryDetailsDialogProps {
@@ -78,14 +72,40 @@ export function InventoryDetailsDialog({
   });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            <span>Inventory Item Details</span>
-          </DialogTitle>
-        </DialogHeader>
-
+    <>
+      <EntityDetailsDialog
+        open={open}
+        onClose={() => onOpenChange(false)}
+        isOperating={isDeleting}
+        header={{
+          title: 'Inventory Item Details',
+          subtitle: 'View and manage inventory information',
+          status: materialInfo ? [
+            {
+              label: MATERIAL_STATUS[materialInfo.status]?.label || 'Unknown',
+              value: materialInfo.status,
+              className: MATERIAL_STATUS[materialInfo.status]?.className
+            }
+          ] : []
+        }}
+        renderFooter={() => (
+          <>
+            <Button variant="outline" onClick={() => onEdit(inventory)} className="gap-2">
+              <Edit className="h-4 w-4" />
+              Edit
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => setIsConfirmDialogOpen(true)}
+              disabled={isDeleting}
+              className="gap-2"
+            >
+              <Trash2 className="h-4 w-4" />
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </>
+        )}
+      >
         <div className="space-y-6">
           {/* Material Summary Section */}
           {materialInfo && (
@@ -226,26 +246,7 @@ export function InventoryDetailsDialog({
             </div>
           </div>
         </div>
-        
-      <DialogFooter>
-        <div className="flex justify-end gap-2 pt-4 w-full border-t">
-          <Button variant="outline" onClick={() => onEdit(inventory)} className="gap-2">
-            <Edit className="h-4 w-4" />
-            Edit
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={() => setIsConfirmDialogOpen(true)}
-            disabled={isDeleting}
-            className="gap-2"
-          >
-            <Trash2 className="h-4 w-4" />
-            {isDeleting ? 'Deleting...' : 'Delete'}
-          </Button>
-        </div>
-      </DialogFooter>
-      </DialogContent>
-      
+      </EntityDetailsDialog>
 
       <ConfirmationDialog
         open={isConfirmDialogOpen}
@@ -257,6 +258,6 @@ export function InventoryDetailsDialog({
         variant="destructive"
         onConfirm={handleDelete}
       />
-    </Dialog>
+    </>
   );
 }
