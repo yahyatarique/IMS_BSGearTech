@@ -2,15 +2,20 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { InventoryRecord } from '@/services/types/inventory.api.type';
-import { fetchInventory, createInventoryItem, updateInventoryItem, deleteInventoryItem } from '@/services/inventory';
+import {
+  fetchInventory,
+  createInventoryItem,
+  updateInventoryItem,
+  deleteInventoryItem
+} from '@/services/inventory';
+import { InventoryStatsCards } from './inventory-stats-cards';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Package, Ruler, FileText, Eye } from 'lucide-react';
+import { Plus, Search, Package, Ruler, Eye } from 'lucide-react';
 import { error as errorToast, success as successToast } from '@/hooks/use-toast';
 import { GradientBorderCard } from '@/components/ui/gradient-border-card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
 import { InventoryDetailsDialog } from './inventory-details-dialog';
 import { InventoryFormDialog } from './inventory-form-dialog';
 import { CreateInventoryInput, UpdateInventoryInput } from '@/schemas/inventory.schema';
@@ -29,11 +34,11 @@ export function InventoryTab() {
   const loadInventoryItems = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await fetchInventory({ 
+      const response = await fetchInventory({
         material_type: materialFilter,
         limit: 100,
         page: 1,
-        search: searchQuery,
+        search: searchQuery
       });
 
       if (response.success && response.data) {
@@ -42,13 +47,12 @@ export function InventoryTab() {
     } catch (error: any) {
       errorToast({
         title: 'Error',
-        description: error.message || 'Failed to load inventory items',
+        description: error.message || 'Failed to load inventory items'
       });
     } finally {
       setIsLoading(false);
     }
   }, [materialFilter, searchQuery]);
-
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -77,7 +81,7 @@ export function InventoryTab() {
       if (response.success) {
         successToast({
           title: 'Success',
-          description: 'Inventory item deleted successfully',
+          description: 'Inventory item deleted successfully'
         });
         setIsDetailsDialogOpen(false);
         loadInventoryItems();
@@ -85,21 +89,25 @@ export function InventoryTab() {
     } catch (error: any) {
       errorToast({
         title: 'Error',
-        description: error.message || 'Failed to delete inventory item',
+        description: error.message || 'Failed to delete inventory item'
       });
     }
   };
 
   // Handle form submit (create or update)
   const handleFormSubmit = async (data: CreateInventoryInput | UpdateInventoryInput) => {
+    debugger;
     try {
       if (editingInventory) {
         // Update existing inventory item
-        const response = await updateInventoryItem(editingInventory.id, data as UpdateInventoryInput);
+        const response = await updateInventoryItem(
+          editingInventory.id,
+          data as UpdateInventoryInput
+        );
         if (response.success) {
           successToast({
             title: 'Success',
-            description: 'Inventory item updated successfully',
+            description: 'Inventory item updated successfully'
           });
         }
       } else {
@@ -108,27 +116,28 @@ export function InventoryTab() {
         if (response.success) {
           successToast({
             title: 'Success',
-            description: 'Inventory item created successfully',
+            description: 'Inventory item created successfully'
           });
         }
       }
-      
+
       setIsFormDialogOpen(false);
       setEditingInventory(null);
       loadInventoryItems();
     } catch (error: any) {
       errorToast({
         title: 'Error',
-        description: error.message || `Failed to ${editingInventory ? 'update' : 'create'} inventory item`,
+        description:
+          error.message || `Failed to ${editingInventory ? 'update' : 'create'} inventory item`
       });
       throw error; // Re-throw to let form handle the error state
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Filters and Search */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div className="flex flex-1 items-center gap-4">
           <div className="flex gap-2">
             <Button
@@ -163,8 +172,8 @@ export function InventoryTab() {
             />
           </div>
         </div>
-        <Button 
-          className="gap-2" 
+        <Button
+          className="gap-2"
           onClick={() => {
             setEditingInventory(null);
             setIsFormDialogOpen(true);
@@ -175,83 +184,106 @@ export function InventoryTab() {
         </Button>
       </div>
 
-      {/* Inventory Items Grid */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
-          {[...Array(6)].map((_, i) => (
-            <Skeleton key={i} className="h-56" />
-          ))}
-        </div>
-      ) : inventoryItems.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <Package className="h-12 w-12 text-muted-foreground/50 mb-4" />
-          <p className="text-muted-foreground">
-            {searchQuery ? `No inventory items found for "${searchQuery}"` : 'No inventory items found'}
+      {/* Material Stats Section */}
+      <section className="rounded-xl bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-100 dark:from-slate-900 dark:to-slate-800 border-l-4 border-l-blue-500 border border-blue-100 dark:border-slate-700 p-6 shadow-lg">
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+            Material Overview
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Inventory statistics by material and dimensions
           </p>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {inventoryItems.map((item) => (
-            <GradientBorderCard
-              key={item.id}
-              className="hover:shadow-lg transition-all duration-300 cursor-pointer group relative"
-              onClick={() => handleInventoryItemClick(item)}
-            >
-              <div className="p-5 space-y-4">
-                {/* Header with Material Type */}
-                <div className="flex items-start justify-between">
-                  <Badge variant="outline" className="text-sm font-semibold">
-                    {item.material_type}
-                  </Badge>
-                </div>
+        <InventoryStatsCards />
+      </section>
 
-                {/* Main Info */}
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between text-sm">
-                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                      <Package className="h-4 w-4" />
-                      <span className="font-medium">Weight</span>
-                    </div>
-                    <span className="font-semibold text-gray-900 dark:text-gray-100">
-                      {Number(item.material_weight).toFixed(2)} kg
-                    </span>
+      {/* Inventory Items Section */}
+      <section className="rounded-xl bg-white dark:bg-slate-900 border-l-4 border-l-slate-400 border border-slate-200 dark:border-slate-700 p-6 shadow-lg">
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Inventory Items</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Browse and manage inventory records
+          </p>
+        </div>
+
+        {/* Inventory Items Grid */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
+            {[...Array(6)].map((_, i) => (
+              <Skeleton key={i} className="h-56" />
+            ))}
+          </div>
+        ) : inventoryItems.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <Package className="h-12 w-12 text-muted-foreground/50 mb-4" />
+            <p className="text-muted-foreground">
+              {searchQuery
+                ? `No inventory items found for "${searchQuery}"`
+                : 'No inventory items found'}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {inventoryItems.map((item) => (
+              <GradientBorderCard
+                key={item.id}
+                className="hover:shadow-lg transition-all duration-300 cursor-pointer group relative"
+                onClick={() => handleInventoryItemClick(item)}
+              >
+                <div className="p-5 space-y-4">
+                  {/* Header with Material Type */}
+                  <div className="flex items-start justify-between">
+                    <Badge variant="outline" className="text-sm font-semibold">
+                      {item.material_type}
+                    </Badge>
                   </div>
 
-                  <div className="flex items-start justify-between text-sm">
-                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                      <Ruler className="h-4 w-4" />
-                      <span className="font-medium">Dimensions</span>
-                    </div>
-                    <span className="font-semibold text-gray-900 dark:text-gray-100 text-right">
-                      {Number(item.cut_size_width).toFixed(2)} × {Number(item.cut_size_height).toFixed(2)} mm
-                    </span>
-                  </div>
-
-                  {item.po_number && (
+                  {/* Main Info */}
+                  <div className="space-y-3">
                     <div className="flex items-start justify-between text-sm">
                       <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                        <FileText className="h-4 w-4" />
-                        <span className="font-medium">PO Number</span>
+                        <Package className="h-4 w-4" />
+                        <span className="font-medium">Weight</span>
                       </div>
                       <span className="font-semibold text-gray-900 dark:text-gray-100">
-                        {item.po_number}
+                        {Number(item.material_weight * item.quantity).toFixed(2)} kg
                       </span>
                     </div>
-                  )}
-                </div>
 
-                {/* View Details - Bottom Right */}
-                <div className="flex justify-end pt-2 border-t border-gray-200 dark:border-gray-700">
-                  <span className="text-xs text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
-                    <Eye className="h-3.5 w-3.5" />
-                    View Details
-                  </span>
+                    <div className="flex items-start justify-between text-sm">
+                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                        <Ruler className="h-4 w-4" />
+                        <span className="font-medium">Dimensions</span>
+                      </div>
+                      <span className="font-semibold text-gray-900 dark:text-gray-100 text-right">
+                        {Number(item.width).toFixed(2)}mm OD × {Number(item.height).toFixed(2)}mm L
+                      </span>
+                    </div>
+
+                    <div className="flex items-start justify-between text-sm">
+                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                        <Package className="h-4 w-4" />
+                        <span className="font-medium">Quantity</span>
+                      </div>
+                      <span className="font-semibold text-gray-900 dark:text-gray-100">
+                        {item.quantity}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* View Details - Bottom Right */}
+                  <div className="flex justify-end pt-2 border-t border-gray-200 dark:border-gray-700">
+                    <span className="text-xs text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
+                      <Eye className="h-3.5 w-3.5" />
+                      View Details
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </GradientBorderCard>
-          ))}
-        </div>
-      )}
+              </GradientBorderCard>
+            ))}
+          </div>
+        )}
+      </section>
 
       {/* Dialogs */}
       <InventoryDetailsDialog

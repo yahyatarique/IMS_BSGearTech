@@ -20,8 +20,9 @@ export interface OrderInventoryAttributes {
   inventory_id: string;
   material_type: 'CR-5' | 'EN-9';
   material_weight: number;
-  cut_size_width: number;
-  cut_size_height: number;
+  width: number;
+  height: number;
+  quantity: number;
   po_number?: string | null;
   created_at: Date;
   updated_at: Date;
@@ -44,9 +45,9 @@ export class OrderInventory extends Model<
   declare inventory_id: ForeignKey<Inventory['id']>;
   declare material_type: 'CR-5' | 'EN-9';
   declare material_weight: number;
-  declare cut_size_width: number;
-  declare cut_size_height: number;
-  declare po_number: string | null;
+  declare width: number;
+  declare height: number;
+  declare quantity: number;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
 
@@ -110,20 +111,21 @@ OrderInventory.init(
       allowNull: false,
       comment: 'Weight of material in kg'
     },
-    cut_size_width: {
+    width: {
       type: DataTypes.DECIMAL(10, 4),
       allowNull: false,
       comment: 'Width dimension in mm'
     },
-    cut_size_height: {
+    height: {
       type: DataTypes.DECIMAL(10, 4),
       allowNull: false,
       comment: 'Height dimension in mm'
     },
-    po_number: {
-      type: DataTypes.STRING(100),
-      allowNull: true,
-      comment: 'Related Purchase Order number'
+    quantity: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 1,
+      comment: 'Quantity ordered'
     },
     created_at: {
       type: DataTypes.DATE,
