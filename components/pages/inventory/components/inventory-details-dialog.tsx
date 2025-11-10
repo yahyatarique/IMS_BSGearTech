@@ -50,8 +50,6 @@ export function InventoryDetailsDialog({
     }
   };
 
-  const materialInfo = inventory.materialInfo;
-
   const MATERIAL_STATUS: Record<string, { label: string; className: string }> = {
     'in-stock': {
       label: 'In Stock',
@@ -77,16 +75,9 @@ export function InventoryDetailsDialog({
         open={open}
         onClose={() => onOpenChange(false)}
         isOperating={isDeleting}
-        header={{
+          header={{
           title: 'Inventory Item Details',
-          subtitle: 'View and manage inventory information',
-          status: materialInfo ? [
-            {
-              label: MATERIAL_STATUS[materialInfo.status]?.label || 'Unknown',
-              value: materialInfo.status,
-              className: MATERIAL_STATUS[materialInfo.status]?.className
-            }
-          ] : []
+          subtitle: 'View and manage inventory information'
         }}
         renderFooter={() => (
           <>
@@ -107,71 +98,6 @@ export function InventoryDetailsDialog({
         )}
       >
         <div className="space-y-6">
-          {/* Material Summary Section */}
-          {materialInfo && (
-            <div className="bg-gradient-to-br from-blue-50 to-[#bbeaed] dark:from-blue-950/20 dark:to-cyan-950/20 p-6 rounded-lg border border-blue-200 dark:border-blue-800">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                    {materialInfo.name}
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    Material Type: {materialInfo.material}
-                  </p>
-                </div>
-                <Badge
-                  className={cn('flex-shrink-0', MATERIAL_STATUS[materialInfo.status]?.className)}
-                >
-                  {MATERIAL_STATUS[materialInfo.status]?.label}
-                </Badge>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-md">
-                  <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 mb-1">
-                    <Package className="h-3 w-3" />
-                    <span>Total Stock</span>
-                  </div>
-                  <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                    {quantityFormatter.format(materialInfo.stock)} {materialInfo.unit}
-                  </p>
-                </div>
-
-                <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-md">
-                  <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 mb-1">
-                    <Clock className="h-3 w-3" />
-                    <span>Pending</span>
-                  </div>
-                  <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                    {quantityFormatter.format(materialInfo.pendingDelivery)} {materialInfo.unit}
-                  </p>
-                </div>
-
-                <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-md">
-                  <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 mb-1">
-                    <CheckCircle className="h-3 w-3" />
-                    <span>Available</span>
-                  </div>
-                  <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                    {quantityFormatter.format(materialInfo.stock - materialInfo.pendingDelivery)}{' '}
-                    {materialInfo.unit}
-                  </p>
-                </div>
-
-                <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-md">
-                  <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 mb-1">
-                    <Layers className="h-3 w-3" />
-                    <span>Profiles</span>
-                  </div>
-                  <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                    {materialInfo.profileCount}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Individual Item Details */}
           <div className="border-t pt-4">
             <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4">
@@ -197,32 +123,29 @@ export function InventoryDetailsDialog({
                   Material Weight
                 </h4>
                 <p className="text-lg font-medium text-foreground">
-                  {Number(inventory.material_weight).toFixed(2)} kg
+                  {Number(inventory.material_weight * inventory.quantity).toFixed(2)} kg
                 </p>
               </div>
 
-              {/* Cut Size */}
+              {/* Dimensions */}
               <div>
                 <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
                   <Ruler className="h-4 w-4" />
-                  Cut Size (Width × Height)
+                  Dimensions
                 </h4>
                 <p className="text-lg font-medium text-foreground">
-                  {Number(inventory.cut_size_width).toFixed(2)} ×{' '}
-                  {Number(inventory.cut_size_height).toFixed(2)} mm
+                  {Number(inventory.width).toFixed(2)}mm OD × {Number(inventory.height).toFixed(2)}mm L
                 </p>
               </div>
 
-              {/* PO Number */}
-              {inventory.po_number && (
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    PO Number
-                  </h4>
-                  <p className="text-lg font-medium text-foreground">{inventory.po_number}</p>
-                </div>
-              )}
+              {/* Quantity */}
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                  <Package className="h-4 w-4" />
+                  Quantity
+                </h4>
+                <p className="text-lg font-medium text-foreground">{inventory.quantity}</p>
+              </div>
 
               {/* Timestamps */}
               <div className="pt-4 border-t w-full col-span-2">

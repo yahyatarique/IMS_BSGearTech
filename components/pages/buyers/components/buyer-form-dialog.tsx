@@ -71,10 +71,8 @@ export function BuyerFormDialog({
         org_address: buyer.org_address || '',
         status: buyer.status
       });
-    } else {
-      form.reset();
-    }
-  }, [buyer]);
+    } 
+  }, [buyer, form]);
 
   const handleSubmit = async (data: FormValues) => {
     try {

@@ -4,73 +4,8 @@ import Inventory from '@/db/models/Inventory';
 import { CreateInventorySchema, InventoryListQuerySchema } from '@/schemas/inventory.schema';
 import { successResponse, errorResponse, sendResponse } from '@/utils/api-response';
 import sequelize from '@/db/connection';
-import { Op, QueryTypes } from 'sequelize';
-import { Profiles, OrderInventory, Orders } from '@/db/models';
-
-const DEFAULT_UNIT = 'kg';
-
-function formatMaterialName(value: string | null): string {
-  if (!value) {
-    return 'Unknown Material';
-  }
-
-  const normalized = value.replace(/_/g, ' ').trim();
-
-  if (/^[A-Z0-9-]+$/.test(value)) {
-    return normalized.toUpperCase();
-  }
-
-  return normalized
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-    .join(' ');
-}
-
-function toFixedNumber(value: unknown, fractionDigits = 2): number {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) {
-    return 0;
-  }
-  return Number(parsed.toFixed(fractionDigits));
-}
-
-async function calculatePendingWeight(materialType: string): Promise<number> {
-  try {
-    // Get weight from OrderInventory for orders that are pending ('0') or accepted ('1')
-    const result = (await sequelize.query(
-      `
-      SELECT COALESCE(SUM(oi.material_weight), 0) as total_weight
-      FROM order_inventory oi
-      INNER JOIN orders o ON oi.order_id = o.id
-      WHERE oi.material_type = :materialType 
-      AND o.status IN ('0', '1')
-    `,
-      {
-        replacements: { materialType },
-        type: QueryTypes.SELECT
-      }
-    )) as { total_weight: string }[];
-
-    return Number(result[0]?.total_weight) || 0;
-  } catch (error) {
-    console.error(`Error calculating pending weight for ${materialType}:`, error);
-    return 0;
-  }
-}
-
-function resolveMaterialStatus(stock: number): 'in-stock' | 'low-stock' | 'out-of-stock' {
-  if (stock <= 0) {
-    return 'out-of-stock';
-  }
-
-  // Simple low stock threshold of 50kg
-  if (stock <= 50) {
-    return 'low-stock';
-  }
-
-  return 'in-stock';
-}
+import { Op } from 'sequelize';
+import { calculateCylindricalWeight } from '@/utils/material-calculations';
 
 // GET /api/inventory - List inventory with meta (pagination) and filters, or get materials summary
 export async function GET(request: NextRequest) {
@@ -84,50 +19,6 @@ export async function GET(request: NextRequest) {
     // Validate query params
     const validatedQuery = InventoryListQuerySchema.parse(queryParams);
     const { page, limit, material_type, search } = validatedQuery;
-
-    // First, get material summaries for all material types
-    const materialTypesRaw = await Inventory.findAll({
-      attributes: [
-        'material_type',
-        [sequelize.fn('SUM', sequelize.col('material_weight')), 'totalWeight']
-      ],
-      group: ['material_type'],
-      raw: true
-    });
-
-    const materialTypes = materialTypesRaw as unknown as Array<{
-      material_type: string;
-      totalWeight: string;
-    }>;
-
-    // Create a map of material info
-    const materialInfoMap = new Map<string, any>();
-    
-    await Promise.all(
-      materialTypes.map(async (material) => {
-        const materialType = material.material_type;
-        const inStock = toFixedNumber(material.totalWeight);
-        const pendingWeight = await calculatePendingWeight(materialType);
-
-        // Get profile count for this material type
-        const profileCountResult = await Profiles.count({
-          where: { material: materialType }
-        });
-
-        const status = resolveMaterialStatus(inStock);
-
-        materialInfoMap.set(materialType, {
-          name: formatMaterialName(materialType),
-          material: materialType,
-          type: 'Raw Material',
-          stock: inStock,
-          pendingDelivery: toFixedNumber(pendingWeight),
-          unit: DEFAULT_UNIT,
-          status,
-          profileCount: profileCountResult || 0
-        });
-      })
-    );
 
     // Build where clause
     const whereClause: any = {};
@@ -151,20 +42,9 @@ export async function GET(request: NextRequest) {
 
     const totalPages = Math.ceil(total / limit);
 
-    // Add material info to each inventory item
-    const inventoryWithMaterialInfo = inventory.map((item) => {
-      const itemJson = item.toJSON();
-      const materialInfo = materialInfoMap.get(itemJson.material_type);
-      
-      return {
-        ...itemJson,
-        materialInfo: materialInfo || null
-      };
-    });
-
     return NextResponse.json(
       successResponse({
-        inventory: inventoryWithMaterialInfo,
+        inventory: inventory.map(item => item.toJSON()),
         meta: {
           page,
           pageSize: limit,
@@ -202,11 +82,18 @@ export async function POST(request: NextRequest) {
     // Validate request body
     const validatedData = CreateInventorySchema.parse(body);
 
-    // Create inventory item
+    // Calculate material weight based on dimensions
+    const calculatedWeight = calculateCylindricalWeight(
+      validatedData.material_type,
+      validatedData.width, // Outer Diameter
+      validatedData.height // Length
+    );
+
+    // Create inventory item with calculated weight
     const inventoryItem = await Inventory.create(
       {
         ...validatedData,
-        po_number: validatedData.po_number || null
+        material_weight: calculatedWeight
       } as any,
       { transaction }
     );

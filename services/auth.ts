@@ -2,7 +2,7 @@
 
 import axios, { AxiosResponse } from "axios";
 import axiosInstance from "../axios";
-import { CreateUserInput, GetCurrentUserRes, LoginInput, LoginRes, RegisterRes, UpdateUserInput, UpdateUserRes } from "./types/auth.api.type";
+import { CreateUserInput, GetCurrentUserRes, LoginInput, LoginRes, RegisterRes, UpdatePasswordInput, UpdateUserInput, UpdateUserRes } from "./types/auth.api.type";
 
 
 const BASE_URL = 'auth';
@@ -13,6 +13,7 @@ export const endpoints = {
   register: `${BASE_URL}/register`,
   refreshToken: `${BASE_URL}/refresh-token`,
   me: `${BASE_URL}/me`,
+  updatePassword: `${BASE_URL}/update-password`,
 }
 
 export const login = async (payload: LoginInput): Promise<AxiosResponse<LoginRes>> => {
@@ -47,6 +48,15 @@ export const updateUser = async (payload: UpdateUserInput): Promise<AxiosRespons
   }
 }
 
+export const updatePassword = async (payload: UpdatePasswordInput): Promise<AxiosResponse> => {
+  try {
+    const res = await axiosInstance.put(endpoints.updatePassword, payload);
+    return res;
+  } catch (error) {
+    throw error;
+  }
+}
+
 export const logout = async (): Promise<AxiosResponse> => {
   try {
     const res = await axiosInstance.post(endpoints.logout);
@@ -59,7 +69,7 @@ export const logout = async (): Promise<AxiosResponse> => {
 
 export const refreshToken = async (): Promise<AxiosResponse> => {
   // Use plain axios to avoid interceptor loops, but with proper config
-  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
   return axios.post(`${BASE_URL}/api/${endpoints.refreshToken}`, undefined, {
     withCredentials: true, // Include cookies with refresh token
   });

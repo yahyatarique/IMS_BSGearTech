@@ -12,12 +12,19 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
+  FormMessage
 } from '@/components/ui/form';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
+import { ChevronDown } from 'lucide-react';
 import {
   CreateInventorySchema,
   CreateInventoryInput,
-  UpdateInventoryInput,
+  UpdateInventoryInput
 } from '@/schemas/inventory.schema';
 import { InventoryRecord } from '@/services/types/inventory.api.type';
 import { z } from 'zod';
@@ -36,51 +43,51 @@ export function InventoryFormDialog({
   open,
   onOpenChange,
   inventory,
-  onSubmit,
+  onSubmit
 }: InventoryFormDialogProps) {
   const form = useForm<InventoryFormData>({
     resolver: zodResolver(CreateInventorySchema),
     defaultValues: {
       material_type: 'CR-5',
-      material_weight: 0,
-      cut_size_width: 0,
-      cut_size_height: 0,
-      po_number: '',
-    },
+      width: 0,
+      height: 0,
+      quantity: 0
+    }
   });
 
   useEffect(() => {
     if (inventory) {
       form.reset({
         material_type: inventory.material_type,
-        material_weight: Number(inventory.material_weight),
-        cut_size_width: Number(inventory.cut_size_width),
-        cut_size_height: Number(inventory.cut_size_height),
-        po_number: inventory.po_number || '',
-      });
-    } else {
-      form.reset({
-        material_type: 'CR-5',
-        material_weight: 0,
-        cut_size_width: 0,
-        cut_size_height: 0,
-        po_number: '',
+        width: Number(inventory.width),
+        height: Number(inventory.height),
+        quantity: Number(inventory.quantity)
       });
     }
   }, [inventory, form]);
 
   const handleSubmit = async (data: InventoryFormData) => {
-    await onSubmit(data as CreateInventoryInput);
+    try {
+      const validatedData = CreateInventorySchema.parse(data);
+      
+      await onSubmit(validatedData);
+      form.reset();
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Form Submission Error:', error);
+    }
+  };
+
+  const onCancel = () => {
     form.reset();
+    onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {inventory ? 'Edit Inventory Item' : 'Add Inventory Item'}
-          </DialogTitle>
+          <DialogTitle>{inventory ? 'Edit Inventory Item' : 'Add Inventory Item'}</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -93,55 +100,67 @@ export function InventoryFormDialog({
                 <FormItem>
                   <FormLabel>Material Type</FormLabel>
                   <FormControl>
-                    <select
-                      {...field}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <option value="CR-5">CR-5</option>
-                      <option value="EN-9">EN-9</option>
-                    </select>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          className="w-full justify-between"
+                        >
+                          {field.value === 'CR-5' ? 'CR-5' : 'EN-9'}
+                          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-[200px]">
+                        <DropdownMenuItem
+                          onClick={() => field.onChange('CR-5')}
+                          className="cursor-pointer"
+                        >
+                          CR-5
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => field.onChange('EN-9')}
+                          className="cursor-pointer"
+                        >
+                          EN-9
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            {/* Material Weight */}
-            <FormField
-              control={form.control}
-              name="material_weight"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Material Weight (kg)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="Enter weight in kg"
-                      {...field}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Weight is calculated automatically based on dimensions */}
+            <p className="text-sm text-muted-foreground">
+              Material weight will be calculated automatically based on the dimensions.
+            </p>
 
-            {/* Cut Size - Width and Height */}
+            {/* Width and Height */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="cut_size_width"
+                name="width"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Cut Size Width (mm)</FormLabel>
+                    <FormLabel>Outer Diameter (mm)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         step="0.01"
-                        placeholder="Width"
+                        placeholder="Outer Diameter"
                         {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          field.onChange(parseFloat(val));
+                        }}
+                        onBlur={(e) => {
+                          const val = parseFloat(e.target.value);
+                          if (isNaN(val)) {
+                            field.onChange(0);
+                          }
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -151,15 +170,15 @@ export function InventoryFormDialog({
 
               <FormField
                 control={form.control}
-                name="cut_size_height"
+                name="height"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Cut Size Height (mm)</FormLabel>
+                    <FormLabel>Length (mm)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         step="0.01"
-                        placeholder="Height"
+                        placeholder="Length"
                         {...field}
                         onChange={(e) => field.onChange(parseFloat(e.target.value))}
                       />
@@ -170,15 +189,29 @@ export function InventoryFormDialog({
               />
             </div>
 
-            {/* PO Number */}
+            {/* Quantity */}
             <FormField
               control={form.control}
-              name="po_number"
+              name="quantity"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>PO Number (Optional)</FormLabel>
+                  <FormLabel>Quantity</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter PO number" {...field} />
+                    <Input
+                      type="number"
+                      placeholder="Enter quantity"
+                      {...field}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        field.onChange(parseInt(val, 10));
+                      }}
+                      onBlur={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        if (isNaN(val)) {
+                          field.onChange(0);
+                        }
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -187,19 +220,11 @@ export function InventoryFormDialog({
 
             {/* Actions */}
             <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
+              <Button type="button" variant="outline" onClick={onCancel}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting
-                  ? 'Saving...'
-                  : inventory
-                  ? 'Update'
-                  : 'Create'}
+              <Button type="submit">
+                {form.formState.isSubmitting ? 'Saving...' : inventory ? 'Update' : 'Create'}
               </Button>
             </div>
           </form>

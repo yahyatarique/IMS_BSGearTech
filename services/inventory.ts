@@ -7,8 +7,13 @@ import {
   DeleteInventoryResponse,
   GetInventoryMaterialsResponse,
   MaterialDimensionsResponse,
+  InventoryStatsResponse
 } from './types/inventory.api.type';
-import { CreateInventoryInput, UpdateInventoryInput, InventoryListQuery } from '@/schemas/inventory.schema';
+import {
+  CreateInventoryInput,
+  UpdateInventoryInput,
+  InventoryListQuery
+} from '@/schemas/inventory.schema';
 import { AxiosResponse } from 'axios';
 
 const INVENTORY_URL = '/inventory';
@@ -16,7 +21,9 @@ const INVENTORY_URL = '/inventory';
 /**
  * Fetch materials summary from inventory
  */
-export const fetchInventoryMaterials = async (params?: { limit?: number }): Promise<GetInventoryMaterialsResponse> => {
+export const fetchInventoryMaterials = async (params?: {
+  limit?: number;
+}): Promise<GetInventoryMaterialsResponse> => {
   const queryParams = new URLSearchParams();
   queryParams.append('view', 'materials');
   if (params?.limit) queryParams.append('limit', params.limit.toString());
@@ -29,7 +36,9 @@ export const fetchInventoryMaterials = async (params?: { limit?: number }): Prom
 /**
  * Fetch list of inventory items with meta (pagination) and filters
  */
-export const fetchInventory = async (params?: InventoryListQuery): Promise<GetInventoryResponse> => {
+export const fetchInventory = async (
+  params?: InventoryListQuery
+): Promise<GetInventoryResponse> => {
   const queryParams = new URLSearchParams();
   if (params?.page) queryParams.append('page', params.page.toString());
   if (params?.limit) queryParams.append('limit', params.limit.toString());
@@ -52,7 +61,9 @@ export const fetchInventoryItem = async (id: string): Promise<GetInventoryItemRe
 /**
  * Create a new inventory item
  */
-export const createInventoryItem = async (data: CreateInventoryInput): Promise<CreateInventoryResponse> => {
+export const createInventoryItem = async (
+  data: CreateInventoryInput
+): Promise<CreateInventoryResponse> => {
   const response = await axiosInstance.post<CreateInventoryResponse>(INVENTORY_URL, data);
   return response.data;
 };
@@ -79,9 +90,16 @@ export const deleteInventoryItem = async (id: string): Promise<DeleteInventoryRe
 /**
  * Fetch available material dimensions for a specific material type
  */
-export const fetchMaterialDimensions = async (materialType: 'CR-5' | 'EN-9'): Promise<AxiosResponse<MaterialDimensionsResponse>> => {
+export const fetchMaterialDimensions = async (
+  materialType: 'CR-5' | 'EN-9'
+): Promise<AxiosResponse<MaterialDimensionsResponse>> => {
   const response = await axiosInstance.get(`${INVENTORY_URL}/material-dimensions`, {
-    params: { material_type: materialType },
+    params: { material_type: materialType }
   });
   return response;
 };
+
+export async function fetchInventoryStats(): Promise<InventoryStatsResponse> {
+  const response = await axiosInstance.get(`${INVENTORY_URL}/stats`);
+  return response.data;
+}
