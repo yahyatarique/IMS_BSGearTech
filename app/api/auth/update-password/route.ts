@@ -35,7 +35,7 @@ export async function PUT(request: NextRequest) {
       }
 
       // Verify current password
-      const isValidPassword = await user.comparePassword(validatedData.currentPassword, user.password);
+      const isValidPassword = await User.comparePassword(validatedData.currentPassword, user.password);
       if (!isValidPassword) {
         return errorResponse('Current password is incorrect', 400);
       }
@@ -43,7 +43,7 @@ export async function PUT(request: NextRequest) {
       // Hash new password
 
       // Update password - skip model hooks to avoid double-hashing
-      await user.update({ password: validatedData.newPassword }, { hooks: true });
+      await user.   update({ password: validatedData.newPassword }, { hooks: true });
 
       return sendResponse(null, 'Password updated successfully');
     } catch (error: any) {

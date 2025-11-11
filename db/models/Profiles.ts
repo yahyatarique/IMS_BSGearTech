@@ -12,6 +12,7 @@ interface ProfilesAttributes {
   burning_wastage_percent: number;
   heat_treatment_rate: number;
   heat_treatment_inefficacy_percent: number;
+  inventory_id?: string;
 }
 
 interface ProfilesCreationAttributes extends Optional<ProfilesAttributes, 'id'> {}
@@ -27,6 +28,14 @@ class Profiles extends Model<ProfilesAttributes, ProfilesCreationAttributes> imp
   declare burning_wastage_percent: number;
   declare heat_treatment_rate: number;
   declare heat_treatment_inefficacy_percent: number;
+  declare inventory_id?: string;
+
+  static associate(models: any) {
+    Profiles.belongsTo(models.Inventory, {
+      foreignKey: 'inventory_id',
+      as: 'inventory',
+    });
+  }
 }
 
 Profiles.init(
@@ -71,6 +80,16 @@ Profiles.init(
     heat_treatment_inefficacy_percent: {
       type: DataTypes.DECIMAL(5, 2),
       allowNull: false,
+    },
+    inventory_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'inventory',
+        key: 'id',
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'SET NULL',
     },
   },
   {

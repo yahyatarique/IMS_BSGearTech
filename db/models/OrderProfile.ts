@@ -6,26 +6,34 @@ interface OrderProfileAttributes {
   id: string;
   order_id: string;
   profile_id: string;
-  quantity: number;
-  unit_price: number;
-  total_price: number;
-  profile_snapshot: object;
-  notes?: string;
+  name: string;
+  type: '0' | '1';
+  material: 'CR-5' | 'EN-9';
+  material_rate: number;
+  cut_size_width_mm: number;
+  cut_size_height_mm: number;
+  burning_wastage_percent: number;
+  heat_treatment_rate: number;
+  heat_treatment_inefficacy_percent: number;
   created_at: Date;
   updated_at: Date;
 }
 
-interface OrderProfileCreationAttributes extends Optional<OrderProfileAttributes, 'id' | 'created_at' | 'updated_at' | 'notes' | 'profile_snapshot'> {}
+interface OrderProfileCreationAttributes extends Optional<OrderProfileAttributes, 'id' | 'created_at' | 'updated_at'> {}
 
 class OrderProfile extends Model<OrderProfileAttributes, OrderProfileCreationAttributes> implements OrderProfileAttributes {
   public id!: string;
   public order_id!: string;
   public profile_id!: string;
-  public quantity!: number;
-  public unit_price!: number;
-  public total_price!: number;
-  public profile_snapshot!: object;
-  public notes?: string;
+  public name!: string;
+  public type!: '0' | '1';
+  public material!: 'CR-5' | 'EN-9';
+  public material_rate!: number;
+  public cut_size_width_mm!: number;
+  public cut_size_height_mm!: number;
+  public burning_wastage_percent!: number;
+  public heat_treatment_rate!: number;
+  public heat_treatment_inefficacy_percent!: number;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 
@@ -69,30 +77,41 @@ OrderProfile.init(
       onUpdate: 'CASCADE',
       onDelete: 'RESTRICT',
     },
-    quantity: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 1,
-      validate: {
-        min: 1
-      }
-    },
-    unit_price: {
-      type: DataTypes.DECIMAL(14, 2),
-      allowNull: false,
-    },
-    total_price: {
-      type: DataTypes.DECIMAL(14, 2),
-      allowNull: false,
-    },
-    profile_snapshot: {
-      type: DataTypes.JSONB,
-      allowNull: false,
-      defaultValue: {},
-    },
-    notes: {
+    name: {
       type: DataTypes.TEXT,
-      allowNull: true,
+      allowNull: false,
+    },
+    type: {
+      type: DataTypes.ENUM('0', '1'),
+      allowNull: false,
+    },
+    material: {
+      type: DataTypes.ENUM('CR-5', 'EN-9'),
+      allowNull: false,
+    },
+    material_rate: {
+      type: DataTypes.DECIMAL(12, 4),
+      allowNull: false,
+    },
+    cut_size_width_mm: {
+      type: DataTypes.DECIMAL(10, 4),
+      allowNull: false,
+    },
+    cut_size_height_mm: {
+      type: DataTypes.DECIMAL(10, 4),
+      allowNull: false,
+    },
+    burning_wastage_percent: {
+      type: DataTypes.DECIMAL(5, 2),
+      allowNull: false,
+    },
+    heat_treatment_rate: {
+      type: DataTypes.DECIMAL(12, 4),
+      allowNull: false,
+    },
+    heat_treatment_inefficacy_percent: {
+      type: DataTypes.DECIMAL(5, 2),
+      allowNull: false,
     },
     created_at: {
       type: DataTypes.DATE,

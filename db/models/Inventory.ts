@@ -30,6 +30,10 @@ class Inventory extends Model<InventoryAttributes, InventoryCreationAttributes> 
       foreignKey: 'inventory_id',
       as: 'orderInventories',
     });
+    Inventory.hasMany(models.Profiles, {
+      foreignKey: 'inventory_id',
+      as: 'profiles',
+    });
   }
 
   // Timestamps

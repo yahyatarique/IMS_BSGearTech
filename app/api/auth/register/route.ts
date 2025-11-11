@@ -35,21 +35,16 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Username already exists' }, { status: 409 });
       }
 
-      // Hash password before creating user
-      // Note: Doing this manually to ensure password is hashed
-      // The beforeCreate hook should do this, but adding it here as backup
-      const hashedPassword = await User.hashPassword(password);
-
       // Create new user
       const newUser = await User.create(
         {
           username,
-          password: hashedPassword,
+          password: password,
           first_name: firstName,
           last_name: lastName,
           role: role
         },
-        { transaction }
+        { transaction, hooks: true }
       );
 
       // Commit the transaction

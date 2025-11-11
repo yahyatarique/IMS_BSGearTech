@@ -13,6 +13,7 @@ export interface ProfileRecord {
   burning_wastage_percent: string;
   heat_treatment_rate: string;
   heat_treatment_inefficacy_percent: string;
+  inventory_id: string;
 }
 
 // Profile list metadata structure

@@ -38,8 +38,9 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   declare readonly created_at: Date;
 
   // Instance methods
-  public async comparePassword(candidatePassword: string, userPassword: string): Promise<boolean> {
-    return bcrypt.compare(candidatePassword, userPassword);
+  public static async comparePassword(candidatePassword: string, userPassword: string): Promise<boolean> {
+    const isValid = await bcrypt.compare(candidatePassword, userPassword);
+    return isValid;
   }
 
 

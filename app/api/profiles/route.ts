@@ -2,9 +2,10 @@ import { NextRequest } from 'next/server';
 import { testConnection } from '@/db/connection';
 import Profiles from '@/db/models/Profiles';
 import { CreateProfileSchema, ProfileListQuerySchema } from '@/schemas/profile.schema';
-import {  errorResponse, sendResponse } from '@/utils/api-response';
+import { errorResponse, sendResponse } from '@/utils/api-response';
 import sequelize from '@/db/connection';
 import { Op } from 'sequelize';
+import z from 'zod';
 
 // GET /api/profiles - List profiles with meta (pagination) and filters
 export async function GET(request: NextRequest) {
@@ -43,7 +44,6 @@ export async function GET(request: NextRequest) {
     });
 
     const totalPages = Math.ceil(total / limit);
-
 
     return sendResponse(
       {
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
     console.error('Error creating profile:', error);
 
     if (error.name === 'ZodError') {
-      return errorResponse('Validation failed', 400, error.errors);
+      return errorResponse('Validation failed', 400, z.treeifyError(error));
     }
 
     return errorResponse('Validation failed', 400, error.errors);

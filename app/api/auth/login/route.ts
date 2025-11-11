@@ -24,16 +24,15 @@ export async function POST(request: NextRequest) {
       where: { username }
     });
 
-    const user = _user?.get({plain: true});
+    const user = _user?.get({ plain: true });
 
     if (!user) {
       return errorResponse('Invalid credentials', 401);
     }
 
     // Check password
-    const isPasswordValid = await _user?.comparePassword(password, user?.password);
+    const isPasswordValid = await User.comparePassword(password, user.password);
 
-    
     if (!isPasswordValid) {
       return errorResponse('Invalid Password', 401);
     }
