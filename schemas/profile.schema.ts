@@ -5,7 +5,7 @@ import { z } from 'zod';
 export const ProfileTypeEnum = z.enum(['0', '1']);
 
 // Material enum
-export const ProfileMaterialEnum = z.enum(['CR-5', 'EN-9']);
+export const ProfileMaterialEnum = z.string();
 
 // Create profile schema
 export const CreateProfileSchema = z.object({
@@ -36,6 +36,7 @@ export const CreateProfileSchema = z.object({
     .number()
     .nonnegative('Heat treatment inefficacy percent must be non-negative')
     .max(100, 'Heat treatment inefficacy percent cannot exceed 100%'),
+  inventory_id: z.uuid().optional(),
 });
 
 // Update profile schema (all fields optional)

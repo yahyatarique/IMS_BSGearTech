@@ -87,17 +87,6 @@ export const deleteInventoryItem = async (id: string): Promise<DeleteInventoryRe
   return response.data;
 };
 
-/**
- * Fetch available material dimensions for a specific material type
- */
-export const fetchMaterialDimensions = async (
-  materialType: 'CR-5' | 'EN-9'
-): Promise<AxiosResponse<MaterialDimensionsResponse>> => {
-  const response = await axiosInstance.get(`${INVENTORY_URL}/material-dimensions`, {
-    params: { material_type: materialType }
-  });
-  return response;
-};
 
 export async function fetchInventoryStats(): Promise<InventoryStatsResponse> {
   const response = await axiosInstance.get(`${INVENTORY_URL}/stats`);
