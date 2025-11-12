@@ -48,7 +48,6 @@ export function ProfileFormDialog({
 }: ProfileFormDialogProps) {
   const isEditMode = !!profile;
   const [inventoryItems, setInventoryItems] = useState<InventoryRecord[]>([]);
-  const selectedMaterialTypeRef = useRef<ProfileRecord['material'] | null>(null);
 
   const form = useForm<CreateProfileInput & { inventory_id?: string }>({
     resolver: zodResolver(CreateProfileSchema),
@@ -100,10 +99,10 @@ export function ProfileFormDialog({
   const handleSubmit = async (data: CreateProfileInput & { inventory_id?: string }) => {
     try {
       const [materialType] = data.material.split('/');
-      const { material, ...rest } = data;
+      const { material: _, ...rest } = data;
       const payload: CreateProfileInput = {
         ...rest,
-        material: materialType
+        material: materialType as ProfileRecord['material'],
       };
 
       await onSubmit(payload);
@@ -171,7 +170,7 @@ export function ProfileFormDialog({
 
               <FormField
                 control={form.control}
-                name="material"
+                name="materialTypeString"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Material</FormLabel>
@@ -184,7 +183,7 @@ export function ProfileFormDialog({
                         field.onChange(value);
 
                         //save material in the
-                        selectedMaterialTypeRef.current = materialType as ProfileRecord['material'];
+                        form.setValue('material', materialType as ProfileRecord['material']);
                         form.setValue('inventory_id', id);
                       }}
                     >
