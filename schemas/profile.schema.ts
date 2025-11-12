@@ -1,17 +1,19 @@
 import { z } from 'zod';
+import { MATERIALS } from '../enums/material.enum';
 
 // Profile type enum
 // 0 = Gear, 1 = Pinion
 export const ProfileTypeEnum = z.enum(['0', '1']);
 
 // Material enum
-export const ProfileMaterialEnum = z.string();
+export const ProfileMaterialEnum = z.enum(MATERIALS);
 
 // Create profile schema
 export const CreateProfileSchema = z.object({
   name: z.string().min(1, 'Name is required').max(255, 'Name is too long'),
   type: ProfileTypeEnum,
   material: ProfileMaterialEnum,
+  materialTypeString: z.string().min(1, 'Material type string is required').max(255, 'Material type string is too long'),
   material_rate: z
     .number()
     .nonnegative('Material rate must be non-negative')
