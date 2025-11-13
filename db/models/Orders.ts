@@ -6,7 +6,7 @@ interface OrdersAttributes {
   order_number: string;
   created_at: Date;
   buyer_id?: string;
-  status: '0' | '1' | '2' | '3' | '4';
+  status: '0' | '1' | '2';
   grand_total: number;
   material_cost: number;
   process_costs: number;
@@ -73,11 +73,6 @@ class Orders extends Model<OrdersAttributes, OrdersCreationAttributes> implement
       as: 'buyer',
       onDelete: 'SET NULL',
       onUpdate: 'CASCADE'
-    });
-
-    Orders.hasMany(models.OrderProfile, {
-      foreignKey: 'order_id',
-      as: 'orderProfiles'
     });
 
     Orders.hasMany(models.OrderInventory, {
