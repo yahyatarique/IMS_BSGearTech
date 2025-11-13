@@ -61,6 +61,7 @@ export function errorResponse(
     success: false,
     status: statusCode,
     message,
+    error
   };
 
   if (errorDetails) {

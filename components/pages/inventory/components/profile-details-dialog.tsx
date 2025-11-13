@@ -60,7 +60,7 @@ export function ProfileDetailsDialog({
               className: `bg-slate-500/10 dark:text-slate-400 ${statusBadgeClassName}`
             },
             {
-              label: `₹${Number(profile.material_rate).toFixed(2)}/unit`,
+              label: `₹${Number(profile.material_rate).toFixed(2)}`,
               value: 'rate',
               className: `bg-blue-500/10 dark:text-blue-400 ${statusBadgeClassName}`
             }

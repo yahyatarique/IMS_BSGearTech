@@ -1,6 +1,6 @@
 {
   "name": "bs-geartech",
-  "version": "0.5",
+  "version": "0.6",
   "scripts": {
     "dev": "next dev --turbopack",
     "export": "next export",

@@ -2,7 +2,6 @@ import User from './User';
 import Profiles from './Profiles';
 import Buyer from './Buyer';
 import Orders from './Orders';
-import OrderProfile from './OrderProfile';
 import Inventory from './Inventory';
 import OrderInventory from './OrderInventory';
 
@@ -19,7 +18,6 @@ import OrderInventory from './OrderInventory';
  * - Profiles: Gear profiles and specifications
  * - Buyer: Customer/buyer information
  * - Orders: Order management with status tracking
- * - OrderProfile: Junction table linking orders with profiles
  * - Inventory: Material inventory tracking
  * - OrderInventory: Junction table linking orders with inventory items
  */
@@ -30,7 +28,6 @@ const models = {
   Profiles,
   Buyer,
   Orders,
-  OrderProfile,
   Inventory,
   OrderInventory,
 };
@@ -47,7 +44,6 @@ export {
   Profiles,
   Buyer,
   Orders,
-  OrderProfile,
   Inventory,
   OrderInventory,
 };

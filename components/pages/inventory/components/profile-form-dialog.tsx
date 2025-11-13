@@ -178,8 +178,6 @@ export function ProfileFormDialog({
                       value={field.value}
                       onValueChange={(value) => {
                         const [materialType, id] = value.split('/');
-                        console.log('🚀 ~ ProfileFormDialog ~ materialType:', materialType);
-
                         field.onChange(value);
 
                         //save material in the
