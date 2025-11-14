@@ -125,7 +125,7 @@ export function UsersCardGrid({
                 'cursor-pointer transition-all duration-200',
                 'hover:shadow-lg hover:scale-[1.02] ',
                 {
-                    'bg-primary-50/80 dark:bg-primary-900': isCurrentUser
+                    'bg-primary-50/80 dark:bg-primary-900/10': isCurrentUser
                 }
               )}
             >

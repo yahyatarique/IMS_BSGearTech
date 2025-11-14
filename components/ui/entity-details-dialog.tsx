@@ -31,6 +31,7 @@ interface EntityDetailsDialogProps {
   leftSectionHeading?: ReactNode;
   leftSectionSubheading?: string;
   leftSectionExtra?: string;
+  childContClassName?: string;
 }
 
 export function EntityDetailsDialog({
@@ -42,7 +43,8 @@ export function EntityDetailsDialog({
   isOperating = false,
   leftSectionHeading,
   leftSectionSubheading,
-  leftSectionExtra
+  leftSectionExtra,
+  childContClassName
 }: EntityDetailsDialogProps) {
   return (
     <Dialog open={open} onOpenChange={(newOpen) => !isOperating && newOpen === false && onClose()}>
@@ -62,21 +64,21 @@ export function EntityDetailsDialog({
                     {leftSectionHeading}
                   </div>
                   {leftSectionSubheading && (
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{leftSectionSubheading}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                      {leftSectionSubheading}
+                    </p>
                   )}
                   {leftSectionExtra && (
-                    <p className="text-sm font-semibold text-blue-600 dark:text-blue-400 mt-1">{leftSectionExtra}</p>
+                    <p className="text-sm font-semibold text-blue-600 dark:text-blue-400 mt-1">
+                      {leftSectionExtra}
+                    </p>
                   )}
                 </div>
               )}
               {header.status && header.status.length > 0 && (
                 <div className="flex gap-2">
                   {header.status.map((status, index) => (
-                    <Badge
-                      key={index}
-                      variant="outline"
-                      className={cn('border', status.className)}
-                    >
+                    <Badge key={index} variant="outline" className={cn('border', status.className)}>
                       {status.label}
                     </Badge>
                   ))}
@@ -86,13 +88,15 @@ export function EntityDetailsDialog({
           )}
 
           {/* Main Content - Scrollable */}
-          <div className="max-h-[400px] overflow-y-auto scrollbar-thin">{children}</div>
+          <div
+            className={cn('max-h-[400px] overflow-y-auto scrollbar-thin',childContClassName)}
+          >
+            {children}
+          </div>
 
           {/* Footer */}
           {renderFooter && (
-            <div className="flex justify-end gap-2 pt-4 border-t">
-              {renderFooter()}
-            </div>
+            <div className="flex justify-end gap-2 pt-4 border-t">{renderFooter()}</div>
           )}
         </div>
       </DialogContent>

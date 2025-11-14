@@ -111,6 +111,7 @@ export function UserDetailsDialog({
         open={open}
         onClose={onClose}
         isOperating={isOperating}
+        childContClassName='pb-4 px-1'
         header={{
           title: 'User Details',
           subtitle: 'View and manage user information',

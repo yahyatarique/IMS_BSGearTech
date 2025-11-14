@@ -346,20 +346,20 @@ export default function UsersPage() {
       subtitle="Manage system users and their permissions"
       icon={UserCircle}
       gradient="blue-cyan"
-      headerActions={
-        <>
-          <Button
-            variant="outline"
-            className="gap-2"
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-          >
-            <RefreshCw className="h-4 w-4" />
-            {isRefreshing ? 'Refreshing' : 'Refresh'}
-          </Button>
-          <UserFormDialog onSuccess={() => loadUsers({ page: 1, silent: true })} />
-        </>
-      }
+      // headerActions={
+      //   <>
+      //     <Button
+      //       variant="outline"
+      //       className="gap-2"
+      //       onClick={handleRefresh}
+      //       disabled={isRefreshing}
+      //     >
+      //       <RefreshCw className="h-4 w-4" />
+      //       {isRefreshing ? 'Refreshing' : 'Refresh'}
+      //     </Button>
+      //     {/* <UserFormDialog onSuccess={() => loadUsers({ page: 1, silent: true })} /> */}
+      //   </>
+      // }
     >
       <div className="space-y-8">
         <section className="rounded-xl bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-100 dark:from-slate-900 dark:to-slate-800 border-l-4 border-l-blue-500 border border-blue-100 dark:border-slate-700 p-6 shadow-lg">
