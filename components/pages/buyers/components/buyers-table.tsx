@@ -53,12 +53,12 @@ export function BuyersTable({
               {buyer.contact_details.email}
             </div>
           )}
-          {buyer.contact_details?.mobile && (
+          {buyer.contact_details?.phone && (
             <div className="text-xs text-slate-500 dark:text-slate-400">
-              {buyer.contact_details.mobile}
+              {buyer.contact_details.phone}
             </div>
           )}
-          {!buyer.contact_details?.email && !buyer.contact_details?.mobile && (
+          {!buyer.contact_details?.email && !buyer.contact_details?.phone && (
             <span className="text-slate-400 dark:text-slate-500">—</span>
           )}
         </div>

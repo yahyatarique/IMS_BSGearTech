@@ -118,24 +118,14 @@ export function BuyersCardGrid({ buyers, isLoading, onCardClick }: BuyersCardGri
               {/* Details */}
               <div className="space-y-3">
                 {/* Contact Info */}
-                {(buyer.contact_details?.email || buyer.contact_details?.mobile) && (
+                {buyer.contact_details?.email && (
                   <div className="space-y-2">
-                    {buyer.contact_details?.email && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Mail className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                        <span className="text-slate-600 dark:text-slate-300 truncate">
-                          {buyer.contact_details.email}
-                        </span>
-                      </div>
-                    )}
-                    {buyer.contact_details?.mobile && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Phone className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                        <span className="text-slate-600 dark:text-slate-300">
-                          {buyer.contact_details.mobile}
-                        </span>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2 text-sm">
+                      <Mail className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                      <span className="text-slate-600 dark:text-slate-300 truncate">
+                        {buyer.contact_details.email}
+                      </span>
+                    </div>
                   </div>
                 )}
 
