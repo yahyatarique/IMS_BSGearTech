@@ -185,7 +185,7 @@ export function InventoryTab() {
       </div>
 
       {/* Material Stats Section */}
-      <section className="rounded-xl bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-100 dark:from-slate-900 dark:to-slate-800 border-l-4 border-l-blue-500 border border-blue-100 dark:border-slate-700 p-6 shadow-lg">
+      <section className="rounded-xl bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-100 dark:from-slate-900 dark:to-slate-800 p-6 shadow-lg">
         <div className="mb-6">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
             Material Overview
@@ -198,7 +198,7 @@ export function InventoryTab() {
       </section>
 
       {/* Inventory Items Section */}
-      <section className="rounded-xl bg-white dark:bg-slate-900 border-l-4 border-l-slate-400 border border-slate-200 dark:border-slate-700 p-6 shadow-lg">
+      <section className="rounded-xl bg-white dark:bg-slate-900 p-6 shadow-lg">
         <div className="mb-6">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Inventory Items</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -246,7 +246,7 @@ export function InventoryTab() {
                         <span className="font-medium">Weight</span>
                       </div>
                       <span className="font-semibold text-gray-900 dark:text-gray-100">
-                        {Number(item.material_weight * item.quantity).toFixed(2)} kg
+                        {Number(item.material_weight * item.quantity)?.toFixed(2)} kg
                       </span>
                     </div>
 

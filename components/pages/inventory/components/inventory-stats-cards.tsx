@@ -61,11 +61,12 @@ export function InventoryStatsCards({ onClose }: InventoryStatsCardsProps) {
   const sortStats = (materialStats: MaterialStats[number]) => {
     return [...materialStats].sort((a, b) => {
       let comparison = 0;
-      
+
       switch (sortField) {
         case 'dimensions':
-          comparison = a.dimensions.outer_diameter - b.dimensions.outer_diameter || 
-                      a.dimensions.length - b.dimensions.length;
+          comparison =
+            a.dimensions.outer_diameter - b.dimensions.outer_diameter ||
+            a.dimensions.length - b.dimensions.length;
           break;
         case 'available':
           comparison = a.available.quantity - b.available.quantity;
@@ -77,15 +78,6 @@ export function InventoryStatsCards({ onClose }: InventoryStatsCardsProps) {
 
       return sortDirection === 'asc' ? comparison : -comparison;
     });
-  };
-
-  const toggleSort = (field: typeof sortField) => {
-    if (sortField === field) {
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
   };
 
   if (isLoading) {
@@ -105,26 +97,19 @@ export function InventoryStatsCards({ onClose }: InventoryStatsCardsProps) {
     );
   }
 
-  const renderSortIndicator = (field: typeof sortField) => {
-    if (sortField !== field) return null;
+  if (Object.values(stats).length === 0) {
     return (
-      <ArrowUpDown className={cn(
-        "h-3 w-3 transition-transform",
-        sortDirection === 'desc' && "rotate-180"
-      )} />
+      <div className="flex flex-col items-center justify-center gap-4 p-8">
+        <p className="text-muted-foreground">No inventory stats found</p>
+      </div>
     );
-  };
+  }
 
   return (
     <div className="space-y-6">
       {onClose && (
         <div className="flex justify-end">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="h-8 w-8"
-          >
+          <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -140,9 +125,9 @@ export function InventoryStatsCards({ onClose }: InventoryStatsCardsProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setExpandedMaterial(
-                    expandedMaterial === materialType ? null : materialType
-                  )}
+                  onClick={() =>
+                    setExpandedMaterial(expandedMaterial === materialType ? null : materialType)
+                  }
                 >
                   {expandedMaterial === materialType ? 'Show Less' : 'Show All'}
                 </Button>
@@ -161,10 +146,7 @@ export function InventoryStatsCards({ onClose }: InventoryStatsCardsProps) {
                         <span className="text-sm font-medium">
                           {stat.dimensions.outer_diameter}mm OD × {stat.dimensions.length}mm L
                         </span>
-                        <Badge
-                          variant="outline"
-                          className={cn(STATUS_STYLES[stat.status])}
-                        >
+                        <Badge variant="outline" className={cn(STATUS_STYLES[stat.status])}>
                           {STATUS_LABELS[stat.status]}
                         </Badge>
                       </div>
@@ -175,7 +157,7 @@ export function InventoryStatsCards({ onClose }: InventoryStatsCardsProps) {
                           <p className="font-medium">
                             {stat.available.quantity} pcs
                             <br />
-                            {stat.available.weight.toFixed(2)} {stat.unit}
+                            {stat.available.weight?.toFixed(2)} {stat.unit}
                           </p>
                         </div>
                         <div>
@@ -183,7 +165,7 @@ export function InventoryStatsCards({ onClose }: InventoryStatsCardsProps) {
                           <p className="font-medium">
                             {stat.pending.quantity} pcs
                             <br />
-                            {stat.pending.weight.toFixed(2)} {stat.unit}
+                            {stat.pending.weight?.toFixed(2)} {stat.unit}
                           </p>
                         </div>
                         <div>
@@ -191,13 +173,13 @@ export function InventoryStatsCards({ onClose }: InventoryStatsCardsProps) {
                           <p className="font-medium">
                             {stat.total.quantity} pcs
                             <br />
-                            {stat.total.weight.toFixed(2)} {stat.unit}
+                            {(stat.total.weight * stat.total.quantity)?.toFixed(2)} {stat.unit}
                           </p>
                         </div>
                       </div>
                     </div>
                   ))}
-                
+
                 {materialStats.length > 3 && expandedMaterial !== materialType && (
                   <Button
                     variant="ghost"

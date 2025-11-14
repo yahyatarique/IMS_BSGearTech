@@ -1,26 +1,16 @@
-export const MATERIAL_DENSITIES = {
-  'CR-5': 7.85, // Density in g/cm³ for CR-5 steel
-  'EN-9': 7.85, // Density in g/cm³ for EN-9 steel
-} as const;
 
-// Calculate weight for cylindrical shape
-export function calculateCylindricalWeight(
-  materialType: keyof typeof MATERIAL_DENSITIES,
-  outerDiameterMm: number,
-  lengthMm: number
-): number {
-  const density = MATERIAL_DENSITIES[materialType]; // g/cm³
-  
-  // Convert dimensions from mm to cm
-  const radius = (outerDiameterMm / 2) / 10;
-  const length = lengthMm / 10;
-  
-  // Calculate volume (π * r² * h) in cm³
-  const volume = Math.PI * Math.pow(radius, 2) * length;
-  
-  // Calculate weight (volume * density) in grams, then convert to kg
-  const weightKg = (volume * density) / 1000;
-  
+/**
+ * Calculates the weight of a cylindrical material in kg given its outer diameter in mm and length in mm.
+ * The weight is calculated using the formula: (outerDiameterMm * outerDiameterMm * lengthMm) / (162.02 * 1000)
+ * and then rounded to 3 decimal places.
+ * @param {number} outerDiameterMm - The outer diameter of the cylindrical material in mm.
+ * @param {number} lengthMm - The length of the cylindrical material in mm.
+ * @returns {number} The weight of the cylindrical material in kg, rounded to 3 decimal places.
+ */
+export function calculateCylindricalWeight(outerDiameterMm: number, lengthMm: number): number {
+  // Calculate weight in kg using the formula
+  const weightKg = (outerDiameterMm * outerDiameterMm * lengthMm) / (162.02 * 1000);
+
   // Round to 3 decimal places
   return Math.round(weightKg * 1000) / 1000;
 }
