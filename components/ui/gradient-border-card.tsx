@@ -7,7 +7,8 @@ const GRADIENT_PRESETS = {
   green: 'from-green-500 to-emerald-500 dark:from-green-700 dark:to-emerald-700',
   orange: 'from-orange-500 to-red-500 dark:from-orange-700 dark:to-red-700',
   'purple-pink': 'from-purple-500 to-pink-500 dark:from-purple-700 dark:to-pink-700',
-  'indigo-blue': 'from-indigo-500 to-blue-500 dark:from-indigo-700 dark:to-blue-700'
+  'indigo-blue': 'from-indigo-500 to-blue-500 dark:from-indigo-700 dark:to-blue-700',
+  none: ''
 } as const;
 
 type GradientKey = keyof typeof GRADIENT_PRESETS;
@@ -28,14 +29,7 @@ type GradientBorderCardProps = HTMLAttributes<HTMLDivElement> & {
 };
 
 export const GradientBorderCard = forwardRef<HTMLDivElement, GradientBorderCardProps>(
-  ({
-    className,
-    children,
-    gradient = 'primary',
-    header,
-    footer,
-    ...props
-  }, ref) => {
+  ({ className, children, gradient = 'primary', header, footer, ...props }, ref) => {
     const resolvedGradient =
       gradient in GRADIENT_PRESETS
         ? GRADIENT_PRESETS[gradient as GradientKey]
@@ -50,7 +44,9 @@ export const GradientBorderCard = forwardRef<HTMLDivElement, GradientBorderCardP
         )}
         {...props}
       >
-        <div className={cn('h-1 w-full bg-gradient-to-r', resolvedGradient)} />
+        {resolvedGradient  && (
+          <div className={cn('h-1 w-full bg-gradient-to-r', resolvedGradient)} />
+        )}
         {header}
         {children}
         {footer}

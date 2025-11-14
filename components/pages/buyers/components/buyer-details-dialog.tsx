@@ -93,13 +93,9 @@ export function BuyerDetailsDialog({
           {/* Header Section */}
           <div className="flex items-start justify-between pb-4 border-b">
             <div>
-              <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
-                {buyer.name}
-              </h3>
+              <h3 className="text-xl font-semibold text-slate-900 dark:text-white">{buyer.name}</h3>
               {buyer.org_name && (
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  {buyer.org_name}
-                </p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{buyer.org_name}</p>
               )}
             </div>
             <Badge variant="outline" className={cn('border', statusClasses[buyer.status])}>
@@ -137,20 +133,6 @@ export function BuyerDetailsDialog({
                     </p>
                     <p className="text-sm text-slate-900 dark:text-white mt-1">
                       {buyer.contact_details.phone}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {buyer.contact_details?.mobile && (
-                <div className="flex items-start gap-3">
-                  <Smartphone className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">
-                      Mobile
-                    </p>
-                    <p className="text-sm text-slate-900 dark:text-white mt-1">
-                      {buyer.contact_details.mobile}
                     </p>
                   </div>
                 </div>
@@ -260,19 +242,12 @@ export function BuyerDetailsDialog({
 
           {/* Actions */}
           <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button 
-              variant="outline" 
-              onClick={handleEdit}
-            >
+            <Button variant="outline" onClick={handleEdit}>
               Edit Buyer
             </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => setIsChangeStatusOpen(true)}
-            >
+            <Button variant="outline" onClick={() => setIsChangeStatusOpen(true)}>
               Change Status
             </Button>
-         
           </div>
         </div>
       </DialogContent>

@@ -1,9 +1,10 @@
 import { Badge } from '@/components/ui/badge';
 import { GradientBorderCard } from '@/components/ui/gradient-border-card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { OrderRecord } from '@/services/types/orders.api.type';
-import { ShoppingCart, User, Building2, Calendar, DollarSign } from 'lucide-react';
+import { ShoppingCart, User, Building2, Calendar, DollarSign, Edit, Trash2 } from 'lucide-react';
 
 const statusClasses: Record<OrderRecord['status'], string> = {
   '0': 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-500 border-yellow-500/20',
@@ -21,6 +22,8 @@ interface OrdersCardGridProps {
   orders: OrderRecord[];
   isLoading: boolean;
   onCardClick: (order: OrderRecord) => void;
+  onEdit: (orderId: string) => void;
+  onDelete: (orderId: string) => void;
 }
 
 function CardSkeleton() {
@@ -43,8 +46,10 @@ function CardSkeleton() {
   );
 }
 
-export function OrdersCardGrid({ orders, isLoading, onCardClick }: OrdersCardGridProps) {
+export function OrdersCardGrid({ orders, isLoading, onCardClick, onEdit, onDelete }: OrdersCardGridProps) {
   const handleGridClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if ((event.target as HTMLElement).closest('button')) return;
+    
     const cardElement = (event.target as HTMLElement).closest('[data-order-id]');
     if (!cardElement) return;
 
@@ -156,6 +161,34 @@ export function OrdersCardGrid({ orders, isLoading, onCardClick }: OrdersCardGri
                     </span>
                   </div>
                 </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 pt-4 border-t border-slate-200 dark:border-slate-700">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(order.id);
+                  }}
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="flex-1"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(order.id);
+                  }}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete
+                </Button>
               </div>
             </div>
           </GradientBorderCard>

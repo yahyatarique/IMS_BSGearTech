@@ -6,6 +6,7 @@ import Buyer from '@/db/models/Buyer';
 import Profiles from '@/db/models/Profiles';
 import Inventory from '@/db/models/Inventory';
 import User from '@/db/models/User';
+import OrderSequence from '@/db/models/OrderSequence';
 import { CreateOrderFormSchema } from '@/schemas/create-order.schema';
 import { ORDER_STATUS } from '@/enums/orders.enum';
 import sequelize, { testConnection } from '@/db/connection';
@@ -25,28 +26,8 @@ export async function POST(request: NextRequest) {
     // Start transaction
     transaction = await sequelize.transaction();
 
-    // Use the order_number provided by frontend, or generate as fallback
-    let orderNumber = validatedData.order_number;
-    if (!orderNumber) {
-      const now = new Date();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const year = now.getFullYear();
-      const prefix = `BSGPL/${month}/${year}/`;
-
-      try {
-        const [{ get_next_order_number: nextOrderNumber }] = (await sequelize.query(
-          'SELECT get_next_order_number() as get_next_order_number',
-          { transaction }
-        )) as any;
-
-        // If no order number returned (empty DB), use 0001
-        orderNumber = nextOrderNumber || `${prefix}0001`;
-      } catch (error) {
-        orderNumber = `${prefix}0001`;
-      }
-    }
-
-    if (!orderNumber) {
+    // Validate order_number is provided
+    if (!validatedData.order_number) {
       await transaction.rollback();
       throw new Error('Order number is required');
     }
@@ -61,18 +42,21 @@ export async function POST(request: NextRequest) {
     // Create the order
     const order = await Orders.create(
       {
-        order_number: orderNumber,
+        order_number: validatedData.order_number,
         buyer_id: validatedData.buyer_id,
         turning_rate: validatedData.turning_rate,
         module: validatedData.module || 0,
         face: validatedData.face || 0,
         teeth_count: validatedData.teeth_count || 0,
         weight: validatedData.weight,
+        finish_size_width: validatedData.finish_size?.width,
+        finish_size_height: validatedData.finish_size?.height,
         material_cost: validatedData.material_cost,
         ht_cost: validatedData.ht_cost,
         total_order_value: validatedData.total_order_value,
         profit_margin: validatedData.profit_margin,
         grand_total: validatedData.grand_total,
+        burning_wastage_percent: validatedData.burning_wastage_percent || 0,
         status: ORDER_STATUS.PENDING
       },
       { transaction }
@@ -87,9 +71,8 @@ export async function POST(request: NextRequest) {
         type: profile.type,
         material: profile.material,
         material_rate: profile.material_rate,
-        cut_size_width_mm: validatedData.finish_size.width,
-        cut_size_height_mm: validatedData.finish_size.height,
-        burning_wastage_percent: profile.burning_wastage_percent,
+        outer_diameter_mm: profile.outer_diameter_mm,
+        thickness_mm: profile.thickness_mm,
         heat_treatment_rate: profile.heat_treatment_rate,
         heat_treatment_inefficacy_percent: profile.heat_treatment_inefficacy_percent
       },
@@ -118,8 +101,11 @@ export async function POST(request: NextRequest) {
 
     await transaction.commit();
 
+    // Increment order sequence after successful order creation
+    await OrderSequence.incrementNumber();
+
     // Fetch the created order with relations
-   order.reload()
+    await order.reload();
 
     return sendResponse(order, 'Order created successfully', 201);
   } catch (error: any) {
@@ -144,27 +130,14 @@ export async function GET(request: NextRequest) {
     if (action === 'next-number') {
       await testConnection();
 
-      const now = new Date();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const year = now.getFullYear();
-      const prefix = `BSGPL/${month}/${year}/`;
-
       try {
-        const [{ get_next_order_number: nextNumber }] = (await sequelize.query(
-          'SELECT get_next_order_number() as get_next_order_number'
-        )) as any;
-
-        // If no order number returned (empty DB), use 0001
-        const orderNumber = nextNumber || `${prefix}0001`;
+        const orderNumber = await OrderSequence.getNextNumber();
         return sendResponse(
           { order_number: orderNumber },
           'Next order number retrieved successfully'
         );
       } catch (error) {
-        return sendResponse(
-          { order_number: `${prefix}0001` },
-          'Next order number retrieved successfully'
-        );
+        return errorResponse('Failed to get next order number', 500);
       }
     }
 

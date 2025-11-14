@@ -26,6 +26,7 @@ export const CreateOrderFormSchema = z.object({
   profile_id: z.string().uuid('Please select a profile'),
   order_number: z.string().optional(), // Will be auto-generated
   finish_size: FinishSizeSchema,
+  rate: z.number().min(0, 'Rate must be >= 0'),
   turning_rate: z.number().min(0, 'Turning rate must be >= 0'),
   module: z.number().min(0, 'Module must be >= 0').optional(),
   face: z.number().min(0, 'Face must be >= 0').optional(),
@@ -38,6 +39,7 @@ export const CreateOrderFormSchema = z.object({
   total_order_value: z.number().min(0), // Will be calculated
   profit_margin: z.number().min(0),
   grand_total: z.number().min(0), // Will be calculated
+  burning_wastage_percent: z.number().min(0).optional(), // Will be calculated
 });
 
 export type CreateOrderFormInput = z.infer<typeof CreateOrderFormSchema>;

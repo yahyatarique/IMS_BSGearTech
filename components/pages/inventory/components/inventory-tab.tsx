@@ -29,6 +29,7 @@ export function InventoryTab() {
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [editingInventory, setEditingInventory] = useState<InventoryRecord | null>(null);
   const [materialFilter, setMaterialFilter] = useState<'all' | 'CR-5' | 'EN-9'>('all');
+  const [statsKey, setStatsKey] = useState(0);
 
   // Fetch all inventory items
   const loadInventoryItems = useCallback(async () => {
@@ -124,6 +125,7 @@ export function InventoryTab() {
       setIsFormDialogOpen(false);
       setEditingInventory(null);
       loadInventoryItems();
+      setStatsKey(prev => prev + 1);
     } catch (error: any) {
       errorToast({
         title: 'Error',
@@ -194,7 +196,7 @@ export function InventoryTab() {
             Inventory statistics by material and dimensions
           </p>
         </div>
-        <InventoryStatsCards />
+        <InventoryStatsCards key={statsKey} />
       </section>
 
       {/* Inventory Items Section */}
@@ -227,57 +229,56 @@ export function InventoryTab() {
             {inventoryItems.map((item) => (
               <GradientBorderCard
                 key={item.id}
-                className="hover:shadow-lg transition-all duration-300 cursor-pointer group relative"
+                gradient="none"
+                className="hover:shadow-lg p-5 space-y-4 transition-all duration-300 cursor-pointer group relative"
                 onClick={() => handleInventoryItemClick(item)}
               >
-                <div className="p-5 space-y-4">
-                  {/* Header with Material Type */}
-                  <div className="flex items-start justify-between">
-                    <Badge variant="outline" className="text-sm font-semibold">
-                      {item.material_type}
-                    </Badge>
-                  </div>
+                {/* Header with Material Type */}
+                <div className="flex items-start justify-between">
+                  <Badge variant="outline" className="text-sm font-semibold">
+                    {item.material_type}
+                  </Badge>
+                </div>
 
-                  {/* Main Info */}
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between text-sm">
-                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                        <Package className="h-4 w-4" />
-                        <span className="font-medium">Weight</span>
-                      </div>
-                      <span className="font-semibold text-gray-900 dark:text-gray-100">
-                        {Number(item.material_weight * item.quantity)?.toFixed(2)} kg
-                      </span>
+                {/* Main Info */}
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between text-sm">
+                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                      <Package className="h-4 w-4" />
+                      <span className="font-medium">Weight</span>
                     </div>
-
-                    <div className="flex items-start justify-between text-sm">
-                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                        <Ruler className="h-4 w-4" />
-                        <span className="font-medium">Dimensions</span>
-                      </div>
-                      <span className="font-semibold text-gray-900 dark:text-gray-100 text-right">
-                        {Number(item.width).toFixed(2)}mm OD × {Number(item.height).toFixed(2)}mm L
-                      </span>
-                    </div>
-
-                    <div className="flex items-start justify-between text-sm">
-                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                        <Package className="h-4 w-4" />
-                        <span className="font-medium">Quantity</span>
-                      </div>
-                      <span className="font-semibold text-gray-900 dark:text-gray-100">
-                        {item.quantity}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* View Details - Bottom Right */}
-                  <div className="flex justify-end pt-2 border-t border-gray-200 dark:border-gray-700">
-                    <span className="text-xs text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
-                      <Eye className="h-3.5 w-3.5" />
-                      View Details
+                    <span className="font-semibold text-gray-900 dark:text-gray-100">
+                      {Number(item.material_weight * item.quantity)?.toFixed(2)} kg
                     </span>
                   </div>
+
+                  <div className="flex items-start justify-between text-sm">
+                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                      <Ruler className="h-4 w-4" />
+                      <span className="font-medium">Dimensions</span>
+                    </div>
+                    <span className="font-semibold text-gray-900 dark:text-gray-100 text-right">
+                      {Number(item.width).toFixed(2)}mm OD × {Number(item.height).toFixed(2)}mm L
+                    </span>
+                  </div>
+
+                  <div className="flex items-start justify-between text-sm">
+                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                      <Package className="h-4 w-4" />
+                      <span className="font-medium">Quantity</span>
+                    </div>
+                    <span className="font-semibold text-gray-900 dark:text-gray-100">
+                      {item.quantity}
+                    </span>
+                  </div>
+                </div>
+
+                {/* View Details - Bottom Right */}
+                <div className="flex justify-end pt-2 border-t border-gray-200 dark:border-gray-700">
+                  <span className="text-xs text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
+                    <Eye className="h-3.5 w-3.5" />
+                    View Details
+                  </span>
                 </div>
               </GradientBorderCard>
             ))}

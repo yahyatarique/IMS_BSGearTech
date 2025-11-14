@@ -18,18 +18,14 @@ export const CreateProfileSchema = z.object({
     .number()
     .nonnegative('Material rate must be non-negative')
     .max(99999999.9999, 'Material rate is too large'),
-  cut_size_width_mm: z
+  outer_diameter_mm: z
     .number()
-    .positive('Width must be positive')
-    .max(999999.9999, 'Width is too large'),
-  cut_size_height_mm: z
+    .positive('Outer diameter must be positive')
+    .max(999999.9999, 'Outer diameter is too large'),
+  thickness_mm: z
     .number()
-    .positive('Height must be positive')
-    .max(999999.9999, 'Height is too large'),
-  burning_wastage_percent: z
-    .number()
-    .nonnegative('Burning wastage percent must be non-negative')
-    .max(100, 'Burning wastage percent cannot exceed 100%'),
+    .positive('Thickness must be positive')
+    .max(999999.9999, 'Thickness is too large'),
   heat_treatment_rate: z
     .number()
     .nonnegative('Heat treatment rate must be non-negative')

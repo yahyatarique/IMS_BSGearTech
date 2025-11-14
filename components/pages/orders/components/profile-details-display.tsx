@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { Card } from '@/components/ui/card';
 import { ProfileRecord } from '@/services/types/profile.api.type';
 import { PROFILE_TYPES } from '../../../../enums/material.enum';
+import { calculateProfileWeight } from '@/utils/material-calculations';
 
 interface ProfileDetailsDisplayProps {
   profile: ProfileRecord;
@@ -28,22 +29,32 @@ export const ProfileDetailsDisplay = memo(({ profile }: ProfileDetailsDisplayPro
         <p className="font-semibold">₹{Number(profile.material_rate)?.toFixed(2)}/kg</p>
       </div>
       <div>
-        <p className="text-muted-foreground">Cut Size (W × H)</p>
+        <p className="text-muted-foreground">Dimensions (OD × T)</p>
         <p className="font-semibold">
-          {Number(profile.cut_size_width_mm)?.toFixed(2)} × {Number(profile.cut_size_height_mm)?.toFixed(2)} mm
+          {Number(profile.outer_diameter_mm)?.toFixed(2)} ×{' '}
+          {Number(profile.thickness_mm)?.toFixed(2)} mm
         </p>
       </div>
-      <div>
-        <p className="text-muted-foreground">Burning Wastage</p>
-        <p className="font-semibold">{Number(profile.burning_wastage_percent)?.toFixed(2)}%</p>
-      </div>
+
       <div>
         <p className="text-muted-foreground">HT Rate</p>
         <p className="font-semibold">₹{Number(profile.heat_treatment_rate)?.toFixed(2)}/kg</p>
       </div>
       <div>
         <p className="text-muted-foreground">HT Inefficacy</p>
-        <p className="font-semibold">{Number(profile.heat_treatment_inefficacy_percent)?.toFixed(2)}%</p>
+        <p className="font-semibold">
+          {Number(profile.heat_treatment_inefficacy_percent)?.toFixed(2)}%
+        </p>
+      </div>
+      <div>
+        <p className="text-muted-foreground">Weight (Single Unit)</p>
+        <p className="font-semibold">
+          {calculateProfileWeight(
+            Number(profile.outer_diameter_mm),
+            Number(profile.thickness_mm)
+          ).toFixed(3)}{' '}
+          kg
+        </p>
       </div>
     </div>
   </Card>

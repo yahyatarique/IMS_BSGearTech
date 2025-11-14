@@ -8,9 +8,8 @@ export interface ProfileRecord {
   type: PROFILE_TYPES;
   material: MATERIALS;
   material_rate: string;
-  cut_size_width_mm: string;
-  cut_size_height_mm: string;
-  burning_wastage_percent: string;
+  outer_diameter_mm: string;
+  thickness_mm: string;
   heat_treatment_rate: string;
   heat_treatment_inefficacy_percent: string;
   inventory_id: string;

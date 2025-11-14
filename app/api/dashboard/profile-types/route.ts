@@ -37,9 +37,9 @@ function formatLabel(value: string | null, dictionary: Record<string, string>, f
   return dictionary[value] ?? dictionary[normalized] ?? fallback;
 }
 
-function formatSpecification(width: number, height: number): string {
-  const formattedWidth = dimensionFormatter.format(width);
-  const formattedHeight = dimensionFormatter.format(height);
+function formatSpecification(outerDiameter: number, thickness: number): string {
+  const formattedWidth = dimensionFormatter.format(outerDiameter);
+  const formattedHeight = dimensionFormatter.format(thickness);
   return `${formattedWidth}mm × ${formattedHeight}mm`;
 }
 
@@ -62,12 +62,11 @@ export async function GET(request: NextRequest) {
     });
 
     const formattedProfiles = profiles.map((profile) => {
-      const plainProfile = profile.get({ plain: true }) as Record<string, any>;
+      const plainProfile = profile.get({ plain: true })
 
-      const width = toFixedNumber(plainProfile.cut_size_width_mm);
-      const height = toFixedNumber(plainProfile.cut_size_height_mm);
+      const width = toFixedNumber(plainProfile.outer_diameter_mm);
+      const height = toFixedNumber(plainProfile.thickness_mm);
       const materialRate = toFixedNumber(plainProfile.material_rate);
-      const burningWastagePercent = toFixedNumber(plainProfile.burning_wastage_percent);
       const heatTreatmentRate = toFixedNumber(plainProfile.heat_treatment_rate);
       const heatTreatmentInefficacyPercent = toFixedNumber(
         plainProfile.heat_treatment_inefficacy_percent,
@@ -80,7 +79,6 @@ export async function GET(request: NextRequest) {
         material: formatLabel(plainProfile.material, MATERIAL_LABELS, 'Unknown'),
         type: formatLabel(plainProfile.type, TYPE_LABELS, 'Custom'),
         materialRate,
-        burningWastagePercent,
         heatTreatmentRate,
         heatTreatmentInefficacyPercent,
       };

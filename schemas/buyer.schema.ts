@@ -5,15 +5,14 @@ const ContactDetailsSchema = z
   .object({
     email: z.string().email('Invalid email address').optional(),
     phone: z.string().min(10, 'Phone number must be at least 10 digits').optional(),
-    mobile: z.string().min(10, 'Mobile number must be at least 10 digits').optional(),
     address: z.string().optional(),
     city: z.string().optional(),
     state: z.string().optional(),
     country: z.string().optional(),
     pincode: z.string().optional(),
   })
-  .refine((data) => data.email || data.phone || data.mobile, {
-    message: 'At least one contact method (email, phone, or mobile) is required',
+  .refine((data) => data.email || data.phone, {
+    message: 'At least one contact method (email or phone) is required',
     path: ['email'],
   });
 

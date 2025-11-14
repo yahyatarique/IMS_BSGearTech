@@ -10,12 +10,32 @@ interface GearSpecificationsSectionProps {
 }
 
 export const GearSpecificationsSection = memo(({ control }: GearSpecificationsSectionProps) => {
-  useWatch({ control, name: ['turning_rate', 'module', 'face', 'teeth_count'] });
+  useWatch({ control, name: ['rate', 'turning_rate', 'module', 'face', 'teeth_count'] });
 
   return (
   <Card className="p-6">
     <h3 className="text-lg font-semibold mb-4">Gear Specifications</h3>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <FormField
+        control={control}
+        name="rate"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Rate (₹) *</FormLabel>
+            <FormControl>
+              <Input
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                {...field}
+                onChange={(e) => field.onChange(parseFloat(e.target.value))}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
       <FormField
         control={control}
         name="turning_rate"

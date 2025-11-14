@@ -3,7 +3,7 @@
 import { ProfileRecord } from '@/services/types/profile.api.type';
 import { Button } from '@/components/ui/button';
 import { EntityDetailsDialog } from '@/components/ui/entity-details-dialog';
-import { Package, IndianRupee, Ruler, Flame, Zap, Percent, Pencil, Trash2 } from 'lucide-react';
+import { Package, IndianRupee, Ruler, Zap, Percent, Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
@@ -89,33 +89,24 @@ export function ProfileDetailsDialog({
             <div>
               <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Ruler className="h-4 w-4" />
-                Cut Size Width (mm)
+                Outer Diameter (mm)
               </p>
               <p className="text-base font-medium text-foreground">
-                {Number(profile.cut_size_width_mm).toFixed(2)}
+                {Number(profile.outer_diameter_mm).toFixed(2)}
               </p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Ruler className="h-4 w-4" />
-                Cut Size Height (mm)
+                Thickness (mm)
               </p>
               <p className="text-base font-medium text-foreground">
-                {Number(profile.cut_size_height_mm).toFixed(2)}
+                {Number(profile.thickness_mm).toFixed(2)}
               </p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Flame className="h-4 w-4" />
-                Burning Wastage %
-              </p>
-              <p className="text-base font-medium text-foreground">
-                {Number(profile.burning_wastage_percent).toFixed(2)}%
-              </p>
-            </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Zap className="h-4 w-4" />
@@ -125,16 +116,15 @@ export function ProfileDetailsDialog({
                 ₹{Number(profile.heat_treatment_rate).toFixed(2)}
               </p>
             </div>
-          </div>
-
-          <div>
-            <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Percent className="h-4 w-4" />
-              Heat Treatment Inefficacy %
-            </p>
-            <p className="text-base font-medium text-foreground">
-              {profile.heat_treatment_inefficacy_percent}%
-            </p>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Percent className="h-4 w-4" />
+                Heat Treatment Inefficacy %
+              </p>
+              <p className="text-base font-medium text-foreground">
+                {profile.heat_treatment_inefficacy_percent}%
+              </p>
+            </div>
           </div>
         </div>
       </EntityDetailsDialog>

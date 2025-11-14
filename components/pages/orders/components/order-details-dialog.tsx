@@ -16,7 +16,8 @@ import {
   DollarSign,
   TrendingUp,
   Package,
-  Wrench
+  Wrench,
+  Flame
 } from 'lucide-react';
 
 const statusClasses: Record<OrderRecord['status'], string> = {
@@ -195,6 +196,24 @@ export function OrderDetailsDialog({ order, open, onClose }: OrderDetailsDialogP
             </div>
           </div>
 
+          {/* Burning Wastage */}
+          {order.burning_wastage_percent !== undefined && (
+            <div>
+              <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                <Flame className="w-4 h-4" />
+                Burning Wastage
+              </h4>
+              <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-800">
+                <p className="text-xs font-medium text-orange-600 dark:text-orange-400 uppercase tracking-wide">
+                  Wastage Percentage
+                </p>
+                <p className="text-2xl font-bold text-orange-700 dark:text-orange-300 mt-1">
+                  {Number(order.burning_wastage_percent).toFixed(2)}%
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Technical Specifications */}
           {(order.teeth_count || order.module || order.face || order.weight) && (
             <div>
@@ -219,7 +238,7 @@ export function OrderDetailsDialog({ order, open, onClose }: OrderDetailsDialogP
                       Module
                     </p>
                     <p className="text-sm text-slate-900 dark:text-white mt-1">
-                      {Number(order.module).toFixed(3)}
+                      {Number(order.module).toFixed(2)}
                     </p>
                   </div>
                 )}
@@ -229,7 +248,7 @@ export function OrderDetailsDialog({ order, open, onClose }: OrderDetailsDialogP
                       Face
                     </p>
                     <p className="text-sm text-slate-900 dark:text-white mt-1">
-                      {Number(order.face).toFixed(3)}
+                      {Number(order.face).toFixed(2)}
                     </p>
                   </div>
                 )}
@@ -239,7 +258,7 @@ export function OrderDetailsDialog({ order, open, onClose }: OrderDetailsDialogP
                       Weight (kg)
                     </p>
                     <p className="text-sm text-slate-900 dark:text-white mt-1">
-                      {Number(order.weight).toFixed(3)}
+                      {Number(order.weight).toFixed(2)}
                     </p>
                   </div>
                 )}

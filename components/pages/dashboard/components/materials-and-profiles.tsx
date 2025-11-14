@@ -1,61 +1,60 @@
-import Link from 'next/link'
-import { Package, Layers, Info, Weight, Clock, IndianRupee, Flame } from 'lucide-react'
-import { DashboardCard } from '@/components/pages/dashboard/components/dashboard-card'
-import { Badge } from '@/components/ui/badge'
-import { fetchDashboardMaterials, fetchDashboardProfileTypes } from '@/services/dashboard'
-import { cn } from '@/lib/utils'
+import Link from 'next/link';
+import { Package, Layers, Info, Weight, Clock, IndianRupee, Flame } from 'lucide-react';
+import { DashboardCard } from '@/components/pages/dashboard/components/dashboard-card';
+import { Badge } from '@/components/ui/badge';
+import { fetchDashboardMaterials, fetchDashboardProfileTypes } from '@/services/dashboard';
+import { cn } from '@/lib/utils';
 
 const MATERIAL_STATUS: Record<string, { label: string; className: string }> = {
   'in-stock': {
     label: 'In Stock',
-    className: 'bg-green-500/10 text-green-700 dark:text-green-500 border-green-500/20',
+    className: 'bg-green-500/10 text-green-700 dark:text-green-500 border-green-500/20'
   },
   'low-stock': {
     label: 'Low Stock',
-    className: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-500 border-yellow-500/20',
+    className: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-500 border-yellow-500/20'
   },
   'out-of-stock': {
     label: 'Out of Stock',
-    className: 'bg-red-500/10 text-red-700 dark:text-red-500 border-red-500/20',
-  },
-}
+    className: 'bg-red-500/10 text-red-700 dark:text-red-500 border-red-500/20'
+  }
+};
 
-const PROFILE_BADGE_CLASS = 'bg-blue-500/10 text-blue-700 dark:text-blue-500 border-blue-500/20'
+const PROFILE_BADGE_CLASS = 'bg-blue-500/10 text-blue-700 dark:text-blue-500 border-blue-500/20';
 
 const quantityFormatter = new Intl.NumberFormat('en-IN', {
-  maximumFractionDigits: 0,
-})
+  maximumFractionDigits: 0
+});
 
 const rateFormatter = new Intl.NumberFormat('en-IN', {
   style: 'currency',
   currency: 'INR',
-  maximumFractionDigits: 0,
-})
+  maximumFractionDigits: 0
+});
 
 function resolveMaterialStatus(status: string) {
-  return MATERIAL_STATUS[status] ?? MATERIAL_STATUS['low-stock']
+  return MATERIAL_STATUS[status] ?? MATERIAL_STATUS['low-stock'];
 }
 
 function calculateStockFill(stock: number) {
   if (stock <= 0) {
-    return 0
+    return 0;
   }
 
   // Use a fixed target of 200kg for the progress bar
-  const target = 200
-  const ratio = stock / target
-  return Math.min(Math.round(ratio * 100), 100)
+  const target = 200;
+  const ratio = stock / target;
+  return Math.min(Math.round(ratio * 100), 100);
 }
-
 
 export async function MaterialsAndProfiles() {
   const [materialsResponse, profileTypesResponse] = await Promise.all([
     fetchDashboardMaterials({ limit: 4 }),
-    fetchDashboardProfileTypes({ limit: 4 }),
-  ])
+    fetchDashboardProfileTypes({ limit: 4 })
+  ]);
 
-  const materials = materialsResponse.data?.data ?? []
-  const profiles = profileTypesResponse.data?.data ?? []
+  const materials = materialsResponse.data?.data ?? [];
+  const profiles = profileTypesResponse.data?.data ?? [];
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -81,8 +80,8 @@ export async function MaterialsAndProfiles() {
           )}
 
           {materials.map((material) => {
-            const status = resolveMaterialStatus(material.status)
-            const stockFill = calculateStockFill(material.stock)
+            const status = resolveMaterialStatus(material.status);
+            const stockFill = calculateStockFill(material.stock);
 
             return (
               <div
@@ -94,9 +93,7 @@ export async function MaterialsAndProfiles() {
                     <p className="text-sm font-semibold text-slate-900 dark:text-white">
                       {material.name}
                     </p>
-                    <p className="text-xs text-slate-600 dark:text-slate-400">
-                      {material.type}
-                    </p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">{material.type}</p>
                     <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
                       <Info className="h-3 w-3" />
                       {material.profileCount} profiles using this material
@@ -123,19 +120,28 @@ export async function MaterialsAndProfiles() {
                   <div
                     className={cn(
                       'h-full rounded-full transition-all duration-300',
-                      material.status === 'in-stock' && 'bg-gradient-to-r from-green-500 to-emerald-500',
-                      material.status === 'low-stock' && 'bg-gradient-to-r from-yellow-500 to-orange-500',
-                      material.status === 'out-of-stock' && 'bg-gradient-to-r from-red-500 to-red-600',
+                      material.status === 'in-stock' &&
+                        'bg-gradient-to-r from-green-500 to-emerald-500',
+                      material.status === 'low-stock' &&
+                        'bg-gradient-to-r from-yellow-500 to-orange-500',
+                      material.status === 'out-of-stock' &&
+                        'bg-gradient-to-r from-red-500 to-red-600'
                     )}
                     style={{ width: `${stockFill}%` }}
                   />
                 </div>
 
                 <div className="mt-3 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                  <span>Available: {quantityFormatter.format(Math.max(0, material.stock - material.pendingDelivery))} {material.unit}</span>
+                  <span>
+                    Available:{' '}
+                    {quantityFormatter.format(
+                      Math.max(0, material.stock - material.pendingDelivery)
+                    )}{' '}
+                    {material.unit}
+                  </span>
                 </div>
               </div>
-            )
+            );
           })}
         </div>
       </DashboardCard>
@@ -176,11 +182,12 @@ export async function MaterialsAndProfiles() {
                   </p>
                   <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
                     <IndianRupee className="h-3 w-3" />
-                    Material Rate: {rateFormatter.format(profile.materialRate)} · HT Rate: {rateFormatter.format(profile.heatTreatmentRate)}
+                    Material Rate: {rateFormatter.format(profile.materialRate)} · HT Rate:{' '}
+                    {rateFormatter.format(profile.heatTreatmentRate)}
                   </p>
                   <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
                     <Flame className="h-3 w-3" />
-                    Wastage: {profile.burningWastagePercent}% · HT Inefficacy: {profile.heatTreatmentInefficacyPercent}%
+                    HT Inefficacy: {profile.heatTreatmentInefficacyPercent}%
                   </p>
                 </div>
                 <div className="flex flex-col items-end gap-1">
@@ -197,5 +204,5 @@ export async function MaterialsAndProfiles() {
         </div>
       </DashboardCard>
     </div>
-  )
+  );
 }
