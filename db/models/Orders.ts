@@ -10,14 +10,18 @@ interface OrdersAttributes {
   grand_total: number;
   material_cost: number;
   process_costs: number;
+  rate: number;
   turning_rate: number;
   teeth_count?: number;
   module?: number;
   face?: number;
   weight?: number;
+  finish_size_width?: number;
+  finish_size_height?: number;
   ht_cost: number;
   total_order_value: number;
   profit_margin: number;
+  burning_wastage_percent: number;
   user_id?: string;
 }
 
@@ -30,10 +34,12 @@ interface OrdersCreationAttributes
     | 'grand_total'
     | 'material_cost'
     | 'process_costs'
+    | 'rate'
     | 'turning_rate'
     | 'ht_cost'
     | 'total_order_value'
     | 'profit_margin'
+    | 'burning_wastage_percent'
   > {}
 
 class Orders extends Model<OrdersAttributes, OrdersCreationAttributes> implements OrdersAttributes {
@@ -45,14 +51,18 @@ class Orders extends Model<OrdersAttributes, OrdersCreationAttributes> implement
   declare grand_total: number;
   declare material_cost: number;
   declare process_costs: number;
+  declare rate: number;
   declare turning_rate: number;
   declare teeth_count?: number;
   declare module?: number;
   declare face?: number;
   declare weight?: number;
+  declare finish_size_width?: number;
+  declare finish_size_height?: number;
   declare ht_cost: number;
   declare total_order_value: number;
   declare profit_margin: number;
+  declare burning_wastage_percent: number;
   declare user_id?: string;
 
   // Association method
@@ -127,6 +137,11 @@ Orders.init(
       allowNull: false,
       defaultValue: 0
     },
+    rate: {
+      type: DataTypes.DECIMAL(14, 2),
+      allowNull: false,
+      defaultValue: 0
+    },
     turning_rate: {
       type: DataTypes.DECIMAL(14, 2),
       allowNull: false,
@@ -148,6 +163,14 @@ Orders.init(
       type: DataTypes.DECIMAL(10, 3),
       allowNull: true
     },
+    finish_size_width: {
+      type: DataTypes.DECIMAL(10, 3),
+      allowNull: true
+    },
+    finish_size_height: {
+      type: DataTypes.DECIMAL(10, 3),
+      allowNull: true
+    },
     ht_cost: {
       type: DataTypes.DECIMAL(14, 2),
       allowNull: false,
@@ -159,6 +182,11 @@ Orders.init(
       defaultValue: 0
     },
     profit_margin: {
+      type: DataTypes.DECIMAL(5, 2),
+      allowNull: false,
+      defaultValue: 0
+    },
+    burning_wastage_percent: {
       type: DataTypes.DECIMAL(5, 2),
       allowNull: false,
       defaultValue: 0

@@ -10,7 +10,7 @@ interface CalculatedValuesSectionProps {
 }
 
 export const CalculatedValuesSection = memo(({ control }: CalculatedValuesSectionProps) => {
-  useWatch({ control, name: ['weight', 'material_cost', 'teeth_cutting_grinding_cost', 'ht_cost'] });
+  useWatch({ control, name: ['weight', 'material_cost', 'teeth_cutting_grinding_cost', 'ht_cost', 'burning_wastage_percent'] });
 
   return (
   <Card className="p-6">
@@ -64,6 +64,20 @@ export const CalculatedValuesSection = memo(({ control }: CalculatedValuesSectio
         render={({ field }) => (
           <FormItem>
             <FormLabel>HT Cost (INR)</FormLabel>
+            <FormControl>
+              <Input type="number" step="0.01" {...field} disabled />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={control}
+        name="burning_wastage_percent"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Burning Wastage (%)</FormLabel>
             <FormControl>
               <Input type="number" step="0.01" {...field} disabled />
             </FormControl>

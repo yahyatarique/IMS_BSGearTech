@@ -12,9 +12,9 @@ module.exports = {
         id: queryInterface.sequelize.literal('gen_random_uuid()'),
         username: 'admin',
         password: hashedPassword,
-        role: '0',
-        first_name: 'System',
-        last_name: 'Administrator',
+        role: '1',
+        first_name: 'Admin',
+        last_name: 'User',
         created_at: new Date()
       }
     ]);

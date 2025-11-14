@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { Control, useWatch } from 'react-hook-form';
+import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -34,11 +35,20 @@ export const BuyerProfileSection = memo(({ control, buyers, profiles, isLoading 
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                {buyers.map((buyer) => (
-                  <SelectItem key={buyer.id} value={buyer.id}>
-                    {buyer.name} {buyer.org_name ? `(${buyer.org_name})` : ''}
-                  </SelectItem>
-                ))}
+                {buyers.length === 0 ? (
+                  <div className="p-2 text-sm text-muted-foreground">
+                    No buyers found.{' '}
+                    <Link href="/buyers" className="text-primary hover:underline">
+                      Add Buyer
+                    </Link>
+                  </div>
+                ) : (
+                  buyers.map((buyer) => (
+                    <SelectItem key={buyer.id} value={buyer.id}>
+                      {buyer.name} {buyer.org_name ? `(${buyer.org_name})` : ''}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
             <FormMessage />
@@ -59,11 +69,20 @@ export const BuyerProfileSection = memo(({ control, buyers, profiles, isLoading 
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                {profiles.map((profile) => (
-                  <SelectItem key={profile.id} value={profile.id}>
-                    {profile.name} ({profile.material})
-                  </SelectItem>
-                ))}
+                {profiles.length === 0 ? (
+                  <div className="p-2 text-sm text-muted-foreground">
+                    No profiles found.{' '}
+                    <Link href="/profiles/create" className="text-primary hover:underline">
+                      Add Profile
+                    </Link>
+                  </div>
+                ) : (
+                  profiles.map((profile) => (
+                    <SelectItem key={profile.id} value={profile.id}>
+                      {profile.name} ({profile.material})
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
             <FormMessage />

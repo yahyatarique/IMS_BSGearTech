@@ -56,9 +56,8 @@ export function ProfileFormDialog({
       type: '0',
       material: undefined,
       material_rate: 0,
-      cut_size_width_mm: 0,
-      cut_size_height_mm: 0,
-      burning_wastage_percent: 0,
+      outer_diameter_mm: 0,
+      thickness_mm: 0,
       heat_treatment_rate: 0,
       heat_treatment_inefficacy_percent: 0,
       inventory_id: undefined
@@ -86,9 +85,8 @@ export function ProfileFormDialog({
         type: profile.type,
         material: profile.material,
         material_rate: Number(profile.material_rate),
-        cut_size_width_mm: Number(profile.cut_size_width_mm),
-        cut_size_height_mm: Number(profile.cut_size_height_mm),
-        burning_wastage_percent: Number(profile.burning_wastage_percent),
+        outer_diameter_mm: Number(profile.outer_diameter_mm),
+        thickness_mm: Number(profile.thickness_mm),
         heat_treatment_rate: Number(profile.heat_treatment_rate),
         heat_treatment_inefficacy_percent: Number(profile.heat_treatment_inefficacy_percent),
         inventory_id: profile.inventory_id
@@ -254,10 +252,10 @@ export function ProfileFormDialog({
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="cut_size_width_mm"
+                name="outer_diameter_mm"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Cut Size Width (mm)</FormLabel>
+                    <FormLabel>Outer Diameter (mm)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -273,10 +271,10 @@ export function ProfileFormDialog({
 
               <FormField
                 control={form.control}
-                name="cut_size_height_mm"
+                name="thickness_mm"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Cut Size Height (mm)</FormLabel>
+                    <FormLabel>Thickness (mm)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -291,45 +289,24 @@ export function ProfileFormDialog({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="burning_wastage_percent"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Burning Wastage (%)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="0.00"
-                        {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="heat_treatment_inefficacy_percent"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Heat Treatment Inefficacy (%)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="0.00"
-                        {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="heat_treatment_inefficacy_percent"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Heat Treatment Inefficacy (%)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="0.00"
+                      {...field}
+                      onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

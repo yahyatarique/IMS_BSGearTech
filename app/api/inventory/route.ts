@@ -84,7 +84,6 @@ export async function POST(request: NextRequest) {
 
     // Calculate material weight based on dimensions
     const calculatedWeight = calculateCylindricalWeight(
-      validatedData.material_type,
       validatedData.width, // Outer Diameter
       validatedData.height // Length
     );

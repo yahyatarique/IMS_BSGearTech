@@ -50,11 +50,11 @@ export const OrderSummary = memo(({ control, buyers, selectedProfile, nextOrderN
             <p className="text-xs uppercase text-muted-foreground font-semibold tracking-wide mb-2">Dimensions</p>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>
-                <span className="text-muted-foreground">Width:</span>
+                <span className="text-muted-foreground">Outer Diameter:</span>
                 <p className="font-medium">{finishWidth} mm</p>
               </div>
               <div>
-                <span className="text-muted-foreground">Height:</span>
+                <span className="text-muted-foreground">Thickness:</span>
                 <p className="font-medium">{finishHeight} mm</p>
               </div>
             </div>

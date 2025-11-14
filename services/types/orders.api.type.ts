@@ -18,6 +18,7 @@ export type OrderRecord = {
   ht_cost: number;
   total_order_value: number;
   profit_margin: number;
+  burning_wastage_percent: number;
   user_id?: string;
   buyer?: {
     id: string;

@@ -7,9 +7,8 @@ interface ProfilesAttributes {
   type:  '0' | '1';
   material: 'CR-5' | 'EN-9';
   material_rate: number;
-  cut_size_width_mm: number;
-  cut_size_height_mm: number;
-  burning_wastage_percent: number;
+  outer_diameter_mm: number;
+  thickness_mm: number;
   heat_treatment_rate: number;
   heat_treatment_inefficacy_percent: number;
   inventory_id?: string;
@@ -23,9 +22,8 @@ class Profiles extends Model<ProfilesAttributes, ProfilesCreationAttributes> imp
   declare type: '0' | '1';
   declare material: 'CR-5' | 'EN-9';
   declare material_rate: number;
-  declare cut_size_width_mm: number;
-  declare cut_size_height_mm: number;
-  declare burning_wastage_percent: number;
+  declare outer_diameter_mm: number;
+  declare thickness_mm: number;
   declare heat_treatment_rate: number;
   declare heat_treatment_inefficacy_percent: number;
   declare inventory_id?: string;
@@ -61,16 +59,12 @@ Profiles.init(
       type: DataTypes.DECIMAL(12, 4),
       allowNull: false,
     },
-    cut_size_width_mm: {
+    outer_diameter_mm: {
       type: DataTypes.DECIMAL(10, 4),
       allowNull: false,
     },
-    cut_size_height_mm: {
+    thickness_mm: {
       type: DataTypes.DECIMAL(10, 4),
-      allowNull: false,
-    },
-    burning_wastage_percent: {
-      type: DataTypes.DECIMAL(5, 2),
       allowNull: false,
     },
     heat_treatment_rate: {

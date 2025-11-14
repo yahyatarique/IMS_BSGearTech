@@ -11,7 +11,8 @@ import { FILTER_VALUES, ORDER_STATUS, ORDER_STATUS_LABELS } from '@/enums/orders
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Search, ShoppingCart } from 'lucide-react';
-import { error as errorToast } from '@/hooks/use-toast';
+import { error as errorToast, success as successToast } from '@/hooks/use-toast';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { PageWrapper } from '@/components/ui/page-wrapper';
 import { GradientBorderCard } from '@/components/ui/gradient-border-card';
 import {
@@ -34,6 +35,7 @@ export default function OrdersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [deferredSearchQuery, setDeferredSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<ORDER_STATUS | FILTER_VALUES>(FILTER_VALUES.ALL_STATUS);
+  const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null);
 
   const router = useRouter();
 
@@ -99,6 +101,40 @@ export default function OrdersPage() {
 
   const navigateToCreateOrder = () => {
     router.push('/orders/create');
+  };
+
+  const handleEdit = (orderId: string) => {
+    router.push(`/orders/${orderId}`);
+  };
+
+  const handleDeleteClick = (orderId: string) => {
+    setDeleteOrderId(orderId);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteOrderId) return;
+
+    try {
+      const response = await fetch(`/api/orders/${deleteOrderId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete order');
+      }
+
+      successToast({
+        title: 'Success',
+        description: 'Order deleted successfully'
+      });
+
+      setOrders(orders.filter(order => order.id !== deleteOrderId));
+    } catch (error: any) {
+      errorToast({
+        title: 'Error',
+        description: error.message || 'Failed to delete order'
+      });
+    }
   };
 
   return (
@@ -179,7 +215,13 @@ export default function OrdersPage() {
           ))}
         </div>
       ) : orders.length > 0 ? (
-        <OrdersCardGrid orders={orders} isLoading={false} onCardClick={handleCardClick} />
+        <OrdersCardGrid 
+          orders={orders} 
+          isLoading={false} 
+          onCardClick={handleCardClick}
+          onEdit={handleEdit}
+          onDelete={handleDeleteClick}
+        />
       ) : (
         <GradientBorderCard className="text-center">
           <div className="py-12 text-center">
@@ -204,6 +246,17 @@ export default function OrdersPage() {
           setIsDetailsDialogOpen(false);
           setSelectedOrder(null);
         }}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmationDialog
+        open={!!deleteOrderId}
+        onOpenChange={() => setDeleteOrderId(null)}
+        title="Delete Order"
+        description="Are you sure you want to delete this order? This action cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={handleDeleteConfirm}
+        variant="destructive"
       />
     </PageWrapper>
   );

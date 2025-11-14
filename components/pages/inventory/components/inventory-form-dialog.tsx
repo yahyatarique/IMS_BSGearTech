@@ -14,12 +14,6 @@ import {
   FormLabel,
   FormMessage
 } from '@/components/ui/form';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
 import { ChevronDown } from 'lucide-react';
 import {
   CreateInventorySchema,
@@ -28,6 +22,7 @@ import {
 } from '@/schemas/inventory.schema';
 import { InventoryRecord } from '@/services/types/inventory.api.type';
 import { z } from 'zod';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 
 // Form data type - quantity is optional with default
 type InventoryFormData = z.input<typeof CreateInventorySchema>;
@@ -69,7 +64,7 @@ export function InventoryFormDialog({
   const handleSubmit = async (data: InventoryFormData) => {
     try {
       const validatedData = CreateInventorySchema.parse(data);
-      
+
       await onSubmit(validatedData);
       form.reset();
       onOpenChange(false);
@@ -100,32 +95,19 @@ export function InventoryFormDialog({
                 <FormItem>
                   <FormLabel>Material Type</FormLabel>
                   <FormControl>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          className="w-full justify-between"
-                        >
-                          {field.value === 'CR-5' ? 'CR-5' : 'EN-9'}
-                          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-[200px]">
-                        <DropdownMenuItem
-                          onClick={() => field.onChange('CR-5')}
-                          className="cursor-pointer"
-                        >
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="w-full">
+                        {field.value === 'CR-5' ? 'CR-5' : 'EN-9'}
+                      </SelectTrigger>
+                      <SelectContent className="w-full">
+                        <SelectItem value="CR-5" className="cursor-pointer">
                           CR-5
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => field.onChange('EN-9')}
-                          className="cursor-pointer"
-                        >
+                        </SelectItem>
+                        <SelectItem value="EN-9" className="cursor-pointer">
                           EN-9
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

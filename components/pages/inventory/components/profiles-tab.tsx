@@ -6,7 +6,7 @@ import { CreateProfileInput, UpdateProfileInput } from '@/schemas/profile.schema
 import { fetchProfiles, createProfile, updateProfile, deleteProfile } from '@/services/profiles';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, IndianRupee, Ruler } from 'lucide-react';
+import { Plus, Search, IndianRupee, Ruler, Eye } from 'lucide-react';
 import { success, error as errorToast } from '@/hooks/use-toast';
 import { GradientBorderCard } from '@/components/ui/gradient-border-card';
 import { Badge } from '@/components/ui/badge';
@@ -125,7 +125,6 @@ export function ProfilesTab() {
             <option value="all">All Types</option>
             <option value="0">Gear</option>
             <option value="1">Pinion</option>
-           
           </select>
         </div>
         <Button
@@ -152,30 +151,60 @@ export function ProfilesTab() {
           <p className="text-muted-foreground">No profiles found</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {profiles.map((profile) => (
             <GradientBorderCard
               key={profile.id}
-              className="cursor-pointer transition-all hover:scale-[1.02] hover:shadow-lg"
+              gradient="none"
+              className="hover:shadow-lg p-5 space-y-4 transition-all duration-300 cursor-pointer group relative"
               onClick={() => handleCardClick(profile)}
             >
-              <div className="space-y-3 p-4 ">
-                <div className="flex items-start justify-between">
-                  <h3 className="font-semibold text-lg">{profile.name}</h3>
+              {/* Header with Profile Name */}
+              <div className="flex items-start justify-between">
+                <Badge variant="outline" className="text-sm font-semibold">
+                  {profile.name}
+                </Badge>
+              </div>
+
+              {/* Main Info */}
+              <div className="space-y-3">
+                <div className="flex items-start justify-between text-sm">
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                    <Ruler className="h-4 w-4" />
+                    <span className="font-medium">Material</span>
+                  </div>
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">
+                    {profile.material}
+                  </span>
                 </div>
-                <div className="space-y-1 text-sm text-muted-foreground">
-                  <p className="flex items-center gap-2">
-                    Material: {profile.material}
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <IndianRupee className="h-3 w-3" />
-                    Rate: ₹{Number(profile.material_rate).toFixed(2)}
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <Ruler className="h-3 w-3" />
-                    Size: {Number(profile.cut_size_width_mm).toFixed(2)} × {Number(profile.cut_size_height_mm).toFixed(2)} mm
-                  </p>
+
+                <div className="flex items-start justify-between text-sm">
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                    <IndianRupee className="h-4 w-4" />
+                    <span className="font-medium">Rate</span>
+                  </div>
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">
+                    ₹{Number(profile.material_rate).toFixed(2)}
+                  </span>
                 </div>
+
+                <div className="flex items-start justify-between text-sm">
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                    <Ruler className="h-4 w-4" />
+                    <span className="font-medium">Dimensions</span>
+                  </div>
+                  <span className="font-semibold text-gray-900 dark:text-gray-100 text-right">
+                    {Number(profile.outer_diameter_mm).toFixed(2)}mm OD × {Number(profile.thickness_mm).toFixed(2)}mm T
+                  </span>
+                </div>
+              </div>
+
+              {/* View Details - Bottom Right */}
+              <div className="flex justify-end pt-2 border-t border-gray-200 dark:border-gray-700">
+                <span className="text-xs text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
+                  <Eye className="h-3.5 w-3.5" />
+                  View Details
+                </span>
               </div>
             </GradientBorderCard>
           ))}

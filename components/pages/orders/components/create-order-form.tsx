@@ -30,6 +30,7 @@ import { ProcessesSection } from './processes-section';
 import { CalculatedValuesSection } from './calculated-values-section';
 import { TotalProfitSection } from './total-profit-section';
 import { OrderSummary } from './order-summary';
+import { calculateProfileWeight } from '../../../../utils/material-calculations';
 
 interface CreateOrderFormProps {
   orderId?: string | null;
@@ -50,13 +51,15 @@ export function CreateOrderForm({ orderId }: CreateOrderFormProps) {
       processes: [],
       profit_margin: 0,
       finish_size: { width: 0, height: 0 },
+      rate: 0,
       turning_rate: 0,
       material_cost: 0,
       teeth_cutting_grinding_cost: 0,
       ht_cost: 0,
       weight: 0,
       total_order_value: 0,
-      grand_total: 0
+      grand_total: 0,
+      burning_wastage_percent: 0
     }
   });
 
@@ -160,39 +163,66 @@ export function CreateOrderForm({ orderId }: CreateOrderFormProps) {
   const htCost = form.watch('ht_cost');
   const profitMargin = form.watch('profit_margin');
   const processes = form.watch('processes');
+  const rate = form.watch('rate');
+  const finishSize = form.watch('finish_size');
 
-  // Update calculations when profile changes
+  // Update calculations when profile or module changes
   useEffect(() => {
-    if (selectedProfile) {
+    if (selectedProfile && moduleValue) {
       // Set rates from profile
       const materialRate = Number(selectedProfile.material_rate);
-      const htRate = Number(selectedProfile.heat_treatment_rate);
+      // const htRate = Number(selectedProfile.heat_treatment_rate);
 
-      const cutSizeOne = Number(selectedProfile.cut_size_width_mm);
-      const cutSizeTwo = Number(selectedProfile.cut_size_height_mm);
+      const outerDiameter = Number(selectedProfile.outer_diameter_mm);
+      const thickness = Number(selectedProfile.thickness_mm);
 
       // Calculate weight if dimensions exist
-      if (cutSizeOne && cutSizeTwo) {
-        const weight = calculateWeight(cutSizeOne, cutSizeTwo);
+      if (outerDiameter && thickness && moduleValue > 0) {
+        
+        // Calculate single product weight
+        const singleWeight = calculateProfileWeight(outerDiameter, thickness);
 
-        form.setValue('weight', Number(weight?.toFixed(5)));
+        // Multiply by module to get total weight
+        const totalWeight = singleWeight * moduleValue;
 
-        const materialCost = calculateMaterialCost(weight, materialRate);
+        form.setValue('weight', Number(totalWeight?.toFixed(5)));
+
+        const materialCost = calculateMaterialCost(totalWeight, materialRate);
         form.setValue('material_cost', Number(materialCost?.toFixed(5)));
 
-        const htCost = calculateHTCost(weight, htRate);
+        const htCost = calculateHTCost(totalWeight, rate);
         form.setValue('ht_cost', Number(htCost?.toFixed(5)));
       }
     }
-  }, [selectedProfile, form]);
+  }, [selectedProfile, moduleValue, form, rate]);
+
+  // Calculate burning wastage
+  useEffect(() => {
+    if (selectedProfile && moduleValue && finishSize?.width && finishSize?.height) {
+      const profileWeight = calculateProfileWeight(
+        Number(selectedProfile.outer_diameter_mm),
+        Number(selectedProfile.thickness_mm)
+      ) * moduleValue;
+
+      const finishWeight = calculateProfileWeight(
+        finishSize.width,
+        finishSize.height
+      ) * moduleValue;
+
+      if (profileWeight > 0) {
+        const wastage = ((profileWeight - finishWeight) / profileWeight) * 100;
+        form.setValue('burning_wastage_percent', Number(wastage.toFixed(2)));
+      }
+    }
+  }, [selectedProfile, moduleValue, finishSize, form]);
 
   // Update teeth cost when dependencies change
   useEffect(() => {
     if (teethCount && moduleValue && face && teethCount > 0 && moduleValue > 0 && face > 0) {
-      const teethCost = calculateTeethCost(teethCount, moduleValue, face);
+      const teethCost = calculateTeethCost(teethCount, moduleValue, face, rate);
       form.setValue('teeth_cutting_grinding_cost', teethCost);
     }
-  }, [teethCount, moduleValue, face, form]);
+  }, [teethCount, moduleValue, face, form, rate]);
 
   const p = JSON.stringify(processes);
 

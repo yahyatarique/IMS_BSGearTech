@@ -10,9 +10,8 @@ interface OrderProfileAttributes {
   type: '0' | '1';
   material: 'CR-5' | 'EN-9';
   material_rate: number;
-  cut_size_width_mm: number;
-  cut_size_height_mm: number;
-  burning_wastage_percent: number;
+  outer_diameter_mm: number;
+  thickness_mm: number;
   heat_treatment_rate: number;
   heat_treatment_inefficacy_percent: number;
   created_at: Date;
@@ -29,9 +28,8 @@ class OrderProfile extends Model<OrderProfileAttributes, OrderProfileCreationAtt
   public type!: '0' | '1';
   public material!: 'CR-5' | 'EN-9';
   public material_rate!: number;
-  public cut_size_width_mm!: number;
-  public cut_size_height_mm!: number;
-  public burning_wastage_percent!: number;
+  public outer_diameter_mm!: number;
+  public thickness_mm!: number;
   public heat_treatment_rate!: number;
   public heat_treatment_inefficacy_percent!: number;
   public readonly created_at!: Date;
@@ -93,16 +91,12 @@ OrderProfile.init(
       type: DataTypes.DECIMAL(12, 4),
       allowNull: false,
     },
-    cut_size_width_mm: {
+    outer_diameter_mm: {
       type: DataTypes.DECIMAL(10, 4),
       allowNull: false,
     },
-    cut_size_height_mm: {
+    thickness_mm: {
       type: DataTypes.DECIMAL(10, 4),
-      allowNull: false,
-    },
-    burning_wastage_percent: {
-      type: DataTypes.DECIMAL(5, 2),
       allowNull: false,
     },
     heat_treatment_rate: {

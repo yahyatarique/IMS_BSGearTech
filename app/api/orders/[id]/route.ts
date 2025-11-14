@@ -88,34 +88,33 @@ export async function PUT(
       transaction
     });
 
-    if (orderProfile) {
-      await orderProfile.update({
-        profile_id: profile.id,
-        name: profile.name,
-        type: profile.type,
-        material: profile.material,
-        material_rate: profile.material_rate,
-        cut_size_width_mm: validatedData.finish_size.width,
-        cut_size_height_mm: validatedData.finish_size.height,
-        burning_wastage_percent: profile.burning_wastage_percent,
-        heat_treatment_rate: profile.heat_treatment_rate,
-        heat_treatment_inefficacy_percent: profile.heat_treatment_inefficacy_percent
-      }, { transaction });
-    } else {
-      await OrderProfile.create({
-        order_id: order.id,
-        profile_id: profile.id,
-        name: profile.name,
-        type: profile.type,
-        material: profile.material,
-        material_rate: profile.material_rate,
-        cut_size_width_mm: validatedData.finish_size.width,
-        cut_size_height_mm: validatedData.finish_size.height,
-        burning_wastage_percent: profile.burning_wastage_percent,
-        heat_treatment_rate: profile.heat_treatment_rate,
-        heat_treatment_inefficacy_percent: profile.heat_treatment_inefficacy_percent
-      }, { transaction });
-    }
+    // if (orderProfile) {
+    //   await orderProfile.update({
+    //     profile_id: profile.id,
+    //     name: profile.name,
+    //     type: profile.type,
+    //     material: profile.material,
+    //     material_rate: profile.material_rate,
+    //     cut_size_width_mm: ,
+    //     cut_size_height_mm: validatedData.finish_size.height,
+    //     heat_treatment_rate: profile.heat_treatment_rate,
+    //     heat_treatment_inefficacy_percent: profile.heat_treatment_inefficacy_percent
+    //   }, { transaction });
+    // } else {
+    //   await OrderProfile.create({
+    //     order_id: order.id,
+    //     profile_id: profile.id,
+    //     name: profile.name,
+    //     type: profile.type,
+    //     material: profile.material,
+    //     material_rate: profile.material_rate,
+    //     cut_size_width_mm: validatedData.finish_size.width,
+    //     cut_size_height_mm: validatedData.finish_size.height,
+    //     burning_wastage_percent: profile.burning_wastage_percent,
+    //     heat_treatment_rate: profile.heat_treatment_rate,
+    //     heat_treatment_inefficacy_percent: profile.heat_treatment_inefficacy_percent
+    //   }, { transaction });
+    // }
 
     // Update OrderInventory record
     const orderInventory = await OrderInventory.findOne({

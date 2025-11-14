@@ -49,7 +49,7 @@ export function BuyerFormDialog({
     resolver: zodResolver(CreateBuyerSchema) as any,
     defaultValues: {
       name: '',
-      contact_details: { email: '', phone: '', mobile: '' },
+      contact_details: { email: '', phone: '' },
       gst_number: '',
       pan_number: '',
       tin_number: '',
@@ -64,14 +64,14 @@ export function BuyerFormDialog({
       form.reset({
         name: buyer.name || '',
         org_name: buyer.org_name || '',
-        contact_details: buyer.contact_details || { email: '', phone: '', mobile: '' },
+        contact_details: buyer.contact_details || { email: '', phone: '' },
         gst_number: buyer.gst_number || '',
         pan_number: buyer.pan_number || '',
         tin_number: buyer.tin_number || '',
         org_address: buyer.org_address || '',
         status: buyer.status
       });
-    } 
+    }
   }, [buyer, form]);
 
   const handleSubmit = async (data: FormValues) => {
@@ -188,19 +188,7 @@ export function BuyerFormDialog({
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="contact_details.mobile"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Mobile</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Mobile number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+
                 <FormField
                   control={form.control}
                   name="contact_details.phone"

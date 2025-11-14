@@ -21,7 +21,7 @@ export const FinishSizeSection = memo(({ control }: FinishSizeSectionProps) => {
         name="finish_size.width"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Width (mm) *</FormLabel>
+            <FormLabel>Outer Diameter (mm) *</FormLabel>
             <FormControl>
               <Input
                 type="number"
@@ -41,7 +41,7 @@ export const FinishSizeSection = memo(({ control }: FinishSizeSectionProps) => {
         name="finish_size.height"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Height (mm) *</FormLabel>
+            <FormLabel>Thickness (mm) *</FormLabel>
             <FormControl>
               <Input
                 type="number"
