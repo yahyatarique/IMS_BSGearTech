@@ -213,7 +213,7 @@ export default function ProfilePage() {
         <div className="grid gap-6 md:grid-cols-3">
           {/* Profile Summary Card */}
           <GradientBorderCard className="border shadow-lg bg-white dark:bg-slate-900">
-            <Card className="!border-0 !shadow-none">
+            <Card className="!border-0 h-full !shadow-none">
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center text-center">
                   <Avatar className="h-24 w-24 border-4 border-white shadow-lg mb-4">
