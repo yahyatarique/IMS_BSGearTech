@@ -3,6 +3,12 @@ import nextVitals from 'eslint-config-next/core-web-vitals'
  
 const eslintConfig = defineConfig([
   ...nextVitals,
+  {
+    rules: {
+      '@typescript-eslint/no-unused-vars': 'error',
+      'no-unused-vars': 'error'
+    }
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

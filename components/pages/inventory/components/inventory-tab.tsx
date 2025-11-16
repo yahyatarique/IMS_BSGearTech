@@ -8,10 +8,9 @@ import {
   updateInventoryItem,
   deleteInventoryItem
 } from '@/services/inventory';
-import { InventoryStatsCards } from './inventory-stats-cards';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Package, Ruler, Eye, Weight } from 'lucide-react';
+import { Plus, Search, Package, Ruler, Eye, Weight, IndianRupee } from 'lucide-react';
 import { error as errorToast, success as successToast } from '@/hooks/use-toast';
 import { Section } from '@/components/ui/section';
 import { GradientBorderCard } from '@/components/ui/gradient-border-card';
@@ -30,7 +29,7 @@ export function InventoryTab() {
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [editingInventory, setEditingInventory] = useState<InventoryRecord | null>(null);
   const [materialFilter, setMaterialFilter] = useState<'all' | 'CR-5' | 'EN-9'>('all');
-  const [statsKey, setStatsKey] = useState(0);
+  // const [statsKey, setStatsKey] = useState(0);
 
   // Fetch all inventory items
   const loadInventoryItems = useCallback(async () => {
@@ -125,7 +124,7 @@ export function InventoryTab() {
       setIsFormDialogOpen(false);
       setEditingInventory(null);
       loadInventoryItems();
-      setStatsKey((prev) => prev + 1);
+      // setStatsKey((prev) => prev + 1);
     } catch (error: any) {
       errorToast({
         title: 'Error',
@@ -167,7 +166,7 @@ export function InventoryTab() {
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search by PO number..."
+              placeholder="Search by outer diameter * length and rate..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -187,13 +186,13 @@ export function InventoryTab() {
       </div>
 
       {/* Material Stats Section */}
-      <Section
+      {/* <Section
         title="Material Overview"
         description="Inventory statistics by material and dimensions"
         variant="gradient"
       >
         <InventoryStatsCards key={statsKey} />
-      </Section>
+      </Section> */}
 
       {/* Inventory Items Section */}
       <Section
@@ -258,7 +257,17 @@ export function InventoryTab() {
 
                   <div className="flex items-start justify-between text-sm">
                     <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                      <Package className="h-4 w-4" />
+                      <IndianRupee className="h-4 w-4" />
+                      <span className="font-medium">Rate</span>
+                    </div>
+                    <span className="font-semibold text-gray-900 dark:text-gray-100">
+                      ₹{Number(item.rate).toFixed(2)}
+                    </span>
+                  </div>
+
+                  <div className="flex items-start justify-between text-sm">
+                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                      <IndianRupee className="h-4 w-4" />
                       <span className="font-medium">Total Cost</span>
                     </div>
                     <span className="font-semibold text-gray-900 dark:text-gray-100">

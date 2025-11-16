@@ -13,7 +13,8 @@ import {
   Layers,
   Clock,
   CheckCircle,
-  TrendingUp
+  TrendingUp,
+  IndianRupee
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
@@ -143,7 +144,7 @@ export function InventoryDetailsDialog({
               {/* Rate */}
               <div>
                 <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4" />
+                  <IndianRupee className="h-4 w-4" />
                   Rate (per kg)
                 </h4>
                 <p className="text-lg font-medium text-foreground">
@@ -154,7 +155,7 @@ export function InventoryDetailsDialog({
               {/* Total Cost */}
               <div>
                 <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4" />
+                  <IndianRupee className="h-4 w-4" />
                   Total Cost
                 </h4>
                 <p className="text-lg font-medium text-foreground">
