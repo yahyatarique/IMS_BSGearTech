@@ -6,7 +6,7 @@ import { CreateProfileInput, UpdateProfileInput } from '@/schemas/profile.schema
 import { fetchProfiles, createProfile, updateProfile, deleteProfile } from '@/services/profiles';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, IndianRupee, Ruler, Eye } from 'lucide-react';
+import { Plus, Search, IndianRupee,  Eye } from 'lucide-react';
 import { success, error as errorToast } from '@/hooks/use-toast';
 import { GradientBorderCard } from '@/components/ui/gradient-border-card';
 import { Badge } from '@/components/ui/badge';
@@ -169,32 +169,40 @@ export function ProfilesTab() {
               {/* Main Info */}
               <div className="space-y-3">
                 <div className="flex items-start justify-between text-sm">
-                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                    <Ruler className="h-4 w-4" />
-                    <span className="font-medium">Material</span>
-                  </div>
+                  <span className="text-gray-600 dark:text-gray-400">Teeth</span>
                   <span className="font-semibold text-gray-900 dark:text-gray-100">
-                    {profile.material}
+                    {profile.no_of_teeth}
                   </span>
                 </div>
 
                 <div className="flex items-start justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">Face</span>
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">
+                    {profile.face}
+                  </span>
+                </div>
+
+                <div className="flex items-start justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">Finish Size</span>
+                  <span className="font-semibold text-gray-900 dark:text-gray-100 text-right">
+                    {profile.finish_size}
+                  </span>
+                </div>
+
+                <div className="flex items-start justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">Processes</span>
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">
+                    {profile.processes?.length || 0}
+                  </span>
+                </div>
+
+                <div className="flex items-start justify-between text-sm pt-2 border-t border-gray-200 dark:border-gray-700">
                   <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                     <IndianRupee className="h-4 w-4" />
-                    <span className="font-medium">Rate</span>
+                    <span className="font-medium">Total</span>
                   </div>
-                  <span className="font-semibold text-gray-900 dark:text-gray-100">
-                    ₹{Number(profile.material_rate).toFixed(2)}
-                  </span>
-                </div>
-
-                <div className="flex items-start justify-between text-sm">
-                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                    <Ruler className="h-4 w-4" />
-                    <span className="font-medium">Dimensions</span>
-                  </div>
-                  <span className="font-semibold text-gray-900 dark:text-gray-100 text-right">
-                    {Number(profile.outer_diameter_mm).toFixed(2)}mm OD × {Number(profile.thickness_mm).toFixed(2)}mm T
+                  <span className="font-bold text-lg text-gray-900 dark:text-gray-100">
+                    ₹{Number(profile.total).toFixed(2)}
                   </span>
                 </div>
               </div>

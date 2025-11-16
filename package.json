@@ -13,6 +13,7 @@
     "db:setup": "npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all"
   },
   "dependencies": {
+    "@bprogress/next": "^3.2.12",
     "@floating-ui/react-dom": "^2.1.1",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-alert-dialog": "^1.1.15",

@@ -1,20 +1,4 @@
-/**
- * Order Calculation Helper Functions
- * Contains all calculation logic for order creation and management
- */
-
-import { CALCULATE_WEIGHT_CONST } from './constants';
-
-/**
- * Calculate weight based on finish size dimensions
- * Formula: (width² × height) / CALCULATE_WEIGHT_CONST / 1000000 (convert mm³ to kg)
- * @param width - Width in mm
- * @param height - Height in mm
- * @returns Weight in kg
- */
-export const calculateWeight = (width: number, height: number): number => {
-  return (Math.pow(width, 2) * height) / CALCULATE_WEIGHT_CONST / 1000000;
-};
+import { Process } from "../schemas/profile.schema";
 
 /**
  * Calculate material cost
@@ -69,19 +53,19 @@ export const calculateHTCost = (weight: number, htRate: number): number => {
  * @param processes - Array of process objects with rate property
  * @returns Total order value in INR
  */
-export const calculateTotalOrderValue = (
+export const caclculateProfileTotal = (
   materialCost: number,
-  turningRate: number,
-  teethCost: number,
+  teethCost: number | undefined,
   htCost: number,
-  processes: Array<{ rate?: number }>
+  cyn_grinding: number,
+  processes: Process[] | undefined
 ): number => {
   return (
     materialCost +
-    turningRate +
-    teethCost +
+    (teethCost || 0) +
     htCost +
-    processes.reduce((sum, process) => sum + (process.rate || 0), 0)
+    cyn_grinding +
+    (processes ? processes.reduce((sum, process) => sum + (process.cost || 0), 0) : 0)
   );
 };
 
@@ -94,4 +78,9 @@ export const calculateTotalOrderValue = (
  */
 export const calculateGrandTotal = (totalOrderValue: number, profitMargin: number): number => {
   return totalOrderValue * (profitMargin / 100);
+};
+
+
+export const calculateBurningWeight = (weight: number): number => {
+  return weight * 0.05;
 };
