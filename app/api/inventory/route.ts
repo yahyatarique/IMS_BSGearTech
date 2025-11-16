@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       successResponse({
-        inventory: inventory.map(item => item.toJSON()),
+        inventory: inventory.map((item) => item.toJSON()),
         meta: {
           page,
           pageSize: limit,
@@ -84,9 +84,13 @@ export async function POST(request: NextRequest) {
 
     // Calculate material weight based on dimensions
     const calculatedWeight = calculateCylindricalWeight(
-      validatedData.width, // Outer Diameter
-      validatedData.height // Length
+      validatedData.outer_diameter, // Outer Diameter
+      validatedData.length // Length
     );
+
+    if (calculatedWeight !== validatedData.material_weight) {
+      throw new Error('Provided material weight does not match calculated weight');
+    }
 
     // Create inventory item with calculated weight
     const inventoryItem = await Inventory.create(

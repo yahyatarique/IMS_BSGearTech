@@ -8,10 +8,10 @@
  */
 export function calculateCylindricalWeight(outerDiameterMm: number, lengthMm: number): number {
   // Calculate weight in kg using the formula
-  const weightKg = (outerDiameterMm * outerDiameterMm * lengthMm) / (162.02 * 1000);
+  const weightKg = ((outerDiameterMm * outerDiameterMm * lengthMm) / 162.02) / 1000;
 
   // Round to 3 decimal places
-  return Math.round(weightKg * 1000) / 1000;
+  return weightKg;
 }
 
 /**
@@ -22,13 +22,10 @@ export function calculateCylindricalWeight(outerDiameterMm: number, lengthMm: nu
  * @param {number} thicknessMm - The thickness of the profile material in mm.
  * @returns {number} The weight of the profile material in kg, rounded to 3 decimal places.
  */
-export function calculateProfileWeight(
-  outerDiameterMm: number,
-  thicknessMm: number,
-): number {
+export function calculateProfileWeight(outerDiameterMm: number, thicknessMm: number): number {
   // Calculate weight in kg using the formula
   const weightKg = (outerDiameterMm * outerDiameterMm * thicknessMm) / 162.28;
 
   // Round to 3 decimal places
-  return Math.round(weightKg) / 1000;
+  return weightKg;
 }

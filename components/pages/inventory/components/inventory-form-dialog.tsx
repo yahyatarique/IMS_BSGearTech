@@ -14,7 +14,6 @@ import {
   FormLabel,
   FormMessage
 } from '@/components/ui/form';
-import { ChevronDown } from 'lucide-react';
 import {
   CreateInventorySchema,
   CreateInventoryInput,
@@ -23,6 +22,7 @@ import {
 import { InventoryRecord } from '@/services/types/inventory.api.type';
 import { z } from 'zod';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
+import { calculateCylindricalWeight } from '../../../../utils/material-calculations';
 
 // Form data type - quantity is optional with default
 type InventoryFormData = z.input<typeof CreateInventorySchema>;
@@ -44,19 +44,33 @@ export function InventoryFormDialog({
     resolver: zodResolver(CreateInventorySchema),
     defaultValues: {
       material_type: 'CR-5',
-      width: 0,
-      height: 0,
-      quantity: 0
+      outer_diameter: 0,
+      length: 0,
+      rate: 0,
+      material_weight: 0,
+      total_cost: 0
     }
   });
+
+  const rate = form.watch('rate');
+  const outer_diameter = form.watch('outer_diameter');
+  const length = form.watch('length');
+
+  useEffect(() => {
+    const totalWeight = calculateCylindricalWeight(outer_diameter, length);
+    const totalCost = rate * totalWeight;
+
+    form.setValue('material_weight', totalWeight || 0);
+    form.setValue('total_cost', totalCost || 0);
+  }, [rate, outer_diameter, length, form]);
 
   useEffect(() => {
     if (inventory) {
       form.reset({
         material_type: inventory.material_type,
-        width: Number(inventory.width),
-        height: Number(inventory.height),
-        quantity: Number(inventory.quantity)
+        outer_diameter: Number(inventory.outer_diameter),
+        length: Number(inventory.length),
+        rate: Number(inventory.rate)
       });
     }
   }, [inventory, form]);
@@ -119,11 +133,11 @@ export function InventoryFormDialog({
               Material weight will be calculated automatically based on the dimensions.
             </p>
 
-            {/* Width and Height */}
+            {/* Outer_diameter and Length */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="width"
+                name="outer_diameter"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Outer Diameter (mm)</FormLabel>
@@ -152,7 +166,7 @@ export function InventoryFormDialog({
 
               <FormField
                 control={form.control}
-                name="height"
+                name="length"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Length (mm)</FormLabel>
@@ -171,34 +185,66 @@ export function InventoryFormDialog({
               />
             </div>
 
-            {/* Quantity */}
             <FormField
               control={form.control}
-              name="quantity"
+              name="rate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Quantity</FormLabel>
+                  <FormLabel>Rate (per kg)</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
-                      placeholder="Enter quantity"
+                      step="0.01"
+                      placeholder="Enter rate"
                       {...field}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        field.onChange(parseInt(val, 10));
-                      }}
-                      onBlur={(e) => {
-                        const val = parseInt(e.target.value, 10);
-                        if (isNaN(val)) {
-                          field.onChange(0);
-                        }
-                      }}
+                      onChange={(e) => field.onChange(parseFloat(e.target.value))}
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            {/* Rate and Material Weight */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Material Weight */}
+              <FormField
+                name="material_weight"
+                control={form.control}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Material Weight (kg)</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={Number(field.value)?.toFixed(2)}
+                        type="number"
+                        disabled
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              {/* Rate  */}
+              <FormField
+                control={form.control}
+                name="total_cost"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Total Cost (Rate × Weight)</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={Number(field.value)?.toFixed(2)}
+                        type="number"
+                        disabled
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
 
             {/* Actions */}
             <div className="flex justify-end gap-2">
