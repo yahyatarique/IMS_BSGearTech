@@ -1,5 +1,7 @@
 import { MATERIALS, PROFILE_TYPES } from '../../enums/material.enum';
+import { Process } from '../../schemas/profile.schema';
 import { BaseResponse } from './base.api.type';
+import { InventoryRecord } from './inventory.api.type';
 
 // Profile record structure matching DB model
 export interface ProfileRecord {
@@ -7,12 +9,20 @@ export interface ProfileRecord {
   name: string;
   type: PROFILE_TYPES;
   material: MATERIALS;
-  material_rate: string;
-  outer_diameter_mm: string;
-  thickness_mm: string;
-  heat_treatment_rate: string;
-  heat_treatment_inefficacy_percent: string;
+  no_of_teeth: number;
+  rate: string;
+  face: string;
+  module: string;
+  finish_size?: string;
+  burning_weight: string;
+  total_weight: string;
+  ht_cost: string;
+  ht_rate: string;
+  processes?: Process[];
+  cyn_grinding: string;
+  total: string;
   inventory_id: string;
+  inventory: InventoryRecord
 }
 
 // Profile list metadata structure

@@ -9,11 +9,19 @@ interface OrderProfileAttributes {
   name: string;
   type: '0' | '1';
   material: 'CR-5' | 'EN-9';
-  material_rate: number;
-  outer_diameter_mm: number;
-  thickness_mm: number;
-  heat_treatment_rate: number;
-  heat_treatment_inefficacy_percent: number;
+  no_of_teeth: number;
+  rate: number;
+  face: number;
+  module: number;
+  finish_size?: string;
+  burning_weight: number;
+  total_weight: number;
+  ht_cost: number;
+  ht_rate: number;
+  processes?: any;
+  cyn_grinding: number;
+  total: number;
+  profit: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -27,11 +35,19 @@ class OrderProfile extends Model<OrderProfileAttributes, OrderProfileCreationAtt
   public name!: string;
   public type!: '0' | '1';
   public material!: 'CR-5' | 'EN-9';
-  public material_rate!: number;
-  public outer_diameter_mm!: number;
-  public thickness_mm!: number;
-  public heat_treatment_rate!: number;
-  public heat_treatment_inefficacy_percent!: number;
+  public no_of_teeth!: number;
+  public rate!: number;
+  public face!: number;
+  public module!: number;
+  public finish_size?: string;
+  public burning_weight!: number;
+  public total_weight!: number;
+  public ht_cost!: number;
+  public ht_rate!: number;
+  public processes?: any;
+  public cyn_grinding!: number;
+  public total!: number;
+  public profit!: number;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 
@@ -87,25 +103,68 @@ OrderProfile.init(
       type: DataTypes.ENUM('CR-5', 'EN-9'),
       allowNull: false,
     },
-    material_rate: {
-      type: DataTypes.DECIMAL(12, 4),
+    no_of_teeth: {
+      type: DataTypes.INTEGER,
       allowNull: false,
+      defaultValue: 0,
     },
-    outer_diameter_mm: {
-      type: DataTypes.DECIMAL(10, 4),
+    rate: {
+      type: DataTypes.DECIMAL(14, 2),
       allowNull: false,
+      defaultValue: 0,
     },
-    thickness_mm: {
-      type: DataTypes.DECIMAL(10, 4),
+    face: {
+      type: DataTypes.DECIMAL(10, 3),
       allowNull: false,
+      defaultValue: 0,
     },
-    heat_treatment_rate: {
-      type: DataTypes.DECIMAL(12, 4),
+    module: {
+      type: DataTypes.DECIMAL(10, 3),
       allowNull: false,
+      defaultValue: 0,
     },
-    heat_treatment_inefficacy_percent: {
-      type: DataTypes.DECIMAL(5, 2),
+    finish_size: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    burning_weight: {
+      type: DataTypes.DECIMAL(14, 2),
       allowNull: false,
+      defaultValue: 0,
+    },
+    total_weight: {
+      type: DataTypes.DECIMAL(14, 2),
+      allowNull: false,
+      defaultValue: 0,
+    },
+    ht_cost: {
+      type: DataTypes.DECIMAL(14, 2),
+      allowNull: false,
+      defaultValue: 0,
+    },
+    ht_rate: {
+      type: DataTypes.DECIMAL(14, 2),
+      allowNull: false,
+      defaultValue: 0,
+    },
+    processes: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+    },
+    cyn_grinding: {
+      type: DataTypes.DECIMAL(14, 2),
+      allowNull: false,
+      defaultValue: 0,
+    },
+    total: {
+      type: DataTypes.DECIMAL(14, 2),
+      allowNull: false,
+      defaultValue: 0,
+    },
+    profit: {
+      type: DataTypes.DECIMAL(14, 2),
+      allowNull: false,
+      defaultValue: 0,
     },
     created_at: {
       type: DataTypes.DATE,

@@ -2,16 +2,10 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CreateProfileSchema, CreateProfileInput, ProfileType } from '@/schemas/profile.schema';
+import { CreateProfileSchema, CreateProfileInput } from '@/schemas/profile.schema';
 import { ProfileRecord } from '@/services/types/profile.api.type';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
+
 import {
   Dialog,
   DialogContent,
@@ -20,18 +14,17 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { useEffect, useRef, useState } from 'react';
+import { Form } from '@/components/ui/form';
+import { useEffect, useState } from 'react';
 import { fetchInventory } from '@/services/inventory';
 import { InventoryRecord } from '@/services/types/inventory.api.type';
+import {
+  BasicInformationSection,
+  GearSpecificationsSection,
+  CostBreakdownSection,
+  ProcessesSection,
+  CalculatedCostsSection
+} from './form-sections';
 
 interface ProfileFormDialogProps {
   open: boolean;
@@ -55,14 +48,25 @@ export function ProfileFormDialog({
       name: '',
       type: '0',
       material: undefined,
-      material_rate: 0,
-      outer_diameter_mm: 0,
-      thickness_mm: 0,
-      heat_treatment_rate: 0,
-      heat_treatment_inefficacy_percent: 0,
-      inventory_id: undefined
+      no_of_teeth: 0,
+      rate: 0,
+      face: 0,
+      module: 0,
+      finish_size: '',
+      burning_weight: 0,
+      total_weight: 0,
+      ht_cost: 0,
+      ht_rate: 0,
+      processes: undefined,
+      cyn_grinding: 0,
+      total: 0,
+      inventory_id: undefined,
+      tcTGCost: 0
     }
   });
+
+  const selectedInventoryId = form.watch('inventory_id');
+  const selectedInventory = inventoryItems.find((item) => item.id === selectedInventoryId);
 
   useEffect(() => {
     const loadInventory = async () => {
@@ -84,11 +88,20 @@ export function ProfileFormDialog({
         name: profile.name,
         type: profile.type,
         material: profile.material,
-        material_rate: Number(profile.material_rate),
-        outer_diameter_mm: Number(profile.outer_diameter_mm),
-        thickness_mm: Number(profile.thickness_mm),
-        heat_treatment_rate: Number(profile.heat_treatment_rate),
-        heat_treatment_inefficacy_percent: Number(profile.heat_treatment_inefficacy_percent),
+        materialTypeString: `${profile.material}/${profile.inventory_id}`,
+        no_of_teeth: Number(profile.no_of_teeth),
+        rate: Number(profile.rate),
+        face: Number(profile.face),
+        module: Number(profile.module),
+        finish_size: profile.finish_size,
+        burning_weight: Number(profile.burning_weight),
+        total_weight: Number(profile.total_weight),
+        ht_cost: Number(profile.ht_cost),
+        ht_rate: Number(profile.ht_rate),
+        processes: profile.processes,
+        cyn_grinding: Number(profile.cyn_grinding),
+        total: Number(profile.total),
+        tcTGCost: 0,
         inventory_id: profile.inventory_id
       });
     }
@@ -97,22 +110,20 @@ export function ProfileFormDialog({
   const handleSubmit = async (data: CreateProfileInput & { inventory_id?: string }) => {
     try {
       const [materialType] = data.material.split('/');
+
+      //eslint-disable-next-line
       const { material: _, ...rest } = data;
       const payload: CreateProfileInput = {
         ...rest,
-        material: materialType as ProfileRecord['material'],
+        material: materialType as ProfileRecord['material']
       };
 
       await onSubmit(payload);
       form.reset();
       onOpenChange(false);
     } catch (error) {
-      // Error is handled by parent component
+      console.error('Form Submission Error:', error);
     }
-  };
-
-  const addInventoryId = (id: string) => {
-    form.setValue('inventory_id', id);
   };
 
   return (
@@ -128,184 +139,27 @@ export function ProfileFormDialog({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <FormField
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            <BasicInformationSection
               control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter profile name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              setValue={form.setValue}
+              inventoryItems={inventoryItems}
             />
-
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Type</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="0">Gear</SelectItem>
-                        <SelectItem value="1">Pinion</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="materialTypeString"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Material</FormLabel>
-                    <Select
-                      value={field.value}
-                      onValueChange={(value) => {
-                        const [materialType, id] = value.split('/');
-                        field.onChange(value);
-
-                        //save material in the
-                        form.setValue('material', materialType as ProfileRecord['material']);
-                        form.setValue('inventory_id', id);
-                      }}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select material" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {inventoryItems.map((item) => (
-                          <SelectItem key={item.id} value={`${item.material_type}/${item.id}`}>
-                            <div className="flex flex-col">
-                              {item.material_type} (Qty: {item.quantity})
-                              <span className="text-xs text-gray-900 dark:text-gray-400">
-                                {Number(item.width)?.toFixed(2)}×{Number(item.height)?.toFixed(2)}mm
-                              </span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4"></div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="material_rate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Material Rate (₹)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="0.00"
-                        {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="heat_treatment_rate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Heat Treatment Rate (₹)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="0.00"
-                        {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="outer_diameter_mm"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Outer Diameter (mm)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="0.00"
-                        {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="thickness_mm"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Thickness (mm)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="0.00"
-                        {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
+            <GearSpecificationsSection control={form.control} />
+            <CostBreakdownSection
               control={form.control}
-              name="heat_treatment_inefficacy_percent"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Heat Treatment Inefficacy (%)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="0.00"
-                      {...field}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              setValue={form.setValue}
+              selectedInventory={selectedInventory}
+            />
+            <ProcessesSection
+              control={form.control}
+              getValues={form.getValues}
+              setValue={form.setValue}
+            />
+            <CalculatedCostsSection
+              control={form.control}
+              setValue={form.setValue}
+              selectedInventory={selectedInventory}
             />
 
             <DialogFooter>

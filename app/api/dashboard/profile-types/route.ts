@@ -5,9 +5,8 @@ import { errorResponse, sendResponse } from '@/utils/api-response';
 import { DashboardProfileTypesQuerySchema } from '@/schemas/dashboard.schema';
 
 const TYPE_LABELS: Record<string, string> = {
-  '0': 'Pinion',
-  '1': 'Gear',
-
+  '0': 'Gear',
+  '1': 'Pinion',
 };
 
 const MATERIAL_LABELS: Record<string, string> = {
@@ -15,10 +14,6 @@ const MATERIAL_LABELS: Record<string, string> = {
   'EN-9': 'EN-9',
 };
 
-const dimensionFormatter = new Intl.NumberFormat('en-IN', {
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 1,
-});
 
 function toFixedNumber(value: unknown, fractionDigits = 2): number {
   const parsed = Number(value);
@@ -35,12 +30,6 @@ function formatLabel(value: string | null, dictionary: Record<string, string>, f
 
   const normalized = value.toLowerCase();
   return dictionary[value] ?? dictionary[normalized] ?? fallback;
-}
-
-function formatSpecification(outerDiameter: number, thickness: number): string {
-  const formattedWidth = dimensionFormatter.format(outerDiameter);
-  const formattedHeight = dimensionFormatter.format(thickness);
-  return `${formattedWidth}mm × ${formattedHeight}mm`;
 }
 
 export async function GET(request: NextRequest) {
@@ -64,23 +53,22 @@ export async function GET(request: NextRequest) {
     const formattedProfiles = profiles.map((profile) => {
       const plainProfile = profile.get({ plain: true })
 
-      const width = toFixedNumber(plainProfile.outer_diameter_mm);
-      const height = toFixedNumber(plainProfile.thickness_mm);
-      const materialRate = toFixedNumber(plainProfile.material_rate);
-      const heatTreatmentRate = toFixedNumber(plainProfile.heat_treatment_rate);
-      const heatTreatmentInefficacyPercent = toFixedNumber(
-        plainProfile.heat_treatment_inefficacy_percent,
-      );
+      const noOfTeeth = toFixedNumber(plainProfile.no_of_teeth, 0);
+      // const face = toFixedNumber(plainProfile.face);
+      // const module = toFixedNumber(plainProfile.module);
+      const rate = toFixedNumber(plainProfile.rate);
+      const htRate = toFixedNumber(plainProfile.ht_rate);
+      const total = toFixedNumber(plainProfile.total);
 
       return {
         id: plainProfile.id,
         name: plainProfile.name,
-        specification: formatSpecification(width, height),
+        specification: plainProfile.finish_size || `${noOfTeeth}T`,
         material: formatLabel(plainProfile.material, MATERIAL_LABELS, 'Unknown'),
         type: formatLabel(plainProfile.type, TYPE_LABELS, 'Custom'),
-        materialRate,
-        heatTreatmentRate,
-        heatTreatmentInefficacyPercent,
+        materialRate: rate,
+        heatTreatmentRate: htRate,
+        total,
       };
     });
 

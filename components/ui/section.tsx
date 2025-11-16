@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils';
 import { ReactNode } from 'react';
+import { LucideIcon } from 'lucide-react';
 
 interface SectionProps {
   title: string;
@@ -7,9 +8,11 @@ interface SectionProps {
   children: ReactNode;
   className?: string;
   variant?: 'default' | 'gradient';
+  childrenClassName?: string;
+  icon?: LucideIcon;
 }
 
-export function Section({ title, description, children, className, variant = 'default' }: SectionProps) {
+export function Section({ title, description, children, className, childrenClassName, variant = 'default', icon: Icon }: SectionProps) {
   return (
     <section
       className={cn(
@@ -20,11 +23,16 @@ export function Section({ title, description, children, className, variant = 'de
         className
       )}
     >
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{title}</h2>
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+          {Icon && <Icon className="h-5 w-5" />}
+          {title}
+        </h2>
         {description && <p className="text-sm text-slate-500 dark:text-slate-400">{description}</p>}
       </div>
-      {children}
+      <div className={cn("space-y-4", childrenClassName)}>
+        {children}
+      </div>
     </section>
   );
 }

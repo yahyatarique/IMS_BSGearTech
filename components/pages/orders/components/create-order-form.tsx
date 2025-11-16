@@ -14,12 +14,7 @@ import { useRouter } from 'next/navigation';
 import { fetchProfiles } from '@/services/profiles';
 import { ProfileRecord } from '@/services/types/profile.api.type';
 import {
-  calculateWeight,
-  calculateMaterialCost,
   calculateTeethCost,
-  calculateHTCost,
-  calculateTotalOrderValue,
-  calculateGrandTotal
 } from '@/utils/calculationHelper';
 import { OrderNumberDisplay } from './order-number-display';
 import { BuyerProfileSection } from './buyer-profile-section';
@@ -30,7 +25,6 @@ import { ProcessesSection } from './processes-section';
 import { CalculatedValuesSection } from './calculated-values-section';
 import { TotalProfitSection } from './total-profit-section';
 import { OrderSummary } from './order-summary';
-import { calculateProfileWeight } from '../../../../utils/material-calculations';
 
 interface CreateOrderFormProps {
   orderId?: string | null;
@@ -157,64 +151,64 @@ export function CreateOrderForm({ orderId }: CreateOrderFormProps) {
   const teethCount = form.watch('teeth_count');
   const moduleValue = form.watch('module');
   const face = form.watch('face');
-  const turningRate = form.watch('turning_rate');
-  const materialCost = form.watch('material_cost');
-  const teethCost = form.watch('teeth_cutting_grinding_cost');
-  const htCost = form.watch('ht_cost');
-  const profitMargin = form.watch('profit_margin');
-  const processes = form.watch('processes');
+  // const turningRate = form.watch('turning_rate');
+  // const materialCost = form.watch('material_cost');
+  // const teethCost = form.watch('teeth_cutting_grinding_cost');
+  // const htCost = form.watch('ht_cost');
+  // const profitMargin = form.watch('profit_margin');
+  // const processes = form.watch('processes');
   const rate = form.watch('rate');
-  const finishSize = form.watch('finish_size');
+  // const finishSize = form.watch('finish_size');
 
-  // Update calculations when profile or module changes
-  useEffect(() => {
-    if (selectedProfile && moduleValue) {
-      // Set rates from profile
-      const materialRate = Number(selectedProfile.material_rate);
-      // const htRate = Number(selectedProfile.heat_treatment_rate);
+  // // Update calculations when profile or module changes
+  // useEffect(() => {
+  //   if (selectedProfile && moduleValue) {
+  //     // Set rates from profile
+  //     const materialRate = Number(selectedProfile.material_rate);
+  //     // const htRate = Number(selectedProfile.heat_treatment_rate);
 
-      const outerDiameter = Number(selectedProfile.outer_diameter_mm);
-      const thickness = Number(selectedProfile.thickness_mm);
+  //     const outerDiameter = Number(selectedProfile.outer_diameter_mm);
+  //     const thickness = Number(selectedProfile.thickness_mm);
 
-      // Calculate weight if dimensions exist
-      if (outerDiameter && thickness && moduleValue > 0) {
+  //     // Calculate weight if dimensions exist
+  //     if (outerDiameter && thickness && moduleValue > 0) {
         
-        // Calculate single product weight
-        const singleWeight = calculateProfileWeight(outerDiameter, thickness);
+  //       // Calculate single product weight
+  //       const singleWeight = calculateProfileWeight(outerDiameter, thickness);
 
-        // Multiply by module to get total weight
-        const totalWeight = singleWeight * moduleValue;
+  //       // Multiply by module to get total weight
+  //       const totalWeight = singleWeight * moduleValue;
 
-        form.setValue('weight', Number(totalWeight?.toFixed(5)));
+  //       form.setValue('weight', Number(totalWeight?.toFixed(5)));
 
-        const materialCost = calculateMaterialCost(totalWeight, materialRate);
-        form.setValue('material_cost', Number(materialCost?.toFixed(5)));
+  //       const materialCost = calculateMaterialCost(totalWeight, materialRate);
+  //       form.setValue('material_cost', Number(materialCost?.toFixed(5)));
 
-        const htCost = calculateHTCost(totalWeight, rate);
-        form.setValue('ht_cost', Number(htCost?.toFixed(5)));
-      }
-    }
-  }, [selectedProfile, moduleValue, form, rate]);
+  //       const htCost = calculateHTCost(totalWeight, rate);
+  //       form.setValue('ht_cost', Number(htCost?.toFixed(5)));
+  //     }
+  //   }
+  // }, [selectedProfile, moduleValue, form, rate]);
 
-  // Calculate burning wastage
-  useEffect(() => {
-    if (selectedProfile && moduleValue && finishSize?.width && finishSize?.height) {
-      const profileWeight = calculateProfileWeight(
-        Number(selectedProfile.outer_diameter_mm),
-        Number(selectedProfile.thickness_mm)
-      ) * moduleValue;
+  // // Calculate burning wastage
+  // useEffect(() => {
+  //   if (selectedProfile && moduleValue && finishSize?.width && finishSize?.height) {
+  //     const profileWeight = calculateProfileWeight(
+  //       Number(selectedProfile.outer_diameter_mm),
+  //       Number(selectedProfile.thickness_mm)
+  //     ) * moduleValue;
 
-      const finishWeight = calculateProfileWeight(
-        finishSize.width,
-        finishSize.height
-      ) * moduleValue;
+  //     const finishWeight = calculateProfileWeight(
+  //       finishSize.width,
+  //       finishSize.height
+  //     ) * moduleValue;
 
-      if (profileWeight > 0) {
-        const wastage = ((profileWeight - finishWeight) / profileWeight) * 100;
-        form.setValue('burning_wastage_percent', Number(wastage.toFixed(2)));
-      }
-    }
-  }, [selectedProfile, moduleValue, finishSize, form]);
+  //     if (profileWeight > 0) {
+  //       const wastage = ((profileWeight - finishWeight) / profileWeight) * 100;
+  //       form.setValue('burning_wastage_percent', Number(wastage.toFixed(2)));
+  //     }
+  //   }
+  // }, [selectedProfile, moduleValue, finishSize, form]);
 
   // Update teeth cost when dependencies change
   useEffect(() => {
@@ -224,26 +218,25 @@ export function CreateOrderForm({ orderId }: CreateOrderFormProps) {
     }
   }, [teethCount, moduleValue, face, form, rate]);
 
-  const p = JSON.stringify(processes);
 
-  // Update total values when dependencies change
-  useEffect(() => {
-    const totalOrderValue = calculateTotalOrderValue(
-      Number(materialCost) || 0,
-      Number(turningRate) || 0,
-      Number(teethCost) || 0,
-      Number(htCost) || 0,
-      processes || []
-    );
-    form.setValue('total_order_value', totalOrderValue);
+  // // Update total values when dependencies change
+  // useEffect(() => {
+  //   const totalOrderValue = calculateTotalOrderValue(
+  //     Number(materialCost) || 0,
+  //     Number(turningRate) || 0,
+  //     Number(teethCost) || 0,
+  //     Number(htCost) || 0,
+  //     processes || []
+  //   );
+  //   form.setValue('total_order_value', totalOrderValue);
 
-    if (profitMargin) {
-      const gT = calculateGrandTotal(totalOrderValue, Number(profitMargin));
-      form.setValue('grand_total', gT);
-    } else {
-      form.setValue('grand_total', totalOrderValue);
-    }
-  }, [materialCost, turningRate, teethCost, htCost, p, processes, profitMargin, form]);
+  //   if (profitMargin) {
+  //     const gT = calculateGrandTotal(totalOrderValue, Number(profitMargin));
+  //     form.setValue('grand_total', gT);
+  //   } else {
+  //     form.setValue('grand_total', totalOrderValue);
+  //   }
+  // }, [materialCost, turningRate, teethCost, htCost, p, processes, profitMargin, form]);
 
   const onSubmit = async (values: CreateOrderFormInput) => {
     try {

@@ -1,10 +1,9 @@
 'use client';
 
-import { useRouter, usePathname } from 'next/navigation';
+import {  usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { AdminWrapper } from '@/components/wrappers';
 import {
-  Home,
   ShoppingCart,
   Users,
   Package,
@@ -12,7 +11,6 @@ import {
   LogOut,
   Menu,
   X,
-  UserPlus,
   UserCircle
 } from 'lucide-react';
 import { useState } from 'react';
@@ -29,6 +27,7 @@ import { USER_ROLES } from '@/enums/users.enum';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import Image from 'next/image';
+import { useRouter } from '@bprogress/next/app';
 
 const navItems = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -47,8 +46,8 @@ export function AppNavigation() {
 
   const isActive = (href: string) => pathname === href;
 
-  // Check if user is admin (role '0' or '1')
-  const isAdmin = user?.role === USER_ROLES.SUPER_ADMIN || user?.role === USER_ROLES.ADMIN;
+  // // Check if user is admin (role '0' or '1')
+  // const isAdmin = user?.role === USER_ROLES.SUPER_ADMIN || user?.role === USER_ROLES.ADMIN;
 
   // Get user initials for avatar
   const getUserInitials = () => {
