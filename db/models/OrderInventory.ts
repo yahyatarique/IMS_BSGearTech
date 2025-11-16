@@ -17,6 +17,7 @@ import type Inventory from './Inventory';
 export interface OrderInventoryAttributes {
   id: string;
   order_id: string;
+  order_profile_id?: string;
   inventory_id: string;
   material_type: 'CR-5' | 'EN-9';
   material_weight: number;
@@ -32,7 +33,7 @@ export interface OrderInventoryAttributes {
 interface OrderInventoryCreationAttributes
   extends Optional<
     OrderInventoryAttributes,
-    'id' | 'po_number' | 'created_at' | 'updated_at'
+    'id' | 'order_profile_id' | 'po_number' | 'created_at' | 'updated_at'
   > {}
 
 // Define the model class
@@ -42,6 +43,7 @@ export class OrderInventory extends Model<
 > {
   declare id: CreationOptional<string>;
   declare order_id: ForeignKey<Orders['id']>;
+  declare order_profile_id?: string;
   declare inventory_id: ForeignKey<Inventory['id']>;
   declare material_type: 'CR-5' | 'EN-9';
   declare material_weight: number;
@@ -65,6 +67,10 @@ export class OrderInventory extends Model<
       foreignKey: 'order_id',
       as: 'order',
     });
+    OrderInventory.belongsTo(models.OrderProfile, {
+      foreignKey: 'order_profile_id',
+      as: 'orderProfile',
+    });
     OrderInventory.belongsTo(models.Inventory, {
       foreignKey: 'inventory_id',
       as: 'inventory',
@@ -86,6 +92,16 @@ OrderInventory.init(
       allowNull: false,
       references: {
         model: 'orders',
+        key: 'id',
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'CASCADE',
+    },
+    order_profile_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'order_profile',
         key: 'id',
       },
       onUpdate: 'CASCADE',

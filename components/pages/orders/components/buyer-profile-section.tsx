@@ -7,16 +7,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { BuyerRecord } from '@/services/types/buyer.api.type';
 import { ProfileRecord } from '@/services/types/profile.api.type';
 import { CreateOrderFormInput } from '@/schemas/create-order.schema';
+import { ProfileMultiSelect } from './profile-multi-select';
 
 interface BuyerProfileSectionProps {
   control: Control<CreateOrderFormInput>;
   buyers: BuyerRecord[];
-  profiles: ProfileRecord[];
   isLoading: boolean;
+  onProfilesLoad: (profiles: ProfileRecord[]) => void;
 }
 
-export const BuyerProfileSection = memo(({ control, buyers, profiles, isLoading }: BuyerProfileSectionProps) => {
-  useWatch({ control, name: ['buyer_id', 'profile_id'] });
+export const BuyerProfileSection = memo(({ control, buyers, isLoading, onProfilesLoad }: BuyerProfileSectionProps) => {
+  useWatch({ control, name: ['buyer_id', 'profile_ids'] });
 
   return (
   <Card className="p-6">
@@ -58,33 +59,17 @@ export const BuyerProfileSection = memo(({ control, buyers, profiles, isLoading 
 
       <FormField
         control={control}
-        name="profile_id"
+        name="profile_ids"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Profile *</FormLabel>
-            <Select value={field.value} onValueChange={field.onChange} disabled={isLoading}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select profile" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {profiles.length === 0 ? (
-                  <div className="p-2 text-sm text-muted-foreground">
-                    No profiles found.{' '}
-                    <Link href="/profiles/create" className="text-primary hover:underline">
-                      Add Profile
-                    </Link>
-                  </div>
-                ) : (
-                  profiles.map((profile) => (
-                    <SelectItem key={profile.id} value={profile.id}>
-                      {profile.name} ({profile.material})
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+            <FormLabel>Profiles *</FormLabel>
+            <FormControl>
+              <ProfileMultiSelect
+                value={field.value}
+                onChange={field.onChange}
+                onProfilesLoad={onProfilesLoad}
+              />
+            </FormControl>
             <FormMessage />
           </FormItem>
         )}

@@ -1,6 +1,6 @@
 import axiosInstance from '@/axios';
 import { CreateOrderInput, UpdateOrderInput } from '@/schemas/order.schema';
-import { OrdersListResponse, OrderResponse } from './types/orders.api.type';
+import { OrdersListResponse, OrderResponse, OrderStatusUpdateRequest, OrderStatusUpdateResponse } from './types/orders.api.type';
 
 import { ORDER_STATUS } from '@/enums/orders.enum';
 
@@ -32,5 +32,10 @@ export async function updateOrder(id: string, data: UpdateOrderInput): Promise<O
 
 export async function deleteOrder(id: string): Promise<{ success: boolean }> {
   const response = await axiosInstance.delete(`/orders/${id}`);
+  return response.data;
+}
+
+export async function updateOrderStatus(id: string, data: OrderStatusUpdateRequest): Promise<OrderStatusUpdateResponse> {
+  const response = await axiosInstance.patch(`/orders/${id}`, data);
   return response.data;
 }

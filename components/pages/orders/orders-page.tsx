@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@bprogress/next/app';
 
 export default function OrdersPage() {
   const [buyers, setBuyers] = useState<BuyerRecord[]>([]);
@@ -137,12 +137,26 @@ export default function OrdersPage() {
     }
   };
 
+  const handleStatusUpdate = (orderId: string, newStatus: '0' | '1' | '2') => {
+    // Update the order in the local state
+    setOrders(prevOrders =>
+      prevOrders.map(order =>
+        order.id === orderId ? { ...order, status: newStatus as ORDER_STATUS } : order
+      )
+    );
+
+    // Update the selected order if it's the one being updated
+    if (selectedOrder && selectedOrder.id === orderId) {
+      setSelectedOrder(prev => prev ? { ...prev, status: newStatus as ORDER_STATUS } : null);
+    }
+  };
+
   return (
     <PageWrapper
       title="Orders Management"
       subtitle="View and manage buyer orders"
       icon={ShoppingCart}
-      gradient="blue-cyan"
+      
       headerActions={
         <Button onClick={navigateToCreateOrder} className="flex items-center gap-2">
           <Plus className="w-4 h-4" />
@@ -203,7 +217,7 @@ export default function OrdersPage() {
 
       {/* Orders Card Grid */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
           {[...Array(6)].map((_, i) => (
             <GradientBorderCard key={i} className="h-[200px] animate-pulse">
               <div className="space-y-4 p-4">
@@ -246,6 +260,7 @@ export default function OrdersPage() {
           setIsDetailsDialogOpen(false);
           setSelectedOrder(null);
         }}
+        onStatusUpdate={handleStatusUpdate}
       />
 
       {/* Delete Confirmation Dialog */}

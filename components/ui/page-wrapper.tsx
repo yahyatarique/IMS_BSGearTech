@@ -16,7 +16,7 @@ interface PageWrapperProps {
 /**
  * PageWrapper component provides consistent padding, spacing, and optional header
  * for all pages in the application.
- * 
+ *
  * @example
  * ```tsx
  * <PageWrapper
@@ -35,9 +35,9 @@ export function PageWrapper({
   title,
   subtitle,
   icon: Icon,
-  gradient = 'blue-cyan',
   headerActions,
   className,
+  gradient
 }: PageWrapperProps) {
   return (
     <div className={cn('container mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6', className)}>
@@ -53,11 +53,10 @@ export function PageWrapper({
               )}
               <div>
                 <h1 className="text-3xl font-bold">
-                  <GradientText gradient={gradient}>{title}</GradientText>
+                  {gradient && <GradientText>{title}</GradientText>}
+                  {!gradient && title}
                 </h1>
-                {subtitle && (
-                  <p className="text-gray-600 dark:text-gray-400 mt-1">{subtitle}</p>
-                )}
+                {subtitle && <p className="text-gray-600 dark:text-gray-400 mt-1">{subtitle}</p>}
               </div>
             </div>
           )}

@@ -12,12 +12,7 @@ interface EditOrderPageProps {
 
 export default function EditOrderPage({ params: { orderId } }: EditOrderPageProps) {
   return (
-    <PageWrapper
-      title="Update Order"
-      subtitle="Update existing order details"
-      icon={ShoppingCart}
-      gradient="blue-cyan"
-    >
+    <PageWrapper title="Update Order" subtitle="Update existing order details" icon={ShoppingCart}>
       <CreateOrderForm orderId={orderId} />
     </PageWrapper>
   );

@@ -4,6 +4,8 @@ import Buyer from './Buyer';
 import Orders from './Orders';
 import Inventory from './Inventory';
 import OrderInventory from './OrderInventory';
+import OrderSequence from './OrderSequence';
+import OrderProfile from './OrderProfile';
 
 /**
  * Database Models Index
@@ -30,6 +32,8 @@ const models = {
   Orders,
   Inventory,
   OrderInventory,
+  OrderSequence,
+  OrderProfile
 };
 
 // Set up associations
@@ -46,6 +50,8 @@ export {
   Orders,
   Inventory,
   OrderInventory,
+  OrderSequence,
+  OrderProfile
 };
 
 export default models;

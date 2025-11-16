@@ -4,6 +4,8 @@ import sequelize from '../connection';
 interface OrdersAttributes {
   id: string;
   order_number: string;
+  order_name?: string;
+  quantity: number;
   created_at: Date;
   buyer_id?: string;
   status: '0' | '1' | '2';
@@ -24,11 +26,14 @@ interface OrdersCreationAttributes
     | 'total_order_value'
     | 'profit_margin'
     | 'burning_wastage_percent'
+    | 'quantity'
   > {}
 
 class Orders extends Model<OrdersAttributes, OrdersCreationAttributes> implements OrdersAttributes {
   declare id: string;
   declare order_number: string;
+  declare order_name?: string;
+  declare quantity: number;
   declare readonly created_at: Date;
   declare buyer_id?: string;
   declare status: '0' | '1' | '2';
@@ -58,6 +63,11 @@ class Orders extends Model<OrdersAttributes, OrdersCreationAttributes> implement
       onUpdate: 'CASCADE'
     });
 
+    Orders.hasMany(models.OrderProfile, {
+      foreignKey: 'order_id',
+      as: 'orderProfiles'
+    });
+
     Orders.hasMany(models.OrderInventory, {
       foreignKey: 'order_id',
       as: 'orderInventoryItems'
@@ -76,6 +86,15 @@ Orders.init(
       type: DataTypes.TEXT,
       allowNull: false,
       unique: true
+    },
+    order_name: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    quantity: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 1
     },
     created_at: {
       type: DataTypes.DATE,

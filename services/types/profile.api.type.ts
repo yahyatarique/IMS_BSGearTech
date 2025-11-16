@@ -16,6 +16,8 @@ export interface ProfileRecord {
   finish_size?: string;
   burning_weight: string;
   total_weight: string;
+  heat_treatment_cost?: number;
+  teeth_cutting_grinding_cost?: number;
   ht_cost: string;
   ht_rate: string;
   processes?: Process[];

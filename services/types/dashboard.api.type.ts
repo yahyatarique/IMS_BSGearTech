@@ -66,8 +66,9 @@ export type DashboardMaterial = {
   name: string;
   material: string;
   type: string;
-  stock: number;
-  pendingDelivery: number;
+  dimensions: string;
+  rate: number;
+  weight: number;
   unit: string;
   status: DashboardMaterialStatus;
   profileCount: number;
@@ -87,10 +88,9 @@ export type DashboardProfileType = {
   specification: string;
   material: string;
   type: string;
-  materialRate: number;
-  burningWastagePercent: number;
-  heatTreatmentRate: number;
-  heatTreatmentInefficacyPercent: number;
+  materialType: string;
+  materialDimensions: string;
+  total: number;
 };
 
 export type DashboardProfileTypesData = DashboardProfileType[];

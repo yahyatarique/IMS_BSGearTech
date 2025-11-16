@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -21,9 +21,24 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { InlineErrorMessage } from '@/components/ui/error-message';
 import Image from 'next/image';
-import Link from 'next/link';
 import { success } from '../../../hooks/use-toast';
 import { useAuth } from '../../../contexts/AuthContext';
+
+function getCookie(name: string): string | null {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+  return null;
+}
+
+function setCookie(name: string, value: string, days: number) {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
+}
+
+function deleteCookie(name: string) {
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+}
 
 export function LoginForm() {
   const router = useRouter();
@@ -41,6 +56,14 @@ export function LoginForm() {
     }
   });
 
+  useEffect(() => {
+    const savedUsername = getCookie('rememberedUsername');
+    if (savedUsername) {
+      form.setValue('username', savedUsername);
+      form.setValue('rememberMe', true);
+    }
+  }, [form]);
+
   async function onSubmit(values: LoginInput) {
     try {
       setIsLoading(true);
@@ -52,6 +75,13 @@ export function LoginForm() {
         // Store user data in localStorage for faster initial navigation load
         if (res.data.data.user) {
           updateUser(res.data.data.user);
+        }
+
+        // Handle remember me
+        if (values.rememberMe) {
+          setCookie('rememberedUsername', values.username, 30);
+        } else {
+          deleteCookie('rememberedUsername');
         }
 
         success({

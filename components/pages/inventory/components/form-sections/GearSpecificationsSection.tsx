@@ -42,7 +42,7 @@ export function GearSpecificationsSection({ control }: GearSpecificationsSection
                   type="number"
                   step="0.001"
                   {...field}
-                  onChange={(e) => field.onChange(e.target.value)}
+                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
                 />
               </FormControl>
               <FormMessage />
@@ -60,7 +60,7 @@ export function GearSpecificationsSection({ control }: GearSpecificationsSection
                   type="number"
                   step="0.001"
                   {...field}
-                  onChange={(e) => field.onChange(e.target.value)}
+                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
                 />
               </FormControl>
               <FormMessage />

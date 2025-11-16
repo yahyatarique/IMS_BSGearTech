@@ -6,15 +6,17 @@ import Profiles from '@/db/models/Profiles';
 import OrderProfile from '@/db/models/OrderProfile';
 import { OrderInventory } from '@/db/models/OrderInventory';
 import User from '@/db/models/User';
-import { CreateOrderFormSchema } from '@/schemas/create-order.schema';
-import { ORDER_STATUS } from '@/enums/orders.enum';
+import { Inventory } from '@/db/models';
+import { UpdateOrderAPISchema } from '@/schemas/create-order.schema';
 import sequelize from '@/db/connection';
 import { sendResponse, errorResponse } from '@/utils/api-response';
+import { z } from 'zod';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+const UpdateOrderStatusSchema = z.object({
+  status: z.enum(['0', '1', '2'])
+});
+
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await testConnection();
 
@@ -38,13 +40,10 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   let transaction;
   const paramsPromise = await params;
-  
+
   try {
     await testConnection();
 
@@ -55,91 +54,226 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const validatedData = CreateOrderFormSchema.parse(body);
+    const validatedData = UpdateOrderAPISchema.parse(body);
 
     // Start transaction
     transaction = await sequelize.transaction();
 
-    // Get the profile for OrderProfile update
-    const profile = await Profiles.findByPk(validatedData.profile_id);
-    if (!profile) {
-      await transaction.rollback();
-      throw new Error('Selected profile not found');
+    // Prepare order update object (only include provided fields)
+    const orderUpdateData: any = {};
+
+    if (validatedData.order_name !== undefined)
+      orderUpdateData.order_name = validatedData.order_name;
+    if (validatedData.buyer_id !== undefined) orderUpdateData.buyer_id = validatedData.buyer_id;
+    if (validatedData.quantity !== undefined) orderUpdateData.quantity = validatedData.quantity;
+    if (validatedData.burning_wastage_percent !== undefined) {
+      orderUpdateData.burning_wastage_percent = validatedData.burning_wastage_percent;
     }
 
-    // Update order
-    await order.update({
-      buyer_id: validatedData.buyer_id,
-      turning_rate: validatedData.turning_rate,
-      module: validatedData.module || 0,
-      face: validatedData.face || 0,
-      teeth_count: validatedData.teeth_count || 0,
-      weight: validatedData.weight,
-      material_cost: validatedData.material_cost,
-      ht_cost: validatedData.ht_cost,
-      total_order_value: validatedData.total_order_value,
-      profit_margin: validatedData.profit_margin,
-      grand_total: validatedData.grand_total
-    }, { transaction });
+    // Handle profile updates if provided
+    if (validatedData.profiles && validatedData.profiles.length > 0) {
+      // Separate profiles into delete, update, and new categories
+      const profilesToDelete = validatedData.profiles.filter(p => p.isDeleted);
+      const profilesToUpdate = validatedData.profiles.filter(p => !p.isDeleted && !p.isNew && p.id);
+      const profilesToCreate = validatedData.profiles.filter(p => !p.isDeleted && p.isNew);
 
-    // Update or create OrderProfile record
-    const orderProfile = await OrderProfile.findOne({
-      where: { order_id: order.id },
-      transaction
-    });
+      // Delete marked profiles and their inventory items (cascade will handle inventory)
+      if (profilesToDelete.length > 0) {
+        const deleteIds = profilesToDelete.map(p => p.id).filter((id): id is string => !!id);
+        if (deleteIds.length > 0) {
+          await OrderProfile.destroy({
+            where: { id: deleteIds, order_id: order.id },
+            transaction
+          });
+        }
+      }
 
-    // if (orderProfile) {
-    //   await orderProfile.update({
-    //     profile_id: profile.id,
-    //     name: profile.name,
-    //     type: profile.type,
-    //     material: profile.material,
-    //     material_rate: profile.material_rate,
-    //     cut_size_width_mm: ,
-    //     cut_size_height_mm: validatedData.finish_size.height,
-    //     heat_treatment_rate: profile.heat_treatment_rate,
-    //     heat_treatment_inefficacy_percent: profile.heat_treatment_inefficacy_percent
-    //   }, { transaction });
-    // } else {
-    //   await OrderProfile.create({
-    //     order_id: order.id,
-    //     profile_id: profile.id,
-    //     name: profile.name,
-    //     type: profile.type,
-    //     material: profile.material,
-    //     material_rate: profile.material_rate,
-    //     cut_size_width_mm: validatedData.finish_size.width,
-    //     cut_size_height_mm: validatedData.finish_size.height,
-    //     burning_wastage_percent: profile.burning_wastage_percent,
-    //     heat_treatment_rate: profile.heat_treatment_rate,
-    //     heat_treatment_inefficacy_percent: profile.heat_treatment_inefficacy_percent
-    //   }, { transaction });
-    // }
+      // Update existing profiles
+      for (const profileUpdate of profilesToUpdate) {
+        if (!profileUpdate.id) continue;
 
-    // Update OrderInventory record
-    const orderInventory = await OrderInventory.findOne({
-      where: { order_id: order.id },
-      transaction
-    });
+        const existingProfile = await OrderProfile.findOne({
+          where: { id: profileUpdate.id, order_id: order.id },
+          transaction
+        });
 
-    if (orderInventory) {
-      await orderInventory.update({
-        material_type: profile.material,
-        material_weight: validatedData.weight,
-        width: validatedData.finish_size.width,
-        height: validatedData.finish_size.height,
-        quantity: 1
-      }, { transaction });
-    } else {
-      await OrderInventory.create({
-        order_id: order.id,
-        inventory_id: '',
-        material_type: profile.material,
-        material_weight: validatedData.weight,
-        width: validatedData.finish_size.width,
-        height: validatedData.finish_size.height,
-        quantity: 1
-      }, { transaction });
+        if (existingProfile) {
+          // Fetch the profile details from Profiles table
+          const profile = await Profiles.findByPk(profileUpdate.profile_id, {
+            include: [{ model: Inventory, as: 'inventory', required: false }],
+            transaction
+          });
+
+          if (!profile) {
+            throw new Error(`Profile ${profileUpdate.profile_id} not found`);
+          }
+
+          // Update OrderProfile with latest data from Profiles
+          await existingProfile.update(
+            {
+              profile_id: profile.id,
+              name: profile.name,
+              type: profile.type,
+              material: profile.material,
+              no_of_teeth: profile.no_of_teeth,
+              rate: Number(profile.rate),
+              face: Number(profile.face),
+              module: Number(profile.module),
+              finish_size: profile.finish_size || '',
+              burning_weight: Number(profile.burning_weight),
+              total_weight: Number(profile.total_weight),
+              ht_cost: Number(profile.ht_cost),
+              ht_rate: Number(profile.ht_rate),
+              processes: profile.processes,
+              cyn_grinding: Number(profile.cyn_grinding),
+              total: Number(profile.total)
+            },
+            { transaction }
+          );
+
+          // Update or create associated inventory if profile has inventory
+          if (profile.inventory_id) {
+            const inventory = (profile as any).inventory;
+            const existingInventory = await OrderInventory.findOne({
+              where: { order_profile_id: existingProfile.id },
+              transaction
+            });
+
+            const inventoryData = {
+              order_id: order.id,
+              order_profile_id: existingProfile.id,
+              inventory_id: profile.inventory_id,
+              material_type: inventory?.material_type || profile.material,
+              material_weight: Number(inventory?.material_weight || 0),
+              outer_diameter: Number(inventory?.outer_diameter || 0),
+              length: Number(inventory?.length || 0),
+              rate: Number(inventory?.rate || 0)
+            };
+
+            if (existingInventory) {
+              await existingInventory.update(inventoryData, { transaction });
+            } else {
+              await OrderInventory.create(inventoryData, { transaction });
+            }
+          }
+        }
+      }
+
+      // Create new profiles
+      if (profilesToCreate.length > 0) {
+        const newProfileIds = profilesToCreate.map(p => p.profile_id);
+        const profiles = await Profiles.findAll({
+          where: { id: newProfileIds },
+          include: [{ model: Inventory, as: 'inventory', required: false }],
+          transaction
+        });
+
+        if (profiles.length !== newProfileIds.length) {
+          throw new Error('One or more new profiles not found');
+        }
+
+        // Create OrderProfile records
+        const orderProfilesData = profiles.map(profile => ({
+          order_id: order.id,
+          profile_id: profile.id,
+          name: profile.name,
+          type: profile.type,
+          material: profile.material,
+          no_of_teeth: profile.no_of_teeth,
+          rate: Number(profile.rate),
+          face: Number(profile.face),
+          module: Number(profile.module),
+          finish_size: profile.finish_size || '',
+          burning_weight: Number(profile.burning_weight),
+          total_weight: Number(profile.total_weight),
+          ht_cost: Number(profile.ht_cost),
+          ht_rate: Number(profile.ht_rate),
+          processes: profile.processes,
+          cyn_grinding: Number(profile.cyn_grinding),
+          total: Number(profile.total)
+        }));
+
+        const createdProfiles = await OrderProfile.bulkCreate(orderProfilesData, {
+          transaction,
+          returning: true
+        });
+
+        // Create OrderInventory records for new profiles with inventory
+        const orderInventoryData = [];
+        for (let i = 0; i < profiles.length; i++) {
+          const profile = profiles[i];
+          const createdProfile = createdProfiles[i];
+          
+          if (profile.inventory_id) {
+            const inventory = (profile as any).inventory;
+            orderInventoryData.push({
+              order_id: order.id,
+              order_profile_id: createdProfile.id,
+              inventory_id: profile.inventory_id,
+              material_type: inventory?.material_type || profile.material,
+              material_weight: Number(inventory?.material_weight || 0),
+              outer_diameter: Number(inventory?.outer_diameter || 0),
+              length: Number(inventory?.length || 0),
+              rate: Number(inventory?.rate || 0)
+            });
+          }
+        }
+
+        if (orderInventoryData.length > 0) {
+          await OrderInventory.bulkCreate(orderInventoryData, { transaction });
+        }
+      }
+
+      // Recalculate totals based on remaining profiles
+      const remainingProfiles = await OrderProfile.findAll({
+        where: { order_id: order.id },
+        transaction
+      });
+
+      const quantity = validatedData.quantity ?? order.quantity;
+      const profit = validatedData.profit ?? order.profit_margin;
+
+      const totalOrderValue = remainingProfiles.reduce((total, profile) => {
+        const profileTotal = Number(profile.total || 0);
+        return total + profileTotal * quantity;
+      }, 0);
+
+      const grandTotal = totalOrderValue + (totalOrderValue * profit) / 100;
+
+      orderUpdateData.total_order_value = totalOrderValue;
+      orderUpdateData.grand_total = grandTotal;
+
+      if (validatedData.profit !== undefined) {
+        orderUpdateData.profit_margin = validatedData.profit;
+      }
+    } else if (validatedData.quantity !== undefined || validatedData.profit !== undefined) {
+      // If only quantity or profit changed (no profile updates), recalculate totals
+      const existingProfiles = await OrderProfile.findAll({
+        where: { order_id: order.id },
+        transaction
+      });
+
+      const quantity = validatedData.quantity ?? order.quantity;
+      const profit = validatedData.profit ?? order.profit_margin;
+
+      const totalOrderValue = existingProfiles.reduce((total, profile) => {
+        const profileTotal = Number(profile.total || 0);
+        return total + profileTotal * quantity;
+      }, 0);
+
+      const grandTotal = totalOrderValue + (totalOrderValue * profit) / 100;
+
+      orderUpdateData.total_order_value = totalOrderValue;
+      orderUpdateData.grand_total = grandTotal;
+
+      if (validatedData.profit !== undefined) {
+        orderUpdateData.profit_margin = validatedData.profit;
+      }
+    }
+
+    // Update the order with all changes
+    if (Object.keys(orderUpdateData).length > 0) {
+      await order.update(orderUpdateData, { transaction });
     }
 
     await transaction.commit();
@@ -147,10 +281,37 @@ export async function PUT(
     // Fetch updated order with relations
     const updatedOrder = await Orders.findByPk(paramsPromise.id, {
       include: [
-        { model: Buyer, as: 'buyer', attributes: ['id', 'name', 'org_name'] },
-        { model: OrderProfile, as: 'orderProfiles' },
+        {
+          model: Buyer,
+          as: 'buyer',
+          attributes: ['id', 'name', 'org_name', 'email', 'phone_number', 'gstin', 'address']
+        },
+        {
+          model: OrderProfile,
+          as: 'orderProfiles',
+          attributes: [
+            'id',
+            'order_id',
+            'profile_id',
+            'name',
+            'type',
+            'material',
+            'no_of_teeth',
+            'rate',
+            'face',
+            'module',
+            'finish_size',
+            'burning_weight',
+            'total_weight',
+            'ht_cost',
+            'ht_rate',
+            'processes',
+            'cyn_grinding',
+            'total'
+          ]
+        },
         { model: OrderInventory, as: 'orderInventoryItems' },
-        { model: User, as: 'user', attributes: ['id', 'username', 'first_name', 'last_name'] }
+        { model: User, as: 'user', attributes: ['id', 'username', 'email'] }
       ]
     });
 
@@ -159,7 +320,7 @@ export async function PUT(
     if (transaction) {
       await transaction.rollback();
     }
-    
+
     if (error.name === 'ZodError') {
       return errorResponse('Validation failed', 400, error.errors);
     }
@@ -174,7 +335,7 @@ export async function DELETE(
 ) {
   const transaction = await sequelize.transaction();
   const paramsPromise = await params;
-  
+
   try {
     await testConnection();
 
@@ -192,5 +353,57 @@ export async function DELETE(
   } catch (error: any) {
     await transaction.rollback();
     return errorResponse(error.message || 'Failed to delete order', 500);
+  }
+}
+
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const paramsPromise = await params;
+
+  try {
+    await testConnection();
+
+    const body = await request.json();
+
+    // Validate request body
+    const validatedData = UpdateOrderStatusSchema.parse(body);
+
+    // Find the order
+    const order = await Orders.findByPk(paramsPromise.id);
+
+    if (!order) {
+      return errorResponse('Order not found', 404);
+    }
+
+    // Update the status
+    await order.update({ status: validatedData.status });
+
+    // Fetch updated order with relations
+    const updatedOrder = await Orders.findByPk(paramsPromise.id, {
+      include: [
+        {
+          model: Buyer,
+          as: 'buyer'
+        },
+        {
+          model: User,
+          as: 'user'
+        },
+        {
+          model: OrderProfile,
+          as: 'orderProfiles',
+         
+        }
+      ]
+    });
+
+    return sendResponse(updatedOrder, 'Order status updated successfully');
+  } catch (error: any) {
+    if (error.name === 'ZodError') {
+      return errorResponse(
+        'Invalid status value. Must be 0 (Pending), 1 (Processing), or 2 (Completed)',
+        400
+      );
+    }
+    return errorResponse(error.message || 'Failed to update order status', 500);
   }
 }

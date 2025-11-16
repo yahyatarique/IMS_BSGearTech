@@ -1,6 +1,5 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from '../connection';
-import type Profiles from './Profiles';
 
 interface OrderProfileAttributes {
   id: string;
@@ -21,7 +20,6 @@ interface OrderProfileAttributes {
   processes?: any;
   cyn_grinding: number;
   total: number;
-  profit: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -29,27 +27,26 @@ interface OrderProfileAttributes {
 interface OrderProfileCreationAttributes extends Optional<OrderProfileAttributes, 'id' | 'created_at' | 'updated_at'> {}
 
 class OrderProfile extends Model<OrderProfileAttributes, OrderProfileCreationAttributes> implements OrderProfileAttributes {
-  public id!: string;
-  public order_id!: string;
-  public profile_id!: string;
-  public name!: string;
-  public type!: '0' | '1';
-  public material!: 'CR-5' | 'EN-9';
-  public no_of_teeth!: number;
-  public rate!: number;
-  public face!: number;
-  public module!: number;
-  public finish_size?: string;
-  public burning_weight!: number;
-  public total_weight!: number;
-  public ht_cost!: number;
-  public ht_rate!: number;
-  public processes?: any;
-  public cyn_grinding!: number;
-  public total!: number;
-  public profit!: number;
-  public readonly created_at!: Date;
-  public readonly updated_at!: Date;
+  declare id: string;
+  declare order_id: string;
+  declare profile_id: string;
+  declare name: string;
+  declare type: '0' | '1';
+  declare material: 'CR-5' | 'EN-9';
+  declare no_of_teeth: number;
+  declare rate: number;
+  declare face: number;
+  declare module: number;
+  declare finish_size?: string;
+  declare burning_weight: number;
+  declare total_weight: number;
+  declare ht_cost: number;
+  declare ht_rate: number;
+  declare processes?: any;
+  declare cyn_grinding: number;
+  declare total: number;
+  declare readonly created_at: Date;
+  declare readonly updated_at: Date;
 
   // Association method
   static associate(models: any) {
@@ -60,6 +57,12 @@ class OrderProfile extends Model<OrderProfileAttributes, OrderProfileCreationAtt
     OrderProfile.belongsTo(models.Profiles, {
       foreignKey: 'profile_id',
       as: 'profile',
+    });
+    OrderProfile.hasMany(models.OrderInventory, {
+      foreignKey: 'order_profile_id',
+      as: 'orderInventoryItems',
+      onDelete: 'CASCADE',
+      hooks: true
     });
   }
 }
@@ -161,11 +164,7 @@ OrderProfile.init(
       allowNull: false,
       defaultValue: 0,
     },
-    profit: {
-      type: DataTypes.DECIMAL(14, 2),
-      allowNull: false,
-      defaultValue: 0,
-    },
+
     created_at: {
       type: DataTypes.DATE,
       allowNull: false,

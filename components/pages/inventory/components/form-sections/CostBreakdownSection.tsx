@@ -29,7 +29,7 @@ export function CostBreakdownSection({ control, setValue, selectedInventory }: C
     if (selectedInventory && profileType === '0') {
       const materialWeight = Number(selectedInventory.material_weight);
       const burning = calculateBurningWeight(materialWeight);
-      setValue('burning_weight', Number(burning.toFixed(2)));
+      setValue('burning_weight', Number(burning));
     } else {
       setValue('burning_weight', 0);
     }
@@ -39,7 +39,7 @@ export function CostBreakdownSection({ control, setValue, selectedInventory }: C
     if (selectedInventory) {
       const materialWeight = Number(selectedInventory.material_weight);
       const total = materialWeight + burningWeight;
-      setValue('total_weight', Number(total.toFixed(2)));
+      setValue('total_weight', Number(total));
     } else {
       setValue('total_weight', 0);
     }

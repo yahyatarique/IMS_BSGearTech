@@ -1,12 +1,8 @@
 import { NextRequest } from 'next/server';
 import { testConnection } from '@/db/connection';
-import { Profiles, Inventory, OrderInventory, Orders } from '@/db/models';
-import sequelize from '@/db/connection';
-import { QueryTypes } from 'sequelize';
+import { Profiles, Inventory } from '@/db/models';
 import { errorResponse, sendResponse } from '@/utils/api-response';
 import { DashboardMaterialsQuerySchema } from '@/schemas/dashboard.schema';
-
-const DEFAULT_UNIT = 'kg';
 
 function formatMaterialName(value: string | null): string {
   if (!value) {
@@ -26,48 +22,6 @@ function formatMaterialName(value: string | null): string {
     .join(' ');
 }
 
-function toFixedNumber(value: unknown, fractionDigits = 2): number {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) {
-    return 0;
-  }
-  return Number(parsed.toFixed(fractionDigits));
-}
-
-async function calculatePendingWeight(materialType: string): Promise<number> {
-  try {
-    // Get weight from OrderInventory for orders that are pending ('0') or accepted ('1')
-    const result = await sequelize.query(`
-      SELECT COALESCE(SUM(oi.material_weight), 0) as total_weight
-      FROM order_inventory oi
-      INNER JOIN orders o ON oi.order_id = o.id
-      WHERE oi.material_type = :materialType 
-      AND o.status IN ('0', '1')
-    `, {
-      replacements: { materialType },
-      type: QueryTypes.SELECT
-    }) as { total_weight: string }[];
-    
-    return Number(result[0]?.total_weight) || 0;
-  } catch (error) {
-    console.error(`Error calculating pending weight for ${materialType}:`, error);
-    return 0;
-  }
-}
-
-function resolveMaterialStatus(stock: number): 'in-stock' | 'low-stock' | 'out-of-stock' {
-  if (stock <= 0) {
-    return 'out-of-stock';
-  }
-
-  // Simple low stock threshold of 50kg
-  if (stock <= 50) {
-    return 'low-stock';
-  }
-
-  return 'in-stock';
-}
-
 export async function GET(request: NextRequest) {
   try {
     await testConnection();
@@ -81,46 +35,47 @@ export async function GET(request: NextRequest) {
 
     const limit = parsedQuery.data.limit ?? 5;
 
-    // Get distinct material types from inventory
-    const materialTypesRaw = await Inventory.findAll({
-      attributes: [
-        'material_type',
-        [sequelize.fn('SUM', sequelize.col('material_weight')), 'totalWeight']
-      ],
-      group: ['material_type'],
-      order: [[sequelize.fn('SUM', sequelize.col('material_weight')), 'DESC']],
+    // Get distinct materials grouped by type, dimensions, rate, and weight
+    const materialsRaw = await Inventory.findAll({
+      attributes: ['id', 'material_type', 'outer_diameter', 'length', 'rate', 'material_weight'],
+      group: ['id', 'material_type', 'outer_diameter', 'length', 'rate', 'material_weight'],
+      order: [['material_type', 'ASC']],
       limit,
-      raw: true,
+      raw: true
     });
 
-    const materialTypes = materialTypesRaw as unknown as Array<{
+    const materials = materialsRaw as unknown as Array<{
+      id: string;
       material_type: string;
-      totalWeight: string;
+      outer_diameter: string;
+      length: string;
+      rate: string;
+      material_weight: string;
     }>;
 
     const formattedMaterials = await Promise.all(
-      materialTypes.map(async (material, index) => {
+      materials.map(async (material) => {
         const materialType = material.material_type;
-        const inStock = toFixedNumber(material.totalWeight);
-        const pendingWeight = await calculatePendingWeight(materialType);
-        
-        // Get profile count for this material type
-        const profileCountResult = await Profiles.count({
-          where: { material: materialType }
+        const dimensions = `${Number(material.outer_diameter).toFixed(2)}mm × ${Number(
+          material.length
+        ).toFixed(2)}mm`;
+
+        // Get profile count for this specific inventory item
+        const profileCount = await Profiles.count({
+          where: { inventory_id: material.id }
         });
-        
-        const status = resolveMaterialStatus(inStock);
 
         return {
-          id: materialType || `material-${index + 1}`,
+          id: material.id,
           name: formatMaterialName(materialType),
           material: materialType,
           type: 'Raw Material',
-          stock: inStock,
-          pendingDelivery: toFixedNumber(pendingWeight),
-          unit: DEFAULT_UNIT,
-          status,
-          profileCount: profileCountResult || 0,
+          dimensions,
+          rate: Number(material.rate),
+          weight: Number(material.material_weight),
+          unit: 'kg',
+          status: 'in-stock' as const,
+          profileCount
         };
       })
     );

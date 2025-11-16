@@ -1,18 +1,10 @@
 import { NextRequest } from 'next/server';
-import Orders from '@/db/models/Orders';
-import { OrderInventory } from '@/db/models/OrderInventory';
-import OrderProfile from '@/db/models/OrderProfile';
-import Buyer from '@/db/models/Buyer';
-import Profiles from '@/db/models/Profiles';
-import Inventory from '@/db/models/Inventory';
-import User from '@/db/models/User';
-import OrderSequence from '@/db/models/OrderSequence';
+import { Inventory, OrderInventory, OrderProfile, Orders, OrderSequence, Profiles, Buyer, User } from '@/db/models';
 import { CreateOrderFormSchema } from '@/schemas/create-order.schema';
 import { ORDER_STATUS } from '@/enums/orders.enum';
 import sequelize, { testConnection } from '@/db/connection';
 import { Op } from 'sequelize';
 import { sendResponse, errorResponse } from '@/utils/api-response';
-import z from 'zod';
 
 export async function POST(request: NextRequest) {
   let transaction;
@@ -26,78 +18,101 @@ export async function POST(request: NextRequest) {
     // Start transaction
     transaction = await sequelize.transaction();
 
-    // Validate order_number is provided
-    if (!validatedData.order_number) {
+    // Use the order_number provided by frontend, or generate as fallback
+    let orderNumber = validatedData.order_number;
+    if (!orderNumber) {
+      orderNumber = await OrderSequence.getNextNumber();
+    }
+
+    if (!orderNumber) {
       await transaction.rollback();
       throw new Error('Order number is required');
     }
 
-    // Get the profile to fetch its details
-    const profile = await Profiles.findByPk(validatedData.profile_id);
-    if (!profile) {
+    // Fetch all selected profiles with their inventory
+    const profiles = await Profiles.findAll({
+      where: { id: validatedData.profile_ids },
+      include: [{ 
+        model: Inventory, 
+        as: 'inventory',
+        required: false 
+      }],
+      transaction
+    });
+
+    if (profiles.length !== validatedData.profile_ids.length) {
       await transaction.rollback();
-      throw new Error('Selected profile not found');
+      throw new Error('One or more selected profiles not found');
     }
+
+    // Calculate order totals
+    const totalOrderValue = profiles.reduce((total, profile) => {
+      const profileTotal = Number(profile.total || 0);
+      return total + (profileTotal * validatedData.quantity);
+    }, 0);
+
+    const grandTotal = totalOrderValue + (totalOrderValue * validatedData.profit / 100);
 
     // Create the order
     const order = await Orders.create(
       {
-        order_number: validatedData.order_number,
+        order_number: orderNumber,
+        order_name: validatedData.order_name,
         buyer_id: validatedData.buyer_id,
-        turning_rate: validatedData.turning_rate,
-        module: validatedData.module || 0,
-        face: validatedData.face || 0,
-        teeth_count: validatedData.teeth_count || 0,
-        weight: validatedData.weight,
-        finish_size_width: validatedData.finish_size?.width,
-        finish_size_height: validatedData.finish_size?.height,
-        material_cost: validatedData.material_cost,
-        ht_cost: validatedData.ht_cost,
-        total_order_value: validatedData.total_order_value,
-        profit_margin: validatedData.profit_margin,
-        grand_total: validatedData.grand_total,
-        burning_wastage_percent: validatedData.burning_wastage_percent || 0,
-        status: ORDER_STATUS.PENDING
+        quantity: validatedData.quantity,
+        total_order_value: totalOrderValue,
+        profit_margin: validatedData.profit,
+        grand_total: grandTotal,
+        status: ORDER_STATUS.PENDING,
+        burning_wastage_percent: validatedData.burning_wastage_percent
       },
       { transaction }
     );
 
-    // Create OrderProfile record with profile details
-    await OrderProfile.create(
-      {
-        order_id: order.id,
-        profile_id: profile.id,
-        name: profile.name,
-        type: profile.type,
-        material: profile.material,
-        material_rate: profile.material_rate,
-        outer_diameter_mm: profile.outer_diameter_mm,
-        thickness_mm: profile.thickness_mm,
-        heat_treatment_rate: profile.heat_treatment_rate,
-        heat_treatment_inefficacy_percent: profile.heat_treatment_inefficacy_percent
-      },
-      { transaction }
-    );
+    // Prepare OrderProfile records for bulk creation
+    const orderProfilesData = profiles.map(profile => ({
+      order_id: order.id,
+      profile_id: profile.id,
+      name: profile.name,
+      type: profile.type,
+      material: profile.material,
+      no_of_teeth: profile.no_of_teeth,
+      rate: Number(profile.rate),
+      face: Number(profile.face),
+      module: Number(profile.module),
+      finish_size: profile.finish_size || '',
+      burning_weight: Number(profile.burning_weight),
+      total_weight: Number(profile.total_weight),
+      ht_cost: Number(profile.ht_cost),
+      ht_rate: Number(profile.ht_rate),
+      processes: profile.processes,
+      cyn_grinding: Number(profile.cyn_grinding),
+      total: Number(profile.total),
+    }));
 
-    // Fetch inventory item if profile has inventory_id
-    let inventoryDetails = null;
-    if (profile.inventory_id) {
-      inventoryDetails = await Inventory.findByPk(profile.inventory_id, { transaction });
+    // BulkCreate OrderProfile records
+    await OrderProfile.bulkCreate(orderProfilesData, { transaction });
+
+    // Prepare OrderInventory records for profiles that have inventory
+    const orderInventoryData = profiles
+      .filter(profile => profile.inventory_id)
+      .map(profile => {
+        const inventory = (profile as any).inventory; // Type assertion for associated data
+        return {
+          order_id: order.id,
+          inventory_id: profile.inventory_id!,
+          material_type: inventory?.material_type || profile.material,
+          material_weight: Number(inventory?.material_weight || 0),
+          outer_diameter: Number(inventory?.outer_diameter || 0),
+          length: Number(inventory?.length || 0),
+          rate: Number(inventory?.rate || 0)
+        };
+      });
+
+    // BulkCreate OrderInventory records if any
+    if (orderInventoryData.length > 0) {
+      await OrderInventory.bulkCreate(orderInventoryData, { transaction });
     }
-
-    // Create OrderInventory record with inventory details
-    await OrderInventory.create(
-      {
-        order_id: order.id,
-        inventory_id: profile.inventory_id || '',
-        material_type: inventoryDetails?.material_type || profile.material,
-        material_weight: validatedData.weight,
-        width: inventoryDetails?.width || validatedData.finish_size.width,
-        height: inventoryDetails?.height || validatedData.finish_size.height,
-        quantity: 1
-      },
-      { transaction }
-    );
 
     await transaction.commit();
 
@@ -105,19 +120,26 @@ export async function POST(request: NextRequest) {
     await OrderSequence.incrementNumber();
 
     // Fetch the created order with relations
-    await order.reload();
+    const orderWithRelations = await Orders.findByPk(order.id, {
+      include: [
+        { model: Buyer, as: 'buyer', attributes: ['id', 'name', 'org_name'] },
+        { model: OrderProfile, as: 'orderProfiles' },
+        { model: OrderInventory, as: 'orderInventoryItems' },
+        { model: User, as: 'user', attributes: ['id', 'username', 'first_name', 'last_name'] }
+      ]
+    });
 
-    return sendResponse(order, 'Order created successfully', 201);
+    return sendResponse(orderWithRelations, 'Order created successfully', 201);
   } catch (error: any) {
     if (transaction) {
       await transaction.rollback();
     }
 
     if (error.name === 'ZodError') {
-      return errorResponse('Validation failed', 400, z.treeifyError(error));
+      return errorResponse('Validation failed', 400, error.errors);
     }
 
-    return errorResponse(error.message || 'Failed to create order', 500, error);
+    return errorResponse(error.message || 'Failed to create order', 500);
   }
 }
 
@@ -136,8 +158,8 @@ export async function GET(request: NextRequest) {
           { order_number: orderNumber },
           'Next order number retrieved successfully'
         );
-      } catch (error) {
-        return errorResponse('Failed to get next order number', 500);
+      } catch (error: any) {
+        return errorResponse(error.message || 'Failed to get next order number', 500);
       }
     }
 
@@ -163,6 +185,41 @@ export async function GET(request: NextRequest) {
       where,
       limit,
       offset,
+      include: [
+        {
+          model: Buyer,
+          as: 'buyer',
+          attributes: ['id', 'name', 'org_name']
+        },
+        {
+          model: User,
+          as: 'user',
+          attributes: ['id', 'username', 'first_name', 'last_name']
+        },
+        {
+          model: OrderProfile,
+          as: 'orderProfiles',
+          attributes: [
+            'id',
+            'profile_id',
+            'name',
+            'type',
+            'material',
+            'no_of_teeth',
+            'rate',
+            'face',
+            'module',
+            'finish_size',
+            'burning_weight',
+            'total_weight',
+            'ht_cost',
+            'ht_rate',
+            'processes',
+            'cyn_grinding',
+            'total',
+          ]
+        }
+      ],
       order: [['created_at', 'DESC']]
     });
 

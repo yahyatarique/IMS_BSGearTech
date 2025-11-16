@@ -1,5 +1,5 @@
-import { memo } from 'react';
-import { Control, useWatch } from 'react-hook-form';
+import { memo, useMemo, useEffect } from 'react';
+import { Control, useWatch, UseFormSetValue } from 'react-hook-form';
 import { Card } from '@/components/ui/card';
 import { BuyerRecord } from '@/services/types/buyer.api.type';
 import { ProfileRecord } from '@/services/types/profile.api.type';
@@ -7,24 +7,40 @@ import { CreateOrderFormInput } from '@/schemas/create-order.schema';
 
 interface OrderSummaryProps {
   control: Control<CreateOrderFormInput>;
+  setValue: UseFormSetValue<CreateOrderFormInput>;
   buyers: BuyerRecord[];
-  selectedProfile: ProfileRecord | undefined;
+  selectedProfiles: ProfileRecord[];
   nextOrderNumber: string | null;
-  orderId?: string | null;
 }
 
-export const OrderSummary = memo(({ control, buyers, selectedProfile, nextOrderNumber, orderId }: OrderSummaryProps) => {
-  const [buyerId, finishWidth, finishHeight, teethCount, module, face, weight, materialCost, turningRate, teethCost, htCost, processes, totalOrderValue, profitMargin, grandTotal] = useWatch({
+export const OrderSummary = memo(({ control, setValue, buyers, selectedProfiles, nextOrderNumber }: OrderSummaryProps) => {
+  const [buyerId, orderName, quantity, profit] = useWatch({
     control,
-    name: ['buyer_id', 'finish_size.width', 'finish_size.height', 'teeth_count', 'module', 'face', 'weight', 'material_cost', 'turning_rate', 'teeth_cutting_grinding_cost', 'ht_cost', 'processes', 'total_order_value', 'profit_margin', 'grand_total']
+    name: ['buyer_id', 'order_name', 'quantity', 'profit']
   });
+
+  const calculations = useMemo(() => {
+    const profilesTotal = selectedProfiles.reduce((sum, p) => sum + parseFloat(p.total || '0'), 0);
+    const total = profilesTotal * (quantity || 1);
+    const grandTotal = total + (total * (profit || 0) / 100);
+    const burningWeightTotal = selectedProfiles.reduce((sum, p) => sum + parseFloat(p.burning_weight || '0'), 0);
+    const totalWeightSum = selectedProfiles.reduce((sum, p) => sum + parseFloat(p.total_weight || '0'), 0);
+    const burningWastagePercent = totalWeightSum > 0 ? ((burningWeightTotal / totalWeightSum) * 100) : 0;
+
+    return { profilesTotal, total, grandTotal, burningWeightTotal, burningWastagePercent };
+  }, [selectedProfiles, quantity, profit]);
+
+  // Update form value when burning wastage percent changes
+  useEffect(() => {
+    setValue('burning_wastage_percent', calculations.burningWastagePercent);
+  }, [calculations.burningWastagePercent, setValue]);
 
   return (
   <Card className="p-6 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/50 border-slate-300 dark:border-slate-600">
     <h3 className="text-lg font-semibold mb-6">Order Summary</h3>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       <div className="space-y-4">
-        {nextOrderNumber && !orderId && (
+        {nextOrderNumber && (
           <div className="pb-4 border-b">
             <p className="text-xs uppercase text-muted-foreground font-semibold tracking-wide">Order Number</p>
             <p className="text-xl font-bold text-green-600 dark:text-green-400 mt-1">{nextOrderNumber}</p>
@@ -38,112 +54,62 @@ export const OrderSummary = memo(({ control, buyers, selectedProfile, nextOrderN
           </div>
         )}
 
-        {selectedProfile && (
+        {orderName && (
           <div>
-            <p className="text-xs uppercase text-muted-foreground font-semibold tracking-wide">Profile</p>
-            <p className="text-sm font-medium mt-1">{selectedProfile.name}</p>
+            <p className="text-xs uppercase text-muted-foreground font-semibold tracking-wide">Order Name</p>
+            <p className="text-sm font-medium mt-1">{orderName}</p>
           </div>
         )}
 
-        {finishWidth > 0 && finishHeight > 0 && (
-          <div className="pt-4 border-t">
-            <p className="text-xs uppercase text-muted-foreground font-semibold tracking-wide mb-2">Dimensions</p>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div>
-                <span className="text-muted-foreground">Outer Diameter:</span>
-                <p className="font-medium">{finishWidth} mm</p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Thickness:</span>
-                <p className="font-medium">{finishHeight} mm</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {(teethCount! > 0 || module! > 0 || face! > 0) && (
-          <div className="pt-4 border-t">
-            <p className="text-xs uppercase text-muted-foreground font-semibold tracking-wide mb-2">Gear Specifications</p>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              {teethCount! > 0 && (
-                <div>
-                  <span className="text-muted-foreground">Teeth:</span>
-                  <p className="font-medium">{teethCount}</p>
-                </div>
-              )}
-              {module! > 0 && (
-                <div>
-                  <span className="text-muted-foreground">Module:</span>
-                  <p className="font-medium">{module}</p>
-                </div>
-              )}
-              {face! > 0 && (
-                <div>
-                  <span className="text-muted-foreground">Face:</span>
-                  <p className="font-medium">{face}</p>
-                </div>
-              )}
-            </div>
+        {selectedProfiles.length > 0 && (
+          <div>
+            <p className="text-xs uppercase text-muted-foreground font-semibold tracking-wide">Profiles</p>
+            <p className="text-sm font-medium mt-1">{selectedProfiles.length} profile(s) selected</p>
           </div>
         )}
       </div>
 
       <div className="space-y-3 pl-6 border-l">
         <div className="flex justify-between items-center">
-          <span className="text-sm text-muted-foreground">Weight</span>
-          <span className="font-semibold">{(weight || 0)?.toFixed(2)} kg</span>
+          <span className="text-sm text-muted-foreground">Profiles Total</span>
+          <span className="font-semibold">₹{calculations.profilesTotal.toFixed(2)}</span>
         </div>
 
         <div className="flex justify-between items-center">
-          <span className="text-sm text-muted-foreground">Material Cost</span>
-          <span className="font-semibold">₹{(materialCost || 0)?.toFixed(2)}</span>
+          <span className="text-sm text-muted-foreground">Quantity</span>
+          <span className="font-semibold">{quantity || 1}</span>
         </div>
-
-        <div className="flex justify-between items-center">
-          <span className="text-sm text-muted-foreground">Turning Rate</span>
-          <span className="font-semibold">₹{(turningRate || 0)?.toFixed(2)}</span>
-        </div>
-
-        {teethCost > 0 && (
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">TC+TG Cost</span>
-            <span className="font-semibold">₹{(teethCost || 0)?.toFixed(2)}</span>
-          </div>
-        )}
-
-        <div className="flex justify-between items-center">
-          <span className="text-sm text-muted-foreground">HT Cost</span>
-          <span className="font-semibold">₹{(htCost || 0)?.toFixed(2)}</span>
-        </div>
-
-        {processes?.length > 0 && processes.some((p: any) => p.rate > 0) && (
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">Additional Processes</span>
-            <span className="font-semibold">
-              ₹{processes.reduce((sum: number, p: any) => sum + p.rate, 0)?.toFixed(2)}
-            </span>
-          </div>
-        )}
 
         <div className="pt-3 border-t flex justify-between items-center">
-          <span className="text-lg font-semibold">Total Order Value</span>
+          <span className="text-lg font-semibold">Total (Profiles × Quantity)</span>
           <span className="text-base font-bold text-blue-600 dark:text-blue-400">
-            ₹{(totalOrderValue || 0)?.toFixed(2)}
+            ₹{calculations.total.toFixed(2)}
           </span>
         </div>
 
-        {profitMargin > 0 && (
+        {profit > 0 && (
           <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">Profit Margin</span>
-            <span className="font-semibold text-green-600 dark:text-green-400">{profitMargin?.toFixed(2)}%</span>
+            <span className="text-sm text-muted-foreground">Profit ({profit}%)</span>
+            <span className="font-semibold text-green-600 dark:text-green-400">₹{(calculations.grandTotal - calculations.total).toFixed(2)}</span>
           </div>
         )}
 
         <div className="pt-3 border-t bg-blue-50 dark:bg-blue-900/30 rounded px-4 py-3 flex justify-between items-center">
           <span className="font-semibold text-lg">Grand Total</span>
           <span className="text-lg font-bold text-blue-700 dark:text-blue-300">
-            ₹{(grandTotal || 0)?.toFixed(2)}
+            ₹{calculations.grandTotal.toFixed(2)}
           </span>
+        </div>
+
+        <div className="pt-3 border-t">
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-muted-foreground">Burning Weight Total</span>
+            <span className="font-semibold">{calculations.burningWeightTotal.toFixed(2)} kg</span>
+          </div>
+          <div className="flex justify-between items-center mt-2">
+            <span className="text-sm text-muted-foreground">Burning Wastage</span>
+            <span className="font-semibold">{calculations.burningWastagePercent.toFixed(2)}%</span>
+          </div>
         </div>
       </div>
     </div>

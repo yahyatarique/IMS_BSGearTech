@@ -22,7 +22,7 @@ export function GradientText({
     'blue-cyan': 'from-blue-600 to-cyan-500',
     green: 'from-green-500 to-emerald-500',
     orange: 'from-orange-500 to-red-500',
-    custom: customGradient || 'from-blue-600 to-cyan-500'
+    custom: customGradient
   }
 
   return (

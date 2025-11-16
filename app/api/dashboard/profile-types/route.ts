@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { testConnection } from '@/db/connection';
-import { Profiles } from '@/db/models';
+import { Profiles, Inventory } from '@/db/models';
 import { errorResponse, sendResponse } from '@/utils/api-response';
 import { DashboardProfileTypesQuerySchema } from '@/schemas/dashboard.schema';
 
@@ -48,26 +48,27 @@ export async function GET(request: NextRequest) {
     const profiles = await Profiles.findAll({
       limit,
       order: [['name', 'ASC']],
+      include: [{
+        model: Inventory,
+        as: 'inventory',
+        attributes: ['material_type', 'outer_diameter', 'length']
+      }]
     });
 
     const formattedProfiles = profiles.map((profile) => {
-      const plainProfile = profile.get({ plain: true })
+      const plainProfile = profile.get({ plain: true }) as any;
 
-      const noOfTeeth = toFixedNumber(plainProfile.no_of_teeth, 0);
-      // const face = toFixedNumber(plainProfile.face);
-      // const module = toFixedNumber(plainProfile.module);
-      const rate = toFixedNumber(plainProfile.rate);
-      const htRate = toFixedNumber(plainProfile.ht_rate);
       const total = toFixedNumber(plainProfile.total);
+      const inventory = plainProfile.inventory;
 
       return {
         id: plainProfile.id,
         name: plainProfile.name,
-        specification: plainProfile.finish_size || `${noOfTeeth}T`,
+        specification: plainProfile.finish_size || 'N/A',
         material: formatLabel(plainProfile.material, MATERIAL_LABELS, 'Unknown'),
         type: formatLabel(plainProfile.type, TYPE_LABELS, 'Custom'),
-        materialRate: rate,
-        heatTreatmentRate: htRate,
+        materialType: inventory?.material_type || 'N/A',
+        materialDimensions: inventory ? `${toFixedNumber(inventory.outer_diameter)}mm × ${toFixedNumber(inventory.length)}mm` : 'N/A',
         total,
       };
     });

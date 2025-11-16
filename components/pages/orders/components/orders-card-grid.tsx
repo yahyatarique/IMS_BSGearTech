@@ -4,7 +4,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { OrderRecord } from '@/services/types/orders.api.type';
-import { ShoppingCart, User, Building2, Calendar, DollarSign, Edit, Trash2 } from 'lucide-react';
+import { ShoppingCart, User, Building2, Calendar,  Edit, Trash2 } from 'lucide-react';
 
 const statusClasses: Record<OrderRecord['status'], string> = {
   '0': 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-500 border-yellow-500/20',
@@ -89,7 +89,7 @@ export function OrdersCardGrid({ orders, isLoading, onCardClick, onEdit, onDelet
   return (
     <div className="space-y-6">
       <div
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6"
         onClick={handleGridClick}
       >
         {orders.map((order) => (
