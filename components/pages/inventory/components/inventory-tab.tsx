@@ -8,11 +8,11 @@ import {
   updateInventoryItem,
   deleteInventoryItem
 } from '@/services/inventory';
-import { InventoryStatsCards } from './inventory-stats-cards';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Package, Ruler, Eye } from 'lucide-react';
+import { Plus, Search, Package, Ruler, Eye, Weight, IndianRupee } from 'lucide-react';
 import { error as errorToast, success as successToast } from '@/hooks/use-toast';
+import { Section } from '@/components/ui/section';
 import { GradientBorderCard } from '@/components/ui/gradient-border-card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -29,7 +29,7 @@ export function InventoryTab() {
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [editingInventory, setEditingInventory] = useState<InventoryRecord | null>(null);
   const [materialFilter, setMaterialFilter] = useState<'all' | 'CR-5' | 'EN-9'>('all');
-  const [statsKey, setStatsKey] = useState(0);
+  // const [statsKey, setStatsKey] = useState(0);
 
   // Fetch all inventory items
   const loadInventoryItems = useCallback(async () => {
@@ -97,7 +97,6 @@ export function InventoryTab() {
 
   // Handle form submit (create or update)
   const handleFormSubmit = async (data: CreateInventoryInput | UpdateInventoryInput) => {
-    debugger;
     try {
       if (editingInventory) {
         // Update existing inventory item
@@ -125,7 +124,7 @@ export function InventoryTab() {
       setIsFormDialogOpen(false);
       setEditingInventory(null);
       loadInventoryItems();
-      setStatsKey(prev => prev + 1);
+      // setStatsKey((prev) => prev + 1);
     } catch (error: any) {
       errorToast({
         title: 'Error',
@@ -167,7 +166,7 @@ export function InventoryTab() {
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search by PO number..."
+              placeholder="Search by outer diameter * length and rate..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -187,27 +186,20 @@ export function InventoryTab() {
       </div>
 
       {/* Material Stats Section */}
-      <section className="rounded-xl bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-100 dark:from-slate-900 dark:to-slate-800 p-6 shadow-lg">
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-            Material Overview
-          </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Inventory statistics by material and dimensions
-          </p>
-        </div>
+      {/* <Section
+        title="Material Overview"
+        description="Inventory statistics by material and dimensions"
+        variant="gradient"
+      >
         <InventoryStatsCards key={statsKey} />
-      </section>
+      </Section> */}
 
       {/* Inventory Items Section */}
-      <section className="rounded-xl bg-white dark:bg-slate-900 p-6 shadow-lg">
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Inventory Items</h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Browse and manage inventory records
-          </p>
-        </div>
-
+      <Section
+        title="Inventory Items"
+        description="Browse and manage inventory records"
+        variant="gradient"
+      >
         {/* Inventory Items Grid */}
         {isLoading ? (
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
@@ -244,11 +236,11 @@ export function InventoryTab() {
                 <div className="space-y-3">
                   <div className="flex items-start justify-between text-sm">
                     <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                      <Package className="h-4 w-4" />
+                      <Weight className="h-4 w-4" />
                       <span className="font-medium">Weight</span>
                     </div>
                     <span className="font-semibold text-gray-900 dark:text-gray-100">
-                      {Number(item.material_weight * item.quantity)?.toFixed(2)} kg
+                      {Number(item.material_weight)?.toFixed(2)} kg
                     </span>
                   </div>
 
@@ -258,17 +250,28 @@ export function InventoryTab() {
                       <span className="font-medium">Dimensions</span>
                     </div>
                     <span className="font-semibold text-gray-900 dark:text-gray-100 text-right">
-                      {Number(item.width).toFixed(2)}mm OD × {Number(item.height).toFixed(2)}mm L
+                      {Number(item.outer_diameter).toFixed(2)}mm OD ×{' '}
+                      {Number(item.length).toFixed(2)}mm L
                     </span>
                   </div>
 
                   <div className="flex items-start justify-between text-sm">
                     <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                      <Package className="h-4 w-4" />
-                      <span className="font-medium">Quantity</span>
+                      <IndianRupee className="h-4 w-4" />
+                      <span className="font-medium">Rate</span>
                     </div>
                     <span className="font-semibold text-gray-900 dark:text-gray-100">
-                      {item.quantity}
+                      ₹{Number(item.rate).toFixed(2)}
+                    </span>
+                  </div>
+
+                  <div className="flex items-start justify-between text-sm">
+                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                      <IndianRupee className="h-4 w-4" />
+                      <span className="font-medium">Total Cost</span>
+                    </div>
+                    <span className="font-semibold text-gray-900 dark:text-gray-100">
+                      ₹{(Number(item.rate) * Number(item.material_weight)).toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -284,7 +287,7 @@ export function InventoryTab() {
             ))}
           </div>
         )}
-      </section>
+      </Section>
 
       {/* Dialogs */}
       <InventoryDetailsDialog

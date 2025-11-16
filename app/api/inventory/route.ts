@@ -4,8 +4,8 @@ import Inventory from '@/db/models/Inventory';
 import { CreateInventorySchema, InventoryListQuerySchema } from '@/schemas/inventory.schema';
 import { successResponse, errorResponse, sendResponse } from '@/utils/api-response';
 import sequelize from '@/db/connection';
-import { Op } from 'sequelize';
 import { calculateCylindricalWeight } from '@/utils/material-calculations';
+import { Op } from 'sequelize';
 
 // GET /api/inventory - List inventory with meta (pagination) and filters, or get materials summary
 export async function GET(request: NextRequest) {
@@ -28,7 +28,20 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      whereClause[Op.or] = [{ po_number: { [Op.iLike]: `%${search}%` } }];
+      const dimensionMatch = search.match(/^(\d+(?:\.\d+)?)\s*x\s*(\d+(?:\.\d+)?)$/i);
+
+      if (dimensionMatch) {
+        // Search by dimensions (e.g., "100 x 100")
+        const [, outerDiameter, length] = dimensionMatch;
+        whereClause.outer_diameter = parseFloat(outerDiameter);
+        whereClause.length = parseFloat(length);
+      } else if (!isNaN(Number(search))) {
+        // Search by weight or total cost
+        const numericValue = parseFloat(search);
+        whereClause.rate = {
+          [Op.gte]: numericValue
+        };
+      }
     }
 
     // Fetch inventory with meta pagination
@@ -44,7 +57,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       successResponse({
-        inventory: inventory.map(item => item.toJSON()),
+        inventory: inventory.map((item) => item.toJSON()),
         meta: {
           page,
           pageSize: limit,
@@ -84,9 +97,13 @@ export async function POST(request: NextRequest) {
 
     // Calculate material weight based on dimensions
     const calculatedWeight = calculateCylindricalWeight(
-      validatedData.width, // Outer Diameter
-      validatedData.height // Length
+      validatedData.outer_diameter, // Outer Diameter
+      validatedData.length // Length
     );
+
+    if (calculatedWeight !== validatedData.material_weight) {
+      throw new Error('Provided material weight does not match calculated weight');
+    }
 
     // Create inventory item with calculated weight
     const inventoryItem = await Inventory.create(

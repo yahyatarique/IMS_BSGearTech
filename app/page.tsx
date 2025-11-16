@@ -20,9 +20,7 @@ export default function Home() {
       <main className="container mx-auto px-4 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent mb-2">
-            Welcome back, Admin
-          </h1>
+          <h1 className="text-3xl font-bold mb-2">Welcome back, Admin</h1>
           <p className="text-muted-foreground">
             Here&apos;s what&apos;s happening with your inventory today
           </p>

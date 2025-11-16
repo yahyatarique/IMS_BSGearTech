@@ -18,11 +18,12 @@ export interface InventoryRecord {
   id: string;
   material_type: 'CR-5' | 'EN-9';
   material_weight: number;
-  width: number;
-  height: number;
-  quantity: number;
+  outer_diameter: number;
+  length: number;
   created_at: string;
   updated_at: string;
+  rate: number;
+  total_cost: number;
   materialInfo?: MaterialInfo; // Added material summary info
 }
 

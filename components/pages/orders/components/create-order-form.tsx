@@ -1,97 +1,104 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Form } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card } from '@/components/ui/card';
 import { CreateOrderFormSchema, type CreateOrderFormInput } from '@/schemas/create-order.schema';
 import { fetchBuyers } from '@/services/buyers';
 import { fetchOrderById } from '@/services/orders';
 import { BuyerRecord } from '@/services/types/buyer.api.type';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { fetchProfiles } from '@/services/profiles';
 import { ProfileRecord } from '@/services/types/profile.api.type';
-import {
-  calculateWeight,
-  calculateMaterialCost,
-  calculateTeethCost,
-  calculateHTCost,
-  calculateTotalOrderValue,
-  calculateGrandTotal
-} from '@/utils/calculationHelper';
 import { OrderNumberDisplay } from './order-number-display';
 import { BuyerProfileSection } from './buyer-profile-section';
-import { ProfileDetailsDisplay } from './profile-details-display';
-import { FinishSizeSection } from './finish-size-section';
-import { GearSpecificationsSection } from './gear-specifications-section';
-import { ProcessesSection } from './processes-section';
-import { CalculatedValuesSection } from './calculated-values-section';
-import { TotalProfitSection } from './total-profit-section';
+import { SelectedProfilesAccordion } from './selected-profiles-accordion';
 import { OrderSummary } from './order-summary';
-import { calculateProfileWeight } from '../../../../utils/material-calculations';
 
-interface CreateOrderFormProps {
-  orderId?: string | null;
-}
-
-export function CreateOrderForm({ orderId }: CreateOrderFormProps) {
+export function CreateOrderForm({ orderId }: { orderId?: string }) {
   const { toast } = useToast();
   const router = useRouter();
   const [buyers, setBuyers] = useState<BuyerRecord[]>([]);
-  const [profiles, setProfiles] = useState<ProfileRecord[]>([]);
+  const [allProfiles, setAllProfiles] = useState<ProfileRecord[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isInitializing, setIsInitializing] = useState(!!orderId);
   const [nextOrderNumber, setNextOrderNumber] = useState<string | null>(null);
+  const [isEditMode] = useState(!!orderId);
+  const [originalOrderNumber, setOriginalOrderNumber] = useState<string | null>(null);
+  const [initialProfileIds, setInitialProfileIds] = useState<string[]>([]);
 
   const form = useForm<CreateOrderFormInput>({
     resolver: zodResolver(CreateOrderFormSchema),
     defaultValues: {
-      processes: [],
-      profit_margin: 0,
-      finish_size: { width: 0, height: 0 },
-      rate: 0,
-      turning_rate: 0,
-      material_cost: 0,
-      teeth_cutting_grinding_cost: 0,
-      ht_cost: 0,
-      weight: 0,
-      total_order_value: 0,
-      grand_total: 0,
-      burning_wastage_percent: 0
+      order_name: '',
+      buyer_id: '',
+      profile_ids: [],
+      quantity: 1,
+      profit: 0,
+      burning_wastage_percent: 0,
     }
   });
 
-  // Fetch buyers and profiles on mount
+  // Load existing order data in edit mode
   useEffect(() => {
-    const loadInitialData = async () => {
-      try {
-        const [buyersRes, profilesRes] = await Promise.all([
-          fetchBuyers({ page: 1, limit: 10, status: 'active' }),
-          fetchProfiles({ page: 1, limit: 10 })
-        ]);
+    if (isEditMode && orderId) {
+      const loadOrder = async () => {
+        try {
+          setIsLoading(true);
+          const response = await fetchOrderById(orderId);
+          if (response.success && response.data) {
+            const order = response.data;
+            setOriginalOrderNumber(order.order_number);
+            
+            const profileIds = order.orderProfiles?.map(op => op.profile_id) || [];
+            setInitialProfileIds(profileIds);
+            
+            form.reset({
+              order_name: order.order_name || '',
+              buyer_id: order.buyer_id || '',
+              profile_ids: profileIds,
+              quantity: order.quantity,
+              profit: order.profit_margin,
+              burning_wastage_percent: order.burning_wastage_percent
+            });
+          }
+        } catch (error: any) {
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: error.message || 'Failed to load order'
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      loadOrder();
+    }
+  }, [isEditMode, orderId, form, toast]);
 
+  useEffect(() => {
+    const loadBuyers = async () => {
+      try {
+        const buyersRes = await fetchBuyers({ page: 1, limit: 100, status: 'active' });
         if (buyersRes.success && buyersRes.data) {
           setBuyers(buyersRes.data.buyers);
-        }
-        if (profilesRes.success && profilesRes.data) {
-          setProfiles(profilesRes.data.profiles);
         }
       } catch (error: any) {
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: error.message || 'Failed to load initial data'
+          description: error.message || 'Failed to load buyers'
         });
       }
     };
-    loadInitialData();
+    loadBuyers();
   }, [toast]);
 
-  // Fetch next order number for new orders
   useEffect(() => {
-    if (!orderId) {
+    if (!isEditMode) {
       const fetchNextOrderNumber = async () => {
         try {
           const response = await fetch('/api/orders?action=next-number');
@@ -105,244 +112,209 @@ export function CreateOrderForm({ orderId }: CreateOrderFormProps) {
       };
       fetchNextOrderNumber();
     }
-  }, [orderId]);
+  }, [isEditMode]);
 
-  // Load order data if editing
-  useEffect(() => {
-    const initializeForm = async () => {
-      if (!orderId) {
-        setIsInitializing(false);
-        return;
-      }
+  const profileIds = form.watch('profile_ids');
+  // const quantity = form.watch('quantity');
+  // const profit = form.watch('profit');
 
-      try {
-        const orderResponse = await fetchOrderById(orderId);
-        if (orderResponse.success && orderResponse.data) {
-          const order = orderResponse.data;
-          form.reset({
-            buyer_id: order.buyer_id || '',
-            finish_size: {
-              width: 0,
-              height: 0
-            },
-            turning_rate: order.turning_rate,
-            module: order.module,
-            face: order.face,
-            teeth_count: order.teeth_count,
-            weight: order.weight,
-            material_cost: order.material_cost,
-            teeth_cutting_grinding_cost: 0,
-            ht_cost: order.ht_cost,
-            processes: [],
-            total_order_value: order.total_order_value,
-            profit_margin: order.profit_margin,
-            grand_total: order.grand_total
-          });
-        }
-      } catch (error: any) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: error.message || 'Failed to load order'
-        });
-      } finally {
-        setIsInitializing(false);
-      }
-    };
-    initializeForm();
-  }, [orderId, form, toast]);
+  const selectedProfiles = useMemo(() => {
+    return allProfiles.filter((p) => profileIds?.includes(p.id));
+  }, [allProfiles, profileIds]);
 
-  const profileId = form.watch('profile_id');
-  const selectedProfile = profiles.find((p) => p.id === profileId);
-  const teethCount = form.watch('teeth_count');
-  const moduleValue = form.watch('module');
-  const face = form.watch('face');
-  const turningRate = form.watch('turning_rate');
-  const materialCost = form.watch('material_cost');
-  const teethCost = form.watch('teeth_cutting_grinding_cost');
-  const htCost = form.watch('ht_cost');
-  const profitMargin = form.watch('profit_margin');
-  const processes = form.watch('processes');
-  const rate = form.watch('rate');
-  const finishSize = form.watch('finish_size');
+  // const calculations = useMemo(() => {
+  //   const profilesTotal = selectedProfiles.reduce((sum, p) => sum + parseFloat(p.total || '0'), 0);
+  //   const total = profilesTotal * quantity;
+  //   const grandTotal = total + (total * profit / 100);
+  //   const burningWeightTotal = selectedProfiles.reduce((sum, p) => sum + parseFloat(p.burning_weight || '0'), 0);
+  //   const totalWeightSum = selectedProfiles.reduce((sum, p) => sum + parseFloat(p.total_weight || '0'), 0);
+  //   const burningWastagePercent = totalWeightSum > 0 ? ((burningWeightTotal / totalWeightSum) * 100) : 0;
 
-  // Update calculations when profile or module changes
-  useEffect(() => {
-    if (selectedProfile && moduleValue) {
-      // Set rates from profile
-      const materialRate = Number(selectedProfile.material_rate);
-      // const htRate = Number(selectedProfile.heat_treatment_rate);
-
-      const outerDiameter = Number(selectedProfile.outer_diameter_mm);
-      const thickness = Number(selectedProfile.thickness_mm);
-
-      // Calculate weight if dimensions exist
-      if (outerDiameter && thickness && moduleValue > 0) {
-        
-        // Calculate single product weight
-        const singleWeight = calculateProfileWeight(outerDiameter, thickness);
-
-        // Multiply by module to get total weight
-        const totalWeight = singleWeight * moduleValue;
-
-        form.setValue('weight', Number(totalWeight?.toFixed(5)));
-
-        const materialCost = calculateMaterialCost(totalWeight, materialRate);
-        form.setValue('material_cost', Number(materialCost?.toFixed(5)));
-
-        const htCost = calculateHTCost(totalWeight, rate);
-        form.setValue('ht_cost', Number(htCost?.toFixed(5)));
-      }
-    }
-  }, [selectedProfile, moduleValue, form, rate]);
-
-  // Calculate burning wastage
-  useEffect(() => {
-    if (selectedProfile && moduleValue && finishSize?.width && finishSize?.height) {
-      const profileWeight = calculateProfileWeight(
-        Number(selectedProfile.outer_diameter_mm),
-        Number(selectedProfile.thickness_mm)
-      ) * moduleValue;
-
-      const finishWeight = calculateProfileWeight(
-        finishSize.width,
-        finishSize.height
-      ) * moduleValue;
-
-      if (profileWeight > 0) {
-        const wastage = ((profileWeight - finishWeight) / profileWeight) * 100;
-        form.setValue('burning_wastage_percent', Number(wastage.toFixed(2)));
-      }
-    }
-  }, [selectedProfile, moduleValue, finishSize, form]);
-
-  // Update teeth cost when dependencies change
-  useEffect(() => {
-    if (teethCount && moduleValue && face && teethCount > 0 && moduleValue > 0 && face > 0) {
-      const teethCost = calculateTeethCost(teethCount, moduleValue, face, rate);
-      form.setValue('teeth_cutting_grinding_cost', teethCost);
-    }
-  }, [teethCount, moduleValue, face, form, rate]);
-
-  const p = JSON.stringify(processes);
-
-  // Update total values when dependencies change
-  useEffect(() => {
-    const totalOrderValue = calculateTotalOrderValue(
-      Number(materialCost) || 0,
-      Number(turningRate) || 0,
-      Number(teethCost) || 0,
-      Number(htCost) || 0,
-      processes || []
-    );
-    form.setValue('total_order_value', totalOrderValue);
-
-    if (profitMargin) {
-      const gT = calculateGrandTotal(totalOrderValue, Number(profitMargin));
-      form.setValue('grand_total', gT);
-    } else {
-      form.setValue('grand_total', totalOrderValue);
-    }
-  }, [materialCost, turningRate, teethCost, htCost, p, processes, profitMargin, form]);
+  //   return { profilesTotal, total, grandTotal, burningWeightTotal, burningWastagePercent };
+  // }, [selectedProfiles, quantity, profit]);
 
   const onSubmit = async (values: CreateOrderFormInput) => {
     try {
       setIsLoading(true);
 
-      // For new orders, fetch the next order number from the API
-      if (!orderId && !values.order_number) {
-        try {
+      if (isEditMode && orderId) {
+        // Edit mode: build update payload with profile changes
+        const currentProfileIds = values.profile_ids || [];
+        const deletedProfileIds = initialProfileIds.filter((id: string) => !currentProfileIds.includes(id));
+        const newProfileIds = currentProfileIds.filter((id: string) => !initialProfileIds.includes(id));
+        const existingProfileIds = currentProfileIds.filter((id: string) => initialProfileIds.includes(id));
+
+        // Get OrderProfile IDs for profiles we're keeping/updating
+        const orderResponse = await fetchOrderById(orderId);
+        const orderProfiles = orderResponse.data?.orderProfiles || [];
+        
+        const profiles = [
+          // Mark deleted profiles
+          ...deletedProfileIds.map((profile_id: string) => {
+            const orderProfile = orderProfiles.find(op => op.profile_id === profile_id);
+            return {
+              id: orderProfile?.id,
+              profile_id,
+              isDeleted: true
+            };
+          }),
+          // Keep existing profiles
+          ...existingProfileIds.map((profile_id: string) => {
+            const orderProfile = orderProfiles.find(op => op.profile_id === profile_id);
+            return {
+              id: orderProfile?.id,
+              profile_id
+            };
+          }),
+          // Mark new profiles
+          ...newProfileIds.map((profile_id: string) => ({
+            profile_id,
+            isNew: true
+          }))
+        ];
+
+        const updatePayload: any = {
+          ...values,
+          profiles
+        };
+        delete updatePayload.profile_ids; // Remove profile_ids as we're using profiles array
+        delete updatePayload.order_number; // Don't update order number
+
+        const response = await fetch(`/api/orders/${orderId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatePayload)
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Failed to update order');
+        }
+
+        toast({ title: 'Success', description: 'Order updated successfully' });
+        router.push('/orders');
+      } else {
+        // Create mode
+        if (!values.order_number) {
           const response = await fetch('/api/orders?action=next-number');
           if (response.ok) {
             const data = await response.json();
             values.order_number = data.data.order_number;
           }
-        } catch (error) {
-          console.error('Failed to fetch next order number:', error);
-          throw new Error('Failed to generate order number');
         }
+
+        const response = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(values)
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Failed to create order');
+        }
+
+        toast({ title: 'Success', description: 'Order created successfully' });
+        router.push('/orders');
       }
-
-      const method = orderId ? 'PUT' : 'POST';
-      const url = orderId ? `/api/orders/${orderId}` : '/api/orders';
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(values)
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to save order');
-      }
-
-      toast({
-        title: 'Success',
-        description: orderId ? 'Order updated successfully' : 'Order created successfully'
-      });
-
-      router.push('/orders');
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error.message || 'Failed to save order'
+        description: error.message || `Failed to ${isEditMode ? 'update' : 'create'} order`
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (isInitializing) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    );
-  }
+
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        {nextOrderNumber && !orderId && <OrderNumberDisplay orderNumber={nextOrderNumber} />}
+        {isEditMode && originalOrderNumber && <OrderNumberDisplay orderNumber={originalOrderNumber} />}
+        {!isEditMode && nextOrderNumber && <OrderNumberDisplay orderNumber={nextOrderNumber} />}
 
         <BuyerProfileSection
           control={form.control}
           buyers={buyers}
-          profiles={profiles}
           isLoading={isLoading}
+          onProfilesLoad={setAllProfiles}
         />
 
-        {selectedProfile && <ProfileDetailsDisplay profile={selectedProfile} />}
+        <SelectedProfilesAccordion selectedProfiles={selectedProfiles} />
 
-        <FinishSizeSection control={form.control} />
-
-        <GearSpecificationsSection control={form.control} />
-
-        <ProcessesSection
-          control={form.control}
-          getValues={form.getValues}
-          setValue={form.setValue}
-        />
-
-        <CalculatedValuesSection control={form.control} />
-
-        <TotalProfitSection control={form.control} />
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4">Order Details</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <FormField
+              control={form.control}
+              name="order_name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Order Name *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter order name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="quantity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Quantity *</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="1"
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="profit"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Profit (%) *</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      {...field}
+                      onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </Card>
 
         <OrderSummary
           control={form.control}
+          setValue={form.setValue}
           buyers={buyers}
-          selectedProfile={selectedProfile}
+          selectedProfiles={selectedProfiles}
           nextOrderNumber={nextOrderNumber}
-          orderId={orderId}
         />
 
         <div className="flex justify-end">
           <Button type="submit" disabled={isLoading}>
-            Create Order
+            {isLoading 
+              ? (isEditMode ? 'Updating...' : 'Creating...') 
+              : (isEditMode ? 'Update Order' : 'Create Order')
+            }
           </Button>
         </div>
       </form>

@@ -7,7 +7,6 @@ import {
   fetchBuyers,
   createBuyer,
   updateBuyer,
-  deleteBuyer,
   toggleBuyerStatus
 } from '@/services/buyers';
 import { BuyersCardGrid } from './components/buyers-card-grid';
@@ -153,7 +152,6 @@ export default function BuyersPage() {
       title="Buyers Management"
       subtitle="Manage your buyer information and contacts"
       icon={Users}
-      gradient="blue-cyan"
       headerActions={
         <Button onClick={handleCreateNew} className="flex items-center gap-2">
           <Plus className="w-4 h-4" />

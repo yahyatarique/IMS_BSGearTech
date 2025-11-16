@@ -204,7 +204,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <main className="container mx-auto px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent mb-2">
+          <h1 className="text-3xl font-bold  mb-2">
             My Profile
           </h1>
           <p className="text-muted-foreground">Manage your account information</p>

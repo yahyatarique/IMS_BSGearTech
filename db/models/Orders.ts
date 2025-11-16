@@ -4,21 +4,12 @@ import sequelize from '../connection';
 interface OrdersAttributes {
   id: string;
   order_number: string;
+  order_name?: string;
+  quantity: number;
   created_at: Date;
   buyer_id?: string;
   status: '0' | '1' | '2';
   grand_total: number;
-  material_cost: number;
-  process_costs: number;
-  rate: number;
-  turning_rate: number;
-  teeth_count?: number;
-  module?: number;
-  face?: number;
-  weight?: number;
-  finish_size_width?: number;
-  finish_size_height?: number;
-  ht_cost: number;
   total_order_value: number;
   profit_margin: number;
   burning_wastage_percent: number;
@@ -32,34 +23,21 @@ interface OrdersCreationAttributes
     | 'created_at'
     | 'status'
     | 'grand_total'
-    | 'material_cost'
-    | 'process_costs'
-    | 'rate'
-    | 'turning_rate'
-    | 'ht_cost'
     | 'total_order_value'
     | 'profit_margin'
     | 'burning_wastage_percent'
+    | 'quantity'
   > {}
 
 class Orders extends Model<OrdersAttributes, OrdersCreationAttributes> implements OrdersAttributes {
   declare id: string;
   declare order_number: string;
+  declare order_name?: string;
+  declare quantity: number;
   declare readonly created_at: Date;
   declare buyer_id?: string;
   declare status: '0' | '1' | '2';
   declare grand_total: number;
-  declare material_cost: number;
-  declare process_costs: number;
-  declare rate: number;
-  declare turning_rate: number;
-  declare teeth_count?: number;
-  declare module?: number;
-  declare face?: number;
-  declare weight?: number;
-  declare finish_size_width?: number;
-  declare finish_size_height?: number;
-  declare ht_cost: number;
   declare total_order_value: number;
   declare profit_margin: number;
   declare burning_wastage_percent: number;
@@ -85,6 +63,11 @@ class Orders extends Model<OrdersAttributes, OrdersCreationAttributes> implement
       onUpdate: 'CASCADE'
     });
 
+    Orders.hasMany(models.OrderProfile, {
+      foreignKey: 'order_id',
+      as: 'orderProfiles'
+    });
+
     Orders.hasMany(models.OrderInventory, {
       foreignKey: 'order_id',
       as: 'orderInventoryItems'
@@ -103,6 +86,15 @@ Orders.init(
       type: DataTypes.TEXT,
       allowNull: false,
       unique: true
+    },
+    order_name: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    quantity: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 1
     },
     created_at: {
       type: DataTypes.DATE,
@@ -123,55 +115,6 @@ Orders.init(
       defaultValue: '0'
     },
     grand_total: {
-      type: DataTypes.DECIMAL(14, 2),
-      allowNull: false,
-      defaultValue: 0
-    },
-    material_cost: {
-      type: DataTypes.DECIMAL(14, 2),
-      allowNull: false,
-      defaultValue: 0
-    },
-    process_costs: {
-      type: DataTypes.DECIMAL(14, 2),
-      allowNull: false,
-      defaultValue: 0
-    },
-    rate: {
-      type: DataTypes.DECIMAL(14, 2),
-      allowNull: false,
-      defaultValue: 0
-    },
-    turning_rate: {
-      type: DataTypes.DECIMAL(14, 2),
-      allowNull: false,
-      defaultValue: 0
-    },
-    teeth_count: {
-      type: DataTypes.INTEGER,
-      allowNull: true
-    },
-    module: {
-      type: DataTypes.DECIMAL(8, 3),
-      allowNull: true
-    },
-    face: {
-      type: DataTypes.DECIMAL(8, 3),
-      allowNull: true
-    },
-    weight: {
-      type: DataTypes.DECIMAL(10, 3),
-      allowNull: true
-    },
-    finish_size_width: {
-      type: DataTypes.DECIMAL(10, 3),
-      allowNull: true
-    },
-    finish_size_height: {
-      type: DataTypes.DECIMAL(10, 3),
-      allowNull: true
-    },
-    ht_cost: {
       type: DataTypes.DECIMAL(14, 2),
       allowNull: false,
       defaultValue: 0

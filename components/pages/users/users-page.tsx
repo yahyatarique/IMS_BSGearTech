@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState, MouseEventHandler } from 'react';
+import { useCallback, useEffect, useMemo, useState, } from 'react';
 import { useRouter } from 'next/navigation';
 import { AxiosError } from 'axios';
 import { useToast } from '@/hooks/use-toast';
@@ -10,10 +10,10 @@ import type { UserRecord, UsersListMeta } from '@/services/types/users.api.type'
 import { UsersStats } from '@/components/pages/users/components/users-stats';
 import { UsersCardGrid } from '@/components/pages/users/components/users-card-grid';
 import { UserDetailsDialog } from '@/components/pages/users/components/user-details-dialog';
-import { UserFormDialog } from '@/components/pages/users/components/user-form-dialog';
+// import { UserFormDialog } from '@/components/pages/users/components/user-form-dialog';
 import { PageWrapper } from '@/components/ui/page-wrapper';
-import { Button } from '@/components/ui/button';
-import { RefreshCw, UserCircle } from 'lucide-react';
+// import { Button } from '@/components/ui/button';
+import {  UserCircle } from 'lucide-react';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 const USERS_PAGE_SIZE = 10;
@@ -167,10 +167,10 @@ export default function UsersPage() {
     }
   }, [isAuthorized, loadUsers]);
 
-  const handleRefresh: MouseEventHandler<HTMLButtonElement> = (event) => {
-    event.preventDefault();
-    loadUsers({ page: 1, silent: true });
-  };
+  // const handleRefresh: MouseEventHandler<HTMLButtonElement> = (event) => {
+  //   event.preventDefault();
+  //   loadUsers({ page: 1, silent: true });
+  // };
 
   const handleToggleStatus = async (id: string, status: UserRecord['status']) => {
     try {
@@ -345,7 +345,6 @@ export default function UsersPage() {
       title="User Management"
       subtitle="Manage system users and their permissions"
       icon={UserCircle}
-      gradient="blue-cyan"
       // headerActions={
       //   <>
       //     <Button

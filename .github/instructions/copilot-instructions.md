@@ -284,7 +284,7 @@ Short, focused instructions to help an AI code agent be productive in this repos
   <GradientText gradient="blue-cyan">Title</GradientText>
   
   // ❌ Bad - repeated gradient classes
-  <h1 className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+  <h1 className="">
   ```
 
 ## Integration points & external dependencies

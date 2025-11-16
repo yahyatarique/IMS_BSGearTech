@@ -1,46 +1,45 @@
 import { z } from 'zod';
 
-export const ProcessType = z.enum([
-  'MILLING',
-  'FITTING',
-  'KEYWAY',
-  'HEAT_TREATMENT',
-  'TEETH_CUTTING',
-  'TEETH_GRINDING',
-  'CYLINDRICAL_GRINDING',
-  'INTERNAL_GRINDING'
-]);
-
-export const OrderProcessSchema = z.object({
-  type: ProcessType,
-  rate: z.number().min(0),
-});
-
-export const FinishSizeSchema = z.object({
-  width: z.number().min(0),
-  height: z.number().min(0),
-});
-
 export const CreateOrderFormSchema = z.object({
-  buyer_id: z.string().uuid(),
-  profile_id: z.string().uuid('Please select a profile'),
-  order_number: z.string().optional(), // Will be auto-generated
-  finish_size: FinishSizeSchema,
-  rate: z.number().min(0, 'Rate must be >= 0'),
-  turning_rate: z.number().min(0, 'Turning rate must be >= 0'),
-  module: z.number().min(0, 'Module must be >= 0').optional(),
-  face: z.number().min(0, 'Face must be >= 0').optional(),
-  teeth_count: z.number().int().min(0, 'Teeth count must be >= 0').optional(),
-  weight: z.number().min(0), // Will be calculated
-  material_cost: z.number().min(0), // Will be calculated
-  teeth_cutting_grinding_cost: z.number().min(0), // Will be calculated
-  ht_cost: z.number().min(0), // Will be calculated
-  processes: z.array(OrderProcessSchema).min(0).max(2),
-  total_order_value: z.number().min(0), // Will be calculated
-  profit_margin: z.number().min(0),
-  grand_total: z.number().min(0), // Will be calculated
-  burning_wastage_percent: z.number().min(0).optional(), // Will be calculated
+  order_name: z.string().min(1, 'Order name is required'),
+  buyer_id: z.string().uuid('Please select a buyer'),
+  profile_ids: z.array(z.string().uuid()).min(1, 'Please select at least one profile'),
+  quantity: z.number().int().min(1, 'Quantity must be at least 1'),
+  profit: z.number().min(0, 'Profit percentage must be >= 0'),
+  order_number: z.string().optional(),
+  burning_wastage_percent: z.number().min(0)
 });
 
 export type CreateOrderFormInput = z.infer<typeof CreateOrderFormSchema>;
-export type ProcessTypeEnum = z.infer<typeof ProcessType>;
+
+// Schema for updating individual order profiles (for API)
+export const UpdateOrderProfileSchema = z.object({
+  id: z.string().uuid().optional(), // Existing profile ID (if updating)
+  profile_id: z.string().uuid(),
+  isNew: z.boolean().optional(), // Flag to indicate new profile
+  isDeleted: z.boolean().optional(), // Flag to indicate profile should be deleted
+});
+
+// Update schema for API (with profiles array)
+export const UpdateOrderAPISchema = z.object({
+  order_name: z.string().min(1).optional(),
+  buyer_id: z.string().uuid().optional(),
+  quantity: z.number().int().min(1).optional(),
+  profit: z.number().min(0).optional(),
+  burning_wastage_percent: z.number().min(0).optional(),
+  profiles: z.array(UpdateOrderProfileSchema).optional(), // Array of profile updates
+});
+
+// Update schema for form (uses profile_ids like create form)
+export const UpdateOrderFormSchema = z.object({
+  order_name: z.string().min(1).optional(),
+  buyer_id: z.string().uuid().optional(),
+  profile_ids: z.array(z.string().uuid()).optional(),
+  quantity: z.number().int().min(1).optional(),
+  profit: z.number().min(0).optional(),
+  burning_wastage_percent: z.number().min(0).optional(),
+});
+
+export type UpdateOrderFormInput = z.infer<typeof UpdateOrderFormSchema>;
+export type UpdateOrderAPIInput = z.infer<typeof UpdateOrderAPISchema>;
+export type UpdateOrderProfileInput = z.infer<typeof UpdateOrderProfileSchema>;

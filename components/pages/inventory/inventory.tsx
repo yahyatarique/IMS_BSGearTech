@@ -37,7 +37,7 @@ export default function InventoryPage() {
       title="Inventory Management"
       subtitle="Manage your profiles and inventory items"
       icon={Package}
-      gradient="blue-cyan"
+    
     >
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-2">

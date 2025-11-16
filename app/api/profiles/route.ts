@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { testConnection } from '@/db/connection';
 import Profiles from '@/db/models/Profiles';
+import {Inventory} from '@/db/models';
 import { CreateProfileSchema, ProfileListQuerySchema } from '@/schemas/profile.schema';
 import { errorResponse, sendResponse } from '@/utils/api-response';
 import sequelize from '@/db/connection';
@@ -22,16 +23,23 @@ export async function GET(request: NextRequest) {
     // Build where clause
     const whereClause: any = {};
 
-    if (type && type !== 'all') {
-      whereClause.type = type;
-    }
+    // Check if fetching by IDs
+    const idsParam = searchParams.get('ids');
+    if (idsParam) {
+      const ids = idsParam.split(',').filter(Boolean);
+      whereClause.id = { [Op.in]: ids };
+    } else {
+      if (type && type !== 'all') {
+        whereClause.type = type;
+      }
 
-    if (material && material !== 'all') {
-      whereClause.material = material;
-    }
+      if (material && material !== 'all') {
+        whereClause.material = material;
+      }
 
-    if (search) {
-      whereClause[Op.or] = [{ name: { [Op.iLike]: `%${search}%` } }];
+      if (search) {
+        whereClause[Op.or] = [{ name: { [Op.iLike]: `%${search}%` } }];
+      }
     }
 
     // Fetch profiles with meta pagination
@@ -40,7 +48,12 @@ export async function GET(request: NextRequest) {
       where: whereClause,
       limit,
       offset,
-      order: [['name', 'ASC']]
+      order: [['name', 'ASC']],
+      include: [{
+        model: Inventory,
+        as : 'inventory',
+        attributes: ['id', 'material_type', 'rate', 'material_weight', 'outer_diameter', 'length']
+      }]
     });
 
     const totalPages = Math.ceil(total / limit);

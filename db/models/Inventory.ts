@@ -5,9 +5,9 @@ export interface InventoryAttributes {
   id: string;
   material_type: 'CR-5' | 'EN-9';
   material_weight: number;
-  width: number;
-  height: number;
-  quantity: number;
+  outer_diameter: number;
+  length: number;
+  rate: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -19,9 +19,9 @@ class Inventory extends Model<InventoryAttributes, InventoryCreationAttributes> 
   declare id: string;
   declare material_type: 'CR-5' | 'EN-9';
   declare material_weight: number;
-  declare width: number;
-  declare height: number;
-  declare quantity: number;
+  declare outer_diameter: number;
+  declare length: number;
+  declare rate: number;
   declare readonly created_at: Date;
   declare readonly updated_at: Date;
 
@@ -59,21 +59,21 @@ Inventory.init(
       allowNull: false,
       comment: 'For BE wastage calculation only'
     },
-    width: {
+    outer_diameter: {
       type: DataTypes.DECIMAL(10, 4),
       allowNull: false,
-      comment: 'Width dimension in mm'
+      comment: 'Outer diameter in mm'
     },
-    height: {
+    length: {
       type: DataTypes.DECIMAL(10, 4),
       allowNull: false,
-      comment: 'Height dimension in mm'
+      comment: 'Length in mm'
     },
-    quantity: {
-      type: DataTypes.INTEGER,
+    rate: {
+      type: DataTypes.DECIMAL(14, 2),
       allowNull: false,
       defaultValue: 0,
-      comment: 'Current inventory quantity'
+      comment: 'Rate per unit'
     },
     created_at: {
       type: DataTypes.DATE,

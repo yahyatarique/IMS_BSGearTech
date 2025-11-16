@@ -13,7 +13,8 @@ import {
   Layers,
   Clock,
   CheckCircle,
-  TrendingUp
+  TrendingUp,
+  IndianRupee
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
@@ -75,7 +76,7 @@ export function InventoryDetailsDialog({
         open={open}
         onClose={() => onOpenChange(false)}
         isOperating={isDeleting}
-          header={{
+        header={{
           title: 'Inventory Item Details',
           subtitle: 'View and manage inventory information'
         }}
@@ -123,7 +124,7 @@ export function InventoryDetailsDialog({
                   Material Weight
                 </h4>
                 <p className="text-lg font-medium text-foreground">
-                  {Number(inventory.material_weight * inventory.quantity).toFixed(2)} kg
+                  {Number(inventory.material_weight).toFixed(2)} kg
                 </p>
               </div>
 
@@ -134,17 +135,32 @@ export function InventoryDetailsDialog({
                   Dimensions
                 </h4>
                 <p className="text-lg font-medium text-foreground">
-                  {Number(inventory.width).toFixed(2)}mm OD × {Number(inventory.height).toFixed(2)}mm L
+                  {Number(inventory.outer_diameter).toFixed(2)}mm OD ×{' '}
+                  {Number(inventory.length).toFixed(2)}
+                  mm L
                 </p>
               </div>
 
-              {/* Quantity */}
+              {/* Rate */}
               <div>
                 <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
-                  <Package className="h-4 w-4" />
-                  Quantity
+                  <IndianRupee className="h-4 w-4" />
+                  Rate (per kg)
                 </h4>
-                <p className="text-lg font-medium text-foreground">{inventory.quantity}</p>
+                <p className="text-lg font-medium text-foreground">
+                  ₹{Number(inventory.rate).toFixed(2)}
+                </p>
+              </div>
+
+              {/* Total Cost */}
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                  <IndianRupee className="h-4 w-4" />
+                  Total Cost
+                </h4>
+                <p className="text-lg font-medium text-foreground">
+                  ₹{(Number(inventory.rate) * Number(inventory.material_weight)).toFixed(2)}
+                </p>
               </div>
 
               {/* Timestamps */}
@@ -164,8 +180,6 @@ export function InventoryDetailsDialog({
                   </div>
                 </div>
               </div>
-
-              
             </div>
           </div>
         </div>
