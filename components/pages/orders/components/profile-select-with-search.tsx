@@ -87,7 +87,7 @@ export function ProfileSelectWithSearch({ value, onChange }: ProfileSelectWithSe
     onChange(newValue);
   };
 
-  const selectedProfiles = profiles.filter(p => value.includes(p.id));
+  // const selectedProfiles = profiles.filter(p => value.includes(p.id));
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
