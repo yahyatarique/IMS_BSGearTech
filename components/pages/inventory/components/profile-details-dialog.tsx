@@ -3,7 +3,7 @@
 import { ProfileRecord } from '@/services/types/profile.api.type';
 import { Button } from '@/components/ui/button';
 import { EntityDetailsDialog } from '@/components/ui/entity-details-dialog';
-import {  IndianRupee,  Pencil, Trash2, Settings } from 'lucide-react';
+import { IndianRupee, Pencil, Trash2, Settings } from 'lucide-react';
 import { calculateTeethCost } from '@/utils/calculationHelper';
 import { useState } from 'react';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
@@ -41,7 +41,7 @@ export function ProfileDetailsDialog({
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      await onDelete(profile.id);
+      await onDelete(String(profile.id || ''));
     } finally {
       setIsDeleting(false);
     }
@@ -89,7 +89,11 @@ export function ProfileDetailsDialog({
         )}
       >
         <div className="space-y-4">
-          <Section title="Gear Specifications" variant="default" className="p-4 shadow-none bg-gray-100 dark:bg-slate-900/80">
+          <Section
+            title="Gear Specifications"
+            variant="default"
+            className="p-4 shadow-none bg-gray-100 dark:bg-slate-900/80"
+          >
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">No. of Teeth</p>
@@ -114,7 +118,11 @@ export function ProfileDetailsDialog({
             </div>
           </Section>
 
-          <Section title="Weight & Material" variant="default" className="p-4 shadow-none bg-gray-100 dark:bg-slate-900/80">
+          <Section
+            title="Weight & Material"
+            variant="default"
+            className="p-4 shadow-none bg-gray-100 dark:bg-slate-900/80"
+          >
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">Burning Weight (kg)</p>
@@ -127,7 +135,11 @@ export function ProfileDetailsDialog({
             </div>
           </Section>
 
-          <Section title="Cost Breakdown" variant="default" className="p-4 shadow-none bg-gray-100 dark:bg-slate-900/80">
+          <Section
+            title="Cost Breakdown"
+            variant="default"
+            className="p-4 shadow-none bg-gray-100 dark:bg-slate-900/80"
+          >
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">HT Rate (₹)</p>
@@ -149,24 +161,33 @@ export function ProfileDetailsDialog({
           </Section>
 
           {profile.processes && profile.processes.length > 0 && (
-            <Section 
-              title="Additional Processes" 
-              variant="default" 
+            <Section
+              title="Additional Processes"
+              variant="default"
               className="p-4 shadow-none bg-gray-100 dark:bg-slate-900/80"
               icon={Settings}
             >
               <div className="space-y-2">
                 {profile.processes.map((process, index) => (
-                  <div key={index} className="flex justify-between items-center p-2 bg-white dark:bg-slate-800 rounded">
+                  <div
+                    key={index}
+                    className="flex justify-between items-center p-2 bg-white dark:bg-slate-800 rounded"
+                  >
                     <span className="text-sm font-medium">{process.name}</span>
-                    <span className="text-sm font-semibold">₹{Number(process.cost).toFixed(2)}</span>
+                    <span className="text-sm font-semibold">
+                      ₹{Number(process.cost).toFixed(2)}
+                    </span>
                   </div>
                 ))}
               </div>
             </Section>
           )}
 
-          <Section title="Total Cost" variant="default" className="p-4 shadow-none bg-gray-100 dark:bg-slate-900/80">
+          <Section
+            title="Total Cost"
+            variant="default"
+            className="p-4 shadow-none bg-gray-100 dark:bg-slate-900/80"
+          >
             <div className="flex justify-between items-center">
               <p className="text-lg font-semibold flex items-center gap-2">
                 <IndianRupee className="h-5 w-5" />

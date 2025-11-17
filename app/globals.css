@@ -117,7 +117,7 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-transparent
+  @apply bg-transparent;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -127,7 +127,6 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-blue-600;
 }
-
 
 /* Firefox scrollbar */
 * {

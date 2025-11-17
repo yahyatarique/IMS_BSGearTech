@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -14,27 +14,33 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { CreateOrderFormSchema, type CreateOrderFormInput } from '@/schemas/create-order.schema';
+import {
+  CreateOrderFormSchema,
+  OrderProfilesRecord,
+  type CreateOrderFormInput
+} from '@/schemas/create-order.schema';
 import { fetchBuyers } from '@/services/buyers';
-import { fetchOrderById } from '@/services/orders';
+import { fetchOrderById, updateOrder } from '@/services/orders';
 import { BuyerRecord } from '@/services/types/buyer.api.type';
 import { success, error as errorToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { ProfileRecord } from '@/services/types/profile.api.type';
 import { OrderNumberDisplay } from './order-number-display';
 import { BuyerProfileSection } from './buyer-profile-section';
 import { SelectedProfilesAccordion } from './selected-profiles-accordion';
 import { OrderSummary } from './order-summary';
+import { OrderProfilesSection } from './order-profiles-section';
+import { UpdateOrderInput } from '@/schemas/order.schema';
 
 export function CreateOrderForm({ orderId }: { orderId?: string }) {
   const router = useRouter();
   const [buyers, setBuyers] = useState<BuyerRecord[]>([]);
-  const [allProfiles, setAllProfiles] = useState<ProfileRecord[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [nextOrderNumber, setNextOrderNumber] = useState<string | null>(null);
   const [isEditMode] = useState(!!orderId);
   const [originalOrderNumber, setOriginalOrderNumber] = useState<string | null>(null);
-  const [initialProfileIds, setInitialProfileIds] = useState<string[]>([]);
+  const [allProfiles, setAllProfiles] = useState<OrderProfilesRecord[]>([]);
+
+  const initialProfileIdsRef = useRef<string[]>([]);
 
   const form = useForm<CreateOrderFormInput>({
     resolver: zodResolver(CreateOrderFormSchema),
@@ -44,9 +50,29 @@ export function CreateOrderForm({ orderId }: { orderId?: string }) {
       profile_ids: [],
       quantity: 1,
       profit: 0,
-      burning_wastage_percent: 0
+      burning_wastage_percent: 0,
+      orderProfiles: []
     }
   });
+
+  const orderProfiles = form.watch('orderProfiles') as OrderProfilesRecord[];
+  const profileIds = form.watch('profile_ids');
+  const selectedProfiles = useMemo(() => {
+    return allProfiles
+      .filter((p) => profileIds?.includes(p.id!))
+      .map((p) => ({
+        ...p,
+        burning_weight: Number(p.burning_weight),
+        total_weight: Number(p.total_weight),
+        rate: Number(p.rate),
+        face: Number(p.face),
+        module: Number(p.module),
+        ht_cost: Number(p.ht_cost),
+        ht_rate: Number(p.ht_rate),
+        cyn_grinding: Number(p.cyn_grinding),
+        total: Number(p.total)
+      }));
+  }, [allProfiles, profileIds]);
 
   // Load existing order data in edit mode
   useEffect(() => {
@@ -54,26 +80,40 @@ export function CreateOrderForm({ orderId }: { orderId?: string }) {
       const loadOrder = async () => {
         try {
           setIsLoading(true);
-          const response = await fetchOrderById(orderId);
-          if (response.success && response.data) {
-            const order = response.data;
+          const res = await fetchOrderById(orderId);
+          const data = res?.data;
+          if (data.success && data.data) {
+            const order = data.data;
             setOriginalOrderNumber(order.order_number);
 
-            const profileIds = order.orderProfiles?.map((op) => op.profile_id) || [];
-            setInitialProfileIds(profileIds);
+            if (order?.orderProfiles) {
+              initialProfileIdsRef.current = order.orderProfiles.map((op) => op.id!);
+            }
 
             form.reset({
               order_name: order.order_name || '',
               buyer_id: order.buyer_id || '',
-              profile_ids: profileIds,
+              profile_ids: [],
               quantity: order.quantity,
               profit: parseFloat(order.profit_margin),
-              burning_wastage_percent: parseFloat(order.burning_wastage_percent)
+              burning_wastage_percent: parseFloat(order.burning_wastage_percent),
+              orderProfiles: order?.orderProfiles?.map((orderProfile) => ({
+                ...orderProfile,
+                rate: Number(orderProfile.rate),
+                materialTypeString: orderProfile.material,
+                face: Number(orderProfile.face),
+                module: Number(orderProfile.module),
+                total_weight: Number(orderProfile.total_weight),
+                ht_cost: Number(orderProfile.ht_cost),
+                ht_rate: Number(orderProfile.ht_rate),
+                cyn_grinding: Number(orderProfile.cyn_grinding),
+                burning_weight: Number(orderProfile.burning_weight),
+                total: Number(orderProfile.total)
+              }))
             });
           }
         } catch (error: any) {
           errorToast({
-
             title: 'Error',
             description: error.message || 'Failed to load order'
           });
@@ -94,7 +134,6 @@ export function CreateOrderForm({ orderId }: { orderId?: string }) {
         }
       } catch (error: any) {
         errorToast({
- 
           title: 'Error',
           description: error.message || 'Failed to load buyers'
         });
@@ -120,87 +159,44 @@ export function CreateOrderForm({ orderId }: { orderId?: string }) {
     }
   }, [isEditMode]);
 
-  const profileIds = form.watch('profile_ids');
-  // const quantity = form.watch('quantity');
-  // const profit = form.watch('profit');
+  const handleRemoveProfile = (profileId: string) => {
+    const orderProfiles = form.getValues('orderProfiles') || [];
+    const updatedProfiles = orderProfiles.filter((profile) => profile.id! !== profileId);
+    form.setValue('orderProfiles', updatedProfiles);
+  };
 
-  const selectedProfiles = useMemo(() => {
-    return allProfiles.filter((p) => profileIds?.includes(p.id));
-  }, [allProfiles, profileIds]);
-
-  // const calculations = useMemo(() => {
-  //   const profilesTotal = selectedProfiles.reduce((sum, p) => sum + parseFloat(p.total || '0'), 0);
-  //   const total = profilesTotal * quantity;
-  //   const grandTotal = total + (total * profit / 100);
-  //   const burningWeightTotal = selectedProfiles.reduce((sum, p) => sum + parseFloat(p.burning_weight || '0'), 0);
-  //   const totalWeightSum = selectedProfiles.reduce((sum, p) => sum + parseFloat(p.total_weight || '0'), 0);
-  //   const burningWastagePercent = totalWeightSum > 0 ? ((burningWeightTotal / totalWeightSum) * 100) : 0;
-
-  //   return { profilesTotal, total, grandTotal, burningWeightTotal, burningWastagePercent };
-  // }, [selectedProfiles, quantity, profit]);
+  const handleProfileLoad = (profiles: OrderProfilesRecord[]) => {
+    setAllProfiles(profiles);
+  };
 
   const onSubmit = async (values: CreateOrderFormInput) => {
     try {
       setIsLoading(true);
-
       if (isEditMode && orderId) {
+
         // Edit mode: build update payload with profile changes
-        const currentProfileIds = values.profile_ids || [];
-        const deletedProfileIds = initialProfileIds.filter(
-          (id: string) => !currentProfileIds.includes(id)
-        );
-        const newProfileIds = currentProfileIds.filter(
-          (id: string) => !initialProfileIds.includes(id)
-        );
-        const existingProfileIds = currentProfileIds.filter((id: string) =>
-          initialProfileIds.includes(id)
-        );
 
-        // Get OrderProfile IDs for profiles we're keeping/updating
-        const orderResponse = await fetchOrderById(orderId);
-        const orderProfiles = orderResponse.data?.orderProfiles || [];
+        const _selectedProfiles = selectedProfiles;
+        const mergedProfiles = [...orderProfiles, ..._selectedProfiles];
 
-        const profiles = [
-          // Mark deleted profiles
-          ...deletedProfileIds.map((profile_id: string) => {
-            const orderProfile = orderProfiles.find((op) => op.profile_id === profile_id);
+        const selectedProfilesModified = mergedProfiles.map((p) => {
+          if (!p.profile_id) {
             return {
-              id: orderProfile?.id,
-              profile_id,
-              isDeleted: true
+              ...p,
+              isNew: true
             };
-          }),
-          // Keep existing profiles
-          ...existingProfileIds.map((profile_id: string) => {
-            const orderProfile = orderProfiles.find((op) => op.profile_id === profile_id);
-            return {
-              id: orderProfile?.id,
-              profile_id
-            };
-          }),
-          // Mark new profiles
-          ...newProfileIds.map((profile_id: string) => ({
-            profile_id,
-            isNew: true
-          }))
-        ];
-
-        const updatePayload: any = {
-          ...values,
-          profiles
-        };
-        delete updatePayload.profile_ids; // Remove profile_ids as we're using profiles array
-        delete updatePayload.order_number; // Don't update order number
-
-        const response = await fetch(`/api/orders/${orderId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(updatePayload)
+          } else return p;
         });
 
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.message || 'Failed to update order');
+        const updatePayload: UpdateOrderInput = {
+          ...values,
+          profiles: selectedProfilesModified
+        };
+
+        const res = await updateOrder(orderId, updatePayload);
+
+        if (!res.data.success) {
+          throw new Error(res.data.message || 'Failed to update order');
         }
 
         success({ title: 'Success', description: 'Order updated successfully' });
@@ -213,6 +209,10 @@ export function CreateOrderForm({ orderId }: { orderId?: string }) {
             const data = await response.json();
             values.order_number = data.data.order_number;
           }
+        }
+
+        if(selectedProfiles.length === 0) {
+          form.setError('profile_ids', { message: 'At least one profile is required' });
         }
 
         const response = await fetch('/api/orders', {
@@ -231,7 +231,6 @@ export function CreateOrderForm({ orderId }: { orderId?: string }) {
       }
     } catch (error: any) {
       errorToast({
-    
         title: 'Error',
         description: error.message || `Failed to ${isEditMode ? 'update' : 'create'} order`
       });
@@ -240,22 +239,30 @@ export function CreateOrderForm({ orderId }: { orderId?: string }) {
     }
   };
 
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit, (errors) => {
+        console.error('Form validation errors:', errors);
+      })} className="space-y-8">
         {isEditMode && originalOrderNumber && (
           <OrderNumberDisplay orderNumber={originalOrderNumber} />
         )}
         {!isEditMode && nextOrderNumber && <OrderNumberDisplay orderNumber={nextOrderNumber} />}
 
         <BuyerProfileSection
+          onProfilesLoad={handleProfileLoad}
           control={form.control}
           buyers={buyers}
           isLoading={isLoading}
-          onProfilesLoad={setAllProfiles}
         />
 
-        <SelectedProfilesAccordion selectedProfiles={selectedProfiles} />
+        <OrderProfilesSection
+          selectedProfiles={orderProfiles}
+          onRemoveProfile={handleRemoveProfile}
+        />
+
+        <SelectedProfilesAccordion profiles={selectedProfiles} selectedProfiles={orderProfiles} />
 
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">Order Details</h3>
@@ -314,10 +321,11 @@ export function CreateOrderForm({ orderId }: { orderId?: string }) {
         </Card>
 
         <OrderSummary
+          orderProfiles={orderProfiles}
+          selectedProfiles={selectedProfiles}
           control={form.control}
           setValue={form.setValue}
           buyers={buyers}
-          selectedProfiles={selectedProfiles}
           nextOrderNumber={nextOrderNumber}
         />
 

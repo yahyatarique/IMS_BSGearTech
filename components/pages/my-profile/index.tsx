@@ -55,7 +55,7 @@ export default function ProfilePage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    
+
     // Handle password fields separately
     if (['currentPassword', 'newPassword', 'confirmPassword'].includes(name)) {
       setPasswordData((prev) => ({ ...prev, [name]: value }));
@@ -204,9 +204,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <main className="container mx-auto px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold  mb-2">
-            My Profile
-          </h1>
+          <h1 className="text-3xl font-bold  mb-2">My Profile</h1>
           <p className="text-muted-foreground">Manage your account information</p>
         </div>
 
@@ -216,8 +214,8 @@ export default function ProfilePage() {
             <Card className="!border-0 h-full !shadow-none">
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center text-center">
-                  <Avatar className="h-24 w-24 border-4 border-white shadow-lg mb-4">
-                    <AvatarFallback className="bg-gradient-to-br from-blue-600 to-cyan-500 text-white text-2xl">
+                  <Avatar className="h-24 w-24 border-4  border-blue-400 dark:border-blue-400/50e shadow-lg mb-4">
+                    <AvatarFallback className="bg-gradient-to-br  from-blue-600 to-cyan-500 dark:from-blue-600/30 dark:to-cyan-500/30 text-white dark:text-[#efefef]  text-2xl">
                       {getInitials()}
                     </AvatarFallback>
                   </Avatar>
@@ -225,7 +223,7 @@ export default function ProfilePage() {
                     {formData.firstName} {formData.lastName}
                   </h3>
                   <p className="text-sm text-muted-foreground mb-3">@{user.username}</p>
-                  <Badge className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-0">
+                  <Badge className="bg-gradient-to-r from-blue-500 to-cyan-500 dark:from-blue-500/30 dark:to-cyan-500/30 px-3 py-2 tracking-wider text-white dark:text-[#efefef] border-0">
                     {roleLabels[user.role]}
                   </Badge>
 
@@ -252,7 +250,7 @@ export default function ProfilePage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-500">
+                    <div className="p-2 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-500 dark:from-blue-600/30 dark:to-cyan-500/30">
                       <User className="h-5 w-5 text-white" />
                     </div>
                     <div>

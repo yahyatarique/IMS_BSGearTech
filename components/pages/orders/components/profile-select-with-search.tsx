@@ -9,16 +9,12 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
-  CommandList,
+  CommandList
 } from '@/components/ui/command';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { fetchProfiles } from '@/services/profiles';
-import { ProfileRecord } from '@/services/types/profile.api.type';
+import { OrderProfilesRecord } from '@/schemas/create-order.schema';
 
 interface ProfileSelectWithSearchProps {
   value: string[];
@@ -27,34 +23,39 @@ interface ProfileSelectWithSearchProps {
 
 export function ProfileSelectWithSearch({ value, onChange }: ProfileSelectWithSearchProps) {
   const [open, setOpen] = useState(false);
-  const [profiles, setProfiles] = useState<ProfileRecord[]>([]);
+  const [profiles, setProfiles] = useState<OrderProfilesRecord[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [search, setSearch] = useState('');
   const observerTarget = useRef<HTMLDivElement>(null);
 
-  const loadProfiles = useCallback(async (pageNum: number, searchTerm: string, reset = false) => {
-    if (isLoading) return;
-    
-    setIsLoading(true);
-    try {
-      const response = await fetchProfiles({
-        page: pageNum,
-        limit: 20,
-        search: searchTerm || undefined,
-      });
+  const loadProfiles = useCallback(
+    async (pageNum: number, searchTerm: string, reset = false) => {
+      if (isLoading) return;
 
-      if (response.success && response.data) {
-        setProfiles(prev => reset ? response.data!.profiles : [...prev, ...response.data!.profiles]);
-        setHasMore(response.data.meta.hasNext);
+      setIsLoading(true);
+      try {
+        const response = await fetchProfiles({
+          page: pageNum,
+          limit: 20,
+          search: searchTerm || undefined
+        });
+
+        if (response.success && response.data) {
+          setProfiles((prev) =>
+            reset ? response.data!.profiles : [...prev, ...response.data!.profiles]
+          );
+          setHasMore(response.data.meta.hasNext);
+        }
+      } catch (error) {
+        console.error('Failed to load profiles:', error);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Failed to load profiles:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isLoading]);
+    },
+    [isLoading]
+  );
 
   useEffect(() => {
     loadProfiles(1, search, true);
@@ -63,7 +64,7 @@ export function ProfileSelectWithSearch({ value, onChange }: ProfileSelectWithSe
 
   useEffect(() => {
     const observer = new IntersectionObserver(
-      entries => {
+      (entries) => {
         if (entries[0].isIntersecting && hasMore && !isLoading) {
           const nextPage = page + 1;
           setPage(nextPage);
@@ -82,7 +83,7 @@ export function ProfileSelectWithSearch({ value, onChange }: ProfileSelectWithSe
 
   const toggleProfile = (profileId: string) => {
     const newValue = value.includes(profileId)
-      ? value.filter(id => id !== profileId)
+      ? value.filter((id) => id !== profileId)
       : [...value, profileId];
     onChange(newValue);
   };
@@ -106,11 +107,7 @@ export function ProfileSelectWithSearch({ value, onChange }: ProfileSelectWithSe
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
         <Command shouldFilter={false}>
-          <CommandInput
-            placeholder="Search profiles..."
-            value={search}
-            onValueChange={setSearch}
-          />
+          <CommandInput placeholder="Search profiles..." value={search} onValueChange={setSearch} />
           <CommandList>
             <CommandEmpty>No profiles found.</CommandEmpty>
             <CommandGroup>
@@ -118,18 +115,19 @@ export function ProfileSelectWithSearch({ value, onChange }: ProfileSelectWithSe
                 <CommandItem
                   key={profile.id}
                   value={profile.id}
-                  onSelect={() => toggleProfile(profile.id)}
+                  onSelect={() => toggleProfile(profile.id!)}
                 >
                   <Check
                     className={cn(
                       'mr-2 h-4 w-4',
-                      value.includes(profile.id) ? 'opacity-100' : 'opacity-0'
+                      value.includes(profile.id!) ? 'opacity-100' : 'opacity-0'
                     )}
                   />
                   <div className="flex flex-col">
                     <span>{profile.name}</span>
                     <span className="text-xs text-muted-foreground">
-                      {profile.type === '0' ? 'Gear' : 'Pinion'} • {profile.inventory?.material_type || 'N/A'}
+                      {profile.type === '0' ? 'Gear' : 'Pinion'} •{' '}
+                      {profile.inventory?.material_type || 'N/A'}
                     </span>
                   </div>
                 </CommandItem>

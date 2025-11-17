@@ -1,7 +1,7 @@
 import { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
-interface GradientBoxProps {
+export interface GradientBoxProps {
   children: ReactNode
   className?: string
   gradient?: 'primary' | 'blue-cyan' | 'green' | 'orange' | 'purple-pink' | 'indigo-blue' | 'custom'

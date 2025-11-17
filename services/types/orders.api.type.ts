@@ -1,3 +1,4 @@
+import { OrderProfilesRecord } from '@/schemas/create-order.schema';
 import { BasePaginatedResponse, BaseResponse } from './base.api.type';
 import { ORDER_STATUS } from '@/enums/orders.enum';
 
@@ -25,26 +26,7 @@ export type OrderRecord = {
     first_name: string;
     last_name: string;
   };
-  orderProfiles?: Array<{
-    id: string;
-    profile_id: string;
-    name: string;
-    type: '0' | '1';
-    material: 'CR-5' | 'EN-9';
-    no_of_teeth: number;
-    rate: number;
-    face: number;
-    module: number;
-    finish_size?: string;
-    burning_weight: number;
-    total_weight: number;
-    ht_cost: number;
-    ht_rate: number;
-    processes?: any;
-    cyn_grinding: number;
-    total: number;
-    profit: number;
-  }>;
+  orderProfiles?: OrderProfilesRecord[];
 };
 
 export type OrdersListResponse = BasePaginatedResponse<{ orders: OrderRecord[] }>;
