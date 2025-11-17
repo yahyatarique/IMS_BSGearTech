@@ -3,7 +3,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -11,7 +18,7 @@ import { CreateOrderFormSchema, type CreateOrderFormInput } from '@/schemas/crea
 import { fetchBuyers } from '@/services/buyers';
 import { fetchOrderById } from '@/services/orders';
 import { BuyerRecord } from '@/services/types/buyer.api.type';
-import { useToast } from '@/hooks/use-toast';
+import { success, error as errorToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { ProfileRecord } from '@/services/types/profile.api.type';
 import { OrderNumberDisplay } from './order-number-display';
@@ -20,7 +27,6 @@ import { SelectedProfilesAccordion } from './selected-profiles-accordion';
 import { OrderSummary } from './order-summary';
 
 export function CreateOrderForm({ orderId }: { orderId?: string }) {
-  const { toast } = useToast();
   const router = useRouter();
   const [buyers, setBuyers] = useState<BuyerRecord[]>([]);
   const [allProfiles, setAllProfiles] = useState<ProfileRecord[]>([]);
@@ -38,7 +44,7 @@ export function CreateOrderForm({ orderId }: { orderId?: string }) {
       profile_ids: [],
       quantity: 1,
       profit: 0,
-      burning_wastage_percent: 0,
+      burning_wastage_percent: 0
     }
   });
 
@@ -52,22 +58,22 @@ export function CreateOrderForm({ orderId }: { orderId?: string }) {
           if (response.success && response.data) {
             const order = response.data;
             setOriginalOrderNumber(order.order_number);
-            
-            const profileIds = order.orderProfiles?.map(op => op.profile_id) || [];
+
+            const profileIds = order.orderProfiles?.map((op) => op.profile_id) || [];
             setInitialProfileIds(profileIds);
-            
+
             form.reset({
               order_name: order.order_name || '',
               buyer_id: order.buyer_id || '',
               profile_ids: profileIds,
               quantity: order.quantity,
-              profit: order.profit_margin,
-              burning_wastage_percent: order.burning_wastage_percent
+              profit: parseFloat(order.profit_margin),
+              burning_wastage_percent: parseFloat(order.burning_wastage_percent)
             });
           }
         } catch (error: any) {
-          toast({
-            variant: 'destructive',
+          errorToast({
+
             title: 'Error',
             description: error.message || 'Failed to load order'
           });
@@ -77,25 +83,25 @@ export function CreateOrderForm({ orderId }: { orderId?: string }) {
       };
       loadOrder();
     }
-  }, [isEditMode, orderId, form, toast]);
+  }, [isEditMode, orderId, form]);
 
   useEffect(() => {
     const loadBuyers = async () => {
       try {
-        const buyersRes = await fetchBuyers({ page: 1, limit: 100, status: 'active' });
+        const buyersRes = await fetchBuyers({ page: 1, limit: 10, status: 'active' });
         if (buyersRes.success && buyersRes.data) {
           setBuyers(buyersRes.data.buyers);
         }
       } catch (error: any) {
-        toast({
-          variant: 'destructive',
+        errorToast({
+ 
           title: 'Error',
           description: error.message || 'Failed to load buyers'
         });
       }
     };
     loadBuyers();
-  }, [toast]);
+  }, []);
 
   useEffect(() => {
     if (!isEditMode) {
@@ -140,18 +146,24 @@ export function CreateOrderForm({ orderId }: { orderId?: string }) {
       if (isEditMode && orderId) {
         // Edit mode: build update payload with profile changes
         const currentProfileIds = values.profile_ids || [];
-        const deletedProfileIds = initialProfileIds.filter((id: string) => !currentProfileIds.includes(id));
-        const newProfileIds = currentProfileIds.filter((id: string) => !initialProfileIds.includes(id));
-        const existingProfileIds = currentProfileIds.filter((id: string) => initialProfileIds.includes(id));
+        const deletedProfileIds = initialProfileIds.filter(
+          (id: string) => !currentProfileIds.includes(id)
+        );
+        const newProfileIds = currentProfileIds.filter(
+          (id: string) => !initialProfileIds.includes(id)
+        );
+        const existingProfileIds = currentProfileIds.filter((id: string) =>
+          initialProfileIds.includes(id)
+        );
 
         // Get OrderProfile IDs for profiles we're keeping/updating
         const orderResponse = await fetchOrderById(orderId);
         const orderProfiles = orderResponse.data?.orderProfiles || [];
-        
+
         const profiles = [
           // Mark deleted profiles
           ...deletedProfileIds.map((profile_id: string) => {
-            const orderProfile = orderProfiles.find(op => op.profile_id === profile_id);
+            const orderProfile = orderProfiles.find((op) => op.profile_id === profile_id);
             return {
               id: orderProfile?.id,
               profile_id,
@@ -160,7 +172,7 @@ export function CreateOrderForm({ orderId }: { orderId?: string }) {
           }),
           // Keep existing profiles
           ...existingProfileIds.map((profile_id: string) => {
-            const orderProfile = orderProfiles.find(op => op.profile_id === profile_id);
+            const orderProfile = orderProfiles.find((op) => op.profile_id === profile_id);
             return {
               id: orderProfile?.id,
               profile_id
@@ -191,7 +203,7 @@ export function CreateOrderForm({ orderId }: { orderId?: string }) {
           throw new Error(error.message || 'Failed to update order');
         }
 
-        toast({ title: 'Success', description: 'Order updated successfully' });
+        success({ title: 'Success', description: 'Order updated successfully' });
         router.push('/orders');
       } else {
         // Create mode
@@ -214,12 +226,12 @@ export function CreateOrderForm({ orderId }: { orderId?: string }) {
           throw new Error(error.message || 'Failed to create order');
         }
 
-        toast({ title: 'Success', description: 'Order created successfully' });
+        success({ title: 'Success', description: 'Order created successfully' });
         router.push('/orders');
       }
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
+      errorToast({
+    
         title: 'Error',
         description: error.message || `Failed to ${isEditMode ? 'update' : 'create'} order`
       });
@@ -228,12 +240,12 @@ export function CreateOrderForm({ orderId }: { orderId?: string }) {
     }
   };
 
-
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        {isEditMode && originalOrderNumber && <OrderNumberDisplay orderNumber={originalOrderNumber} />}
+        {isEditMode && originalOrderNumber && (
+          <OrderNumberDisplay orderNumber={originalOrderNumber} />
+        )}
         {!isEditMode && nextOrderNumber && <OrderNumberDisplay orderNumber={nextOrderNumber} />}
 
         <BuyerProfileSection
@@ -289,9 +301,9 @@ export function CreateOrderForm({ orderId }: { orderId?: string }) {
                     <Input
                       type="number"
                       min="0"
-                      step="0.01"
                       {...field}
                       onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                      value={parseFloat(String(field.value))}
                     />
                   </FormControl>
                   <FormMessage />
@@ -311,10 +323,13 @@ export function CreateOrderForm({ orderId }: { orderId?: string }) {
 
         <div className="flex justify-end">
           <Button type="submit" disabled={isLoading}>
-            {isLoading 
-              ? (isEditMode ? 'Updating...' : 'Creating...') 
-              : (isEditMode ? 'Update Order' : 'Create Order')
-            }
+            {isLoading
+              ? isEditMode
+                ? 'Updating...'
+                : 'Creating...'
+              : isEditMode
+              ? 'Update Order'
+              : 'Create Order'}
           </Button>
         </div>
       </form>

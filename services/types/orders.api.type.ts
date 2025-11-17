@@ -9,10 +9,10 @@ export type OrderRecord = {
   created_at: string;
   buyer_id?: string;
   status: ORDER_STATUS;
-  grand_total: number;
-  total_order_value: number;
-  profit_margin: number;
-  burning_wastage_percent: number;
+  grand_total: string;
+  total_order_value: string;
+  profit_margin: string;
+  burning_wastage_percent: string;
   user_id?: string;
   buyer?: {
     id: string;

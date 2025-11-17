@@ -53,11 +53,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem(StorageKeys.USER_STORAGE_KEY, JSON.stringify(userData));
       }
     } catch (error) {
-      console.error('Failed to fetch user info:', error);
-      // If token is invalid, clear cache and redirect to login
-      localStorage.removeItem(StorageKeys.USER_STORAGE_KEY);
-      tokenUtils.clearTokens();
-      router.push('/login');
+      console.error('Failed to fetch user info:', error); 
+      
       setUser(null);
     } finally {
       setIsLoading(false);

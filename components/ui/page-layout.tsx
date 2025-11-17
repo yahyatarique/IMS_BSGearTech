@@ -3,12 +3,13 @@ import { GradientBox } from '@/components/ui/gradient-box'
 import { LucideIcon } from 'lucide-react'
 import { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
+import { getGradientTheme, GradientPreset } from '@/components/ui/gradient-theme'
 
 interface PageHeaderProps {
   title: string
   description?: string
   icon?: LucideIcon
-  gradient?: 'primary' | 'blue-cyan' | 'green' | 'orange' | 'purple-pink' | 'indigo-blue'
+  gradient?: GradientPreset
   action?: ReactNode
   backButton?: ReactNode
   className?: string
@@ -69,7 +70,7 @@ interface GradientCardProps {
   title: string
   description?: string
   icon?: LucideIcon
-  gradient?: 'primary' | 'blue-cyan' | 'green' | 'orange' | 'purple-pink' | 'indigo-blue'
+  gradient?: GradientPreset
   children: ReactNode
   action?: ReactNode
   className?: string
@@ -87,18 +88,23 @@ export function GradientCard({
   action,
   className
 }: GradientCardProps) {
-  const gradientClasses = {
-    primary: 'from-primary-600 to-cyan-500',
-    'blue-cyan': 'from-blue-600 to-cyan-500',
-    green: 'from-green-500 to-emerald-500',
-    orange: 'from-orange-500 to-red-500',
-    'purple-pink': 'from-purple-500 to-pink-500',
-    'indigo-blue': 'from-indigo-500 to-blue-500',
-  }
+  const theme = getGradientTheme(gradient);
+  const gradientClasses = cn(theme.gradientLight, theme.gradientDark)
+  const showAccent = gradient !== 'none'
 
   return (
-    <Card className={cn('border shadow-lg bg-white dark:bg-slate-900', className)}>
-      <div className={`h-1 bg-gradient-to-r ${gradientClasses[gradient]}`} />
+    <Card
+      className={cn(
+        'border shadow-lg bg-white transition-colors duration-200',
+        'dark:bg-slate-900/70 dark:border-slate-800',
+        showAccent && theme.darkBackground,
+        showAccent && theme.darkBorder,
+        className
+      )}
+    >
+      {showAccent && (
+        <div className={cn('h-1 bg-gradient-to-r', gradientClasses)} />
+      )}
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">

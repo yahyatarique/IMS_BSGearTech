@@ -9,7 +9,7 @@ import { RecentBuyers } from '@/components/pages/dashboard/components/recent-buy
 import RecentBuyersSkeleton from '@/components/pages/dashboard/components/recent-buyers-skeleton';
 import { RecentBuyersBoundary } from '@/components/pages/dashboard/components/recent-buyers-boundary';
 import { MaterialsAndProfiles } from '@/components/pages/dashboard/components/materials-and-profiles';
-import { MateraiAndProfilesBoundary } from '../components/pages/dashboard/components/materials-and-profiles-boundary';
+import { MaterialsAndProfilesBoundary } from '../components/pages/dashboard/components/materials-and-profiles-boundary';
 
 // Force dynamic rendering to prevent prerendering during build
 export const dynamic = 'force-dynamic';
@@ -52,9 +52,9 @@ export default function Home() {
         </div>
 
         {/* Materials and Profiles Section */}
-        <MateraiAndProfilesBoundary>
+        <MaterialsAndProfilesBoundary>
           <MaterialsAndProfiles />
-        </MateraiAndProfilesBoundary>
+        </MaterialsAndProfilesBoundary>
       </main>
     </div>
   );

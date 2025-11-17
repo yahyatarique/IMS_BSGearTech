@@ -28,7 +28,7 @@ export default async function StatsSection() {
     {
       title: 'Total Orders',
       value: orders.total,
-      gradient: 'from-blue-500 to-cyan-500',
+      gradient: 'from-blue-500 to-cyan-500 dark:from-blue-500/30 dark:to-cyan-500/30',
       trend: orders.percentageChange,
       isPositive: orders.isPositive,
       description: 'From all time',
@@ -37,7 +37,7 @@ export default async function StatsSection() {
     {
       title: 'Active Buyers',
       value: buyers.total,
-      gradient: 'from-indigo-500 to-blue-500',
+      gradient: 'from-indigo-500 to-blue-500  dark:from-indigo-500/30 dark:to-blue-500/30',
       trend: buyers.percentageChange,
       isPositive: buyers.isPositive,
       description: 'Registered customers',
@@ -46,7 +46,7 @@ export default async function StatsSection() {
     {
       title: 'Total Products',
       value: products.total,
-      gradient: 'from-green-500 to-emerald-500',
+      gradient: 'from-green-500 to-emerald-500  dark:from-green-500/30 dark:to-emerald-500/30',
       trend: products.percentageChange,
       isPositive: products.isPositive,
       description: 'Tracked order profiles',

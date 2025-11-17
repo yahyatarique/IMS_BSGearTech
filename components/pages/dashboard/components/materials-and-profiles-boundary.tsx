@@ -11,7 +11,7 @@ interface MateraiAndProfilesState {
   hasError: boolean
 }
 
-export class MateraiAndProfilesBoundary extends Component<MateraiAndProfilesProps, MateraiAndProfilesState> {
+export class MaterialsAndProfilesBoundary extends Component<MateraiAndProfilesProps, MateraiAndProfilesState> {
   state: MateraiAndProfilesState = {
     hasError: false,
   }

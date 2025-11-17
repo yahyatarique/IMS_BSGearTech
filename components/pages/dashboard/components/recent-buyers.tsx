@@ -6,11 +6,11 @@ import { fetchRecentBuyers } from '@/services/dashboard';
 import { cn, formatDate } from '@/lib/utils';
 
 const gradients = [
-  'from-blue-500 to-cyan-500',
-  'from-sky-500 to-blue-600',
-  'from-indigo-500 to-blue-500',
-  'from-cyan-500 to-teal-500',
-  'from-blue-600 to-indigo-600',
+  'from-blue-500 to-cyan-500  dark:from-blue-500/30 dark:to-cyan-500/30',
+  'from-sky-500 to-blue-600  dark:from-sky-500/30 dark:to-blue-500/30',
+  'from-indigo-500 to-blue-500  dark:from-indigo-500/30 dark:to-blue-500/30',
+  'from-cyan-500 to-teal-500  dark:from-cyan-500/30 dark:to-teal-500/30',
+  'from-blue-600 to-indigo-600  dark:from-blue-500/30 dark:to-indigo-500/30',
 ];
 
 const statusClasses: Record<string, string> = {
@@ -42,10 +42,10 @@ export async function RecentBuyers() {
       title="Recent Buyers"
       description="Recently added customers"
       icon={Users}
-      gradient="from-blue-500 to-cyan-500"
+      gradient="from-blue-500 to-cyan-500  dark:from-blue-500/30 dark:to-cyan-500/30"
       action={
         <Link
-          href="#"
+          href="/buyers"
           className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
         >
           View All

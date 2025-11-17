@@ -47,6 +47,7 @@ export async function POST(request: NextRequest) {
       .sign(secret);
 
     // Generate new refresh token (optional - for token rotation)
+    
     const newRefreshToken = await new SignJWT({
       userId,
       role: user.role,
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge:  2 * 60 * 60, // 20 days in seconds
+      maxAge:  20 * 24 * 60 * 60, // 20 days in seconds
       path: '/'
     });
 

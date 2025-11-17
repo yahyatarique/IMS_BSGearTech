@@ -167,8 +167,7 @@ export function OrdersCardGrid({ orders, isLoading, onCardClick, onEdit, onDelet
               <div className="flex gap-2 pt-4 border-t border-slate-200 dark:border-slate-700">
                 <Button
                   variant="outline"
-                  size="sm"
-                  className="flex-1"
+                  className="flex-1 py-3 text-base font-medium"
                   onClick={(e) => {
                     e.stopPropagation();
                     onEdit(order.id);
@@ -179,8 +178,7 @@ export function OrdersCardGrid({ orders, isLoading, onCardClick, onEdit, onDelet
                 </Button>
                 <Button
                   variant="destructive"
-                  size="sm"
-                  className="flex-1"
+                  className="flex-1 py-3 text-base font-medium"
                   onClick={(e) => {
                     e.stopPropagation();
                     onDelete(order.id);

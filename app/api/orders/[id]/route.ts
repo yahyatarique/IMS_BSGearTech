@@ -73,13 +73,15 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     // Handle profile updates if provided
     if (validatedData.profiles && validatedData.profiles.length > 0) {
       // Separate profiles into delete, update, and new categories
-      const profilesToDelete = validatedData.profiles.filter(p => p.isDeleted);
-      const profilesToUpdate = validatedData.profiles.filter(p => !p.isDeleted && !p.isNew && p.id);
-      const profilesToCreate = validatedData.profiles.filter(p => !p.isDeleted && p.isNew);
+      const profilesToDelete = validatedData.profiles.filter((p) => p.isDeleted);
+      const profilesToUpdate = validatedData.profiles.filter(
+        (p) => !p.isDeleted && !p.isNew && p.id
+      );
+      const profilesToCreate = validatedData.profiles.filter((p) => !p.isDeleted && p.isNew);
 
       // Delete marked profiles and their inventory items (cascade will handle inventory)
       if (profilesToDelete.length > 0) {
-        const deleteIds = profilesToDelete.map(p => p.id).filter((id): id is string => !!id);
+        const deleteIds = profilesToDelete.map((p) => p.id).filter((id): id is string => !!id);
         if (deleteIds.length > 0) {
           await OrderProfile.destroy({
             where: { id: deleteIds, order_id: order.id },
@@ -161,7 +163,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
       // Create new profiles
       if (profilesToCreate.length > 0) {
-        const newProfileIds = profilesToCreate.map(p => p.profile_id);
+        const newProfileIds = profilesToCreate.map((p) => p.profile_id);
         const profiles = await Profiles.findAll({
           where: { id: newProfileIds },
           include: [{ model: Inventory, as: 'inventory', required: false }],
@@ -173,7 +175,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         }
 
         // Create OrderProfile records
-        const orderProfilesData = profiles.map(profile => ({
+        const orderProfilesData = profiles.map((profile) => ({
           order_id: order.id,
           profile_id: profile.id,
           name: profile.name,
@@ -203,7 +205,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         for (let i = 0; i < profiles.length; i++) {
           const profile = profiles[i];
           const createdProfile = createdProfiles[i];
-          
+
           if (profile.inventory_id) {
             const inventory = (profile as any).inventory;
             orderInventoryData.push({
@@ -284,38 +286,18 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         {
           model: Buyer,
           as: 'buyer',
-          attributes: ['id', 'name', 'org_name', 'email', 'phone_number', 'gstin', 'address']
         },
         {
           model: OrderProfile,
           as: 'orderProfiles',
-          attributes: [
-            'id',
-            'order_id',
-            'profile_id',
-            'name',
-            'type',
-            'material',
-            'no_of_teeth',
-            'rate',
-            'face',
-            'module',
-            'finish_size',
-            'burning_weight',
-            'total_weight',
-            'ht_cost',
-            'ht_rate',
-            'processes',
-            'cyn_grinding',
-            'total'
-          ]
+    
         },
         { model: OrderInventory, as: 'orderInventoryItems' },
-        { model: User, as: 'user', attributes: ['id', 'username', 'email'] }
+        { model: User, as: 'user' }
       ]
     });
 
-    return sendResponse(updatedOrder, 'Order updated successfully');
+    return sendResponse(JSON.stringify(updatedOrder), 'Order updated successfully');
   } catch (error: any) {
     if (transaction) {
       await transaction.rollback();
@@ -390,8 +372,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         },
         {
           model: OrderProfile,
-          as: 'orderProfiles',
-         
+          as: 'orderProfiles'
         }
       ]
     });

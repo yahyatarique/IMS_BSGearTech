@@ -60,10 +60,10 @@ export default async function RecentOrders() {
       title="Recent Orders"
       description="Latest orders placed by buyers"
       icon={ShoppingCart}
-      gradient="from-blue-500 to-cyan-500"
+      gradient="from-blue-500 to-cyan-500  dark:from-blue-500/30 dark:to-cyan-500/30"
       action={
         <Link
-          href="#"
+          href="/orders"
           className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
         >
           View All
