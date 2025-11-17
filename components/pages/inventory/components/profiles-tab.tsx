@@ -68,7 +68,7 @@ export function ProfilesTab() {
   // Handle create/update
   const handleSubmit = async (data: CreateProfileInput | UpdateProfileInput) => {
     try {
-      if (selectedProfile) {
+      if (selectedProfile && selectedProfile?.id) {
         await updateProfile(selectedProfile.id, data);
         success({ title: 'Success', description: 'Profile updated successfully' });
       } else {

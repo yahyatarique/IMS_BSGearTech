@@ -1,5 +1,6 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from '../connection';
+import OrderProfile from './OrderProfile';
 
 interface OrdersAttributes {
   id: string;
@@ -14,6 +15,7 @@ interface OrdersAttributes {
   profit_margin: number;
   burning_wastage_percent: number;
   user_id?: string;
+  orderProfiles?: OrderProfile[];
 }
 
 interface OrdersCreationAttributes
@@ -42,6 +44,7 @@ class Orders extends Model<OrdersAttributes, OrdersCreationAttributes> implement
   declare profit_margin: number;
   declare burning_wastage_percent: number;
   declare user_id?: string;
+  declare orderProfiles?: OrderProfile[];
 
   // Association method
   static associate(models: any) {

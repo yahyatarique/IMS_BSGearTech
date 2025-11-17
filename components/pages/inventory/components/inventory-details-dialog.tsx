@@ -8,19 +8,13 @@ import {
   Package,
   Weight,
   Ruler,
-  FileText,
   Calendar,
-  Layers,
-  Clock,
-  CheckCircle,
-  TrendingUp,
   IndianRupee
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { EntityDetailsDialog } from '@/components/ui/entity-details-dialog';
-import { cn } from '@/lib/utils';
 
 interface InventoryDetailsDialogProps {
   open: boolean;
@@ -50,25 +44,6 @@ export function InventoryDetailsDialog({
       setIsDeleting(false);
     }
   };
-
-  const MATERIAL_STATUS: Record<string, { label: string; className: string }> = {
-    'in-stock': {
-      label: 'In Stock',
-      className: 'bg-green-500/10 text-green-700 dark:text-green-500 border-green-500/20'
-    },
-    'low-stock': {
-      label: 'Low Stock',
-      className: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-500 border-yellow-500/20'
-    },
-    'out-of-stock': {
-      label: 'Out of Stock',
-      className: 'bg-red-500/10 text-red-700 dark:text-red-500 border-red-500/20'
-    }
-  };
-
-  const quantityFormatter = new Intl.NumberFormat('en-IN', {
-    maximumFractionDigits: 2
-  });
 
   return (
     <>

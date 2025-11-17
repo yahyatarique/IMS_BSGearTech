@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
           name: orderData.buyer.name,
           company: orderData.buyer.org_name
         } : null,
-        amount: parseFloat(order.total_order_value.toString()),
+        amount: parseFloat(order.grand_total.toString()),
         status: order.status,
         date: order.created_at instanceof Date ? order.created_at.toISOString() : new Date(order.created_at).toISOString(),
         statusLabel: getStatusLabel(order.status)

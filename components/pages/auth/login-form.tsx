@@ -125,7 +125,7 @@ export function LoginForm() {
               Manufacturing Excellence in Mechanical Components
             </h2>
                         
-            <div className="grid grid-cols-3 gap-4 pt-8">
+            {/* <div className="grid grid-cols-3 gap-4 pt-8">
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
                 <div className="text-3xl font-bold mb-1">50+</div>
                 <div className="text-xs text-slate-300">Customers</div>
@@ -138,7 +138,7 @@ export function LoginForm() {
                 <div className="text-3xl font-bold mb-1">30+</div>
                 <div className="text-xs text-slate-300">Team members</div>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

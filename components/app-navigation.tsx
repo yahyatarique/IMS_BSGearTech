@@ -158,8 +158,8 @@ export function AppNavigation() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center gap-3 hover:bg-white/5">
-                    <Avatar className="h-8 w-8 border-2 border-blue-400">
-                      <AvatarFallback className="bg-gradient-to-br from-blue-600 to-cyan-500 text-white text-sm">
+                    <Avatar className="h-8 w-8 border-2 border-blue-400 dark:border-blue-400/50">
+                      <AvatarFallback className="bg-gradient-to-br from-blue-600 to-cyan-500 dark:from-blue-600/30 dark:to-cyan-500/30 text-white text-xs">
                         {getUserInitials()}
                       </AvatarFallback>
                     </Avatar>

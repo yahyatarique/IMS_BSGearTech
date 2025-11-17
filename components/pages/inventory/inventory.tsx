@@ -1,12 +1,13 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import {  useSearchParams } from 'next/navigation';
 import { PageWrapper } from '@/components/ui/page-wrapper';
 import { Package, Layers, Warehouse } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProfilesTab } from './components/profiles-tab';
 import { InventoryTab } from './components/inventory-tab';
+import { useRouter } from '@bprogress/next/app';
 
 export default function InventoryPage() {
   const router = useRouter();

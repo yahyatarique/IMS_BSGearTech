@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ORDER_STATUS } from '@/enums/orders.enum';
+import { CreateProfileSchema } from './profile.schema';
 
 export const CreateOrderSchema = z.object({
   order_number: z.string().min(1, 'Order number is required'),
@@ -16,7 +17,8 @@ export const CreateOrderSchema = z.object({
   ht_cost: z.number().min(0).default(0),
   total_order_value: z.number().min(0).default(0),
   profit_margin: z.number().min(0).default(0),
-  user_id: z.string().uuid().optional()
+  user_id: z.string().uuid().optional(),
+  profiles: CreateProfileSchema.extend({ profile_id: z.uuid(), isNew: z.boolean().optional()  }).array().optional()
 });
 
 export const UpdateOrderSchema = CreateOrderSchema.partial();

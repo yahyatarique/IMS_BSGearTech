@@ -1,13 +1,12 @@
 import { NextRequest } from 'next/server';
 import { testConnection } from '@/db/connection';
-import Orders from '@/db/models/Orders';
 import Buyer from '@/db/models/Buyer';
 import Profiles from '@/db/models/Profiles';
 import OrderProfile from '@/db/models/OrderProfile';
 import { OrderInventory } from '@/db/models/OrderInventory';
 import User from '@/db/models/User';
-import { Inventory } from '@/db/models';
-import { UpdateOrderAPISchema } from '@/schemas/create-order.schema';
+import { Inventory, Orders } from '@/db/models';
+import { UpdateOrderFormSchema } from '@/schemas/create-order.schema';
 import sequelize from '@/db/connection';
 import { sendResponse, errorResponse } from '@/utils/api-response';
 import { z } from 'zod';
@@ -47,14 +46,17 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   try {
     await testConnection();
 
-    const order = await Orders.findByPk(paramsPromise.id);
+    const order = await Orders.findOne({
+      where: { id: paramsPromise.id },
+      include: [{ model: OrderProfile, as: 'orderProfiles' }]
+    });
 
     if (!order) {
       return errorResponse('Order not found', 404);
     }
 
     const body = await request.json();
-    const validatedData = UpdateOrderAPISchema.parse(body);
+    const validatedData = UpdateOrderFormSchema.parse(body);
 
     // Start transaction
     transaction = await sequelize.transaction();
@@ -70,22 +72,29 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       orderUpdateData.burning_wastage_percent = validatedData.burning_wastage_percent;
     }
 
+    const oldProfiles = order.get({ plain: true }).orderProfiles || [];
+
+    //use row ids to track deletions and updates
+    const oldProfileIds = oldProfiles.map((p) => p.id);
+    const orderProfileIds =
+      validatedData.profiles?.filter((p) => !p.isNew && p.id).map((p) => p.id) || [];
+
     // Handle profile updates if provided
     if (validatedData.profiles && validatedData.profiles.length > 0) {
       // Separate profiles into delete, update, and new categories
-      const profilesToDelete = validatedData.profiles.filter(p => p.isDeleted);
-      const profilesToUpdate = validatedData.profiles.filter(p => !p.isDeleted && !p.isNew && p.id);
-      const profilesToCreate = validatedData.profiles.filter(p => !p.isDeleted && p.isNew);
+      const profilesToDeleteIds = oldProfileIds.filter((id) => !orderProfileIds.includes(id));
+
+      const profilesToUpdate = validatedData.profiles.filter((p) => !p.isNew && p.id);
+      const profilesToCreateIds =
+        validatedData.profiles.filter((p) => !p.profile_id && p.id && p.isNew).map((p) => p.id) ||
+        [];
 
       // Delete marked profiles and their inventory items (cascade will handle inventory)
-      if (profilesToDelete.length > 0) {
-        const deleteIds = profilesToDelete.map(p => p.id).filter((id): id is string => !!id);
-        if (deleteIds.length > 0) {
-          await OrderProfile.destroy({
-            where: { id: deleteIds, order_id: order.id },
-            transaction
-          });
-        }
+      if (profilesToDeleteIds.length > 0) {
+        await OrderProfile.destroy({
+          where: { id: profilesToDeleteIds, order_id: order.id },
+          transaction
+        });
       }
 
       // Update existing profiles
@@ -160,20 +169,19 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       }
 
       // Create new profiles
-      if (profilesToCreate.length > 0) {
-        const newProfileIds = profilesToCreate.map(p => p.profile_id);
+      if (profilesToCreateIds.length > 0) {
         const profiles = await Profiles.findAll({
-          where: { id: newProfileIds },
+          where: { id: profilesToCreateIds as string[] },
           include: [{ model: Inventory, as: 'inventory', required: false }],
           transaction
         });
 
-        if (profiles.length !== newProfileIds.length) {
+        if (profiles.length !== profilesToCreateIds.length) {
           throw new Error('One or more new profiles not found');
         }
 
         // Create OrderProfile records
-        const orderProfilesData = profiles.map(profile => ({
+        const orderProfilesData = profiles.map((profile) => ({
           order_id: order.id,
           profile_id: profile.id,
           name: profile.name,
@@ -203,7 +211,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         for (let i = 0; i < profiles.length; i++) {
           const profile = profiles[i];
           const createdProfile = createdProfiles[i];
-          
+
           if (profile.inventory_id) {
             const inventory = (profile as any).inventory;
             orderInventoryData.push({
@@ -283,46 +291,25 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       include: [
         {
           model: Buyer,
-          as: 'buyer',
-          attributes: ['id', 'name', 'org_name', 'email', 'phone_number', 'gstin', 'address']
+          as: 'buyer'
         },
         {
           model: OrderProfile,
-          as: 'orderProfiles',
-          attributes: [
-            'id',
-            'order_id',
-            'profile_id',
-            'name',
-            'type',
-            'material',
-            'no_of_teeth',
-            'rate',
-            'face',
-            'module',
-            'finish_size',
-            'burning_weight',
-            'total_weight',
-            'ht_cost',
-            'ht_rate',
-            'processes',
-            'cyn_grinding',
-            'total'
-          ]
+          as: 'orderProfiles'
         },
         { model: OrderInventory, as: 'orderInventoryItems' },
-        { model: User, as: 'user', attributes: ['id', 'username', 'email'] }
+        { model: User, as: 'user' }
       ]
     });
 
-    return sendResponse(updatedOrder, 'Order updated successfully');
+    return sendResponse(JSON.stringify(updatedOrder), 'Order updated successfully');
   } catch (error: any) {
     if (transaction) {
       await transaction.rollback();
     }
 
     if (error.name === 'ZodError') {
-      return errorResponse('Validation failed', 400, error.errors);
+      return errorResponse('Validation failed', 400, z.treeifyError(error));
     }
 
     return errorResponse(error.message || 'Failed to update order', 500);
@@ -390,8 +377,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         },
         {
           model: OrderProfile,
-          as: 'orderProfiles',
-         
+          as: 'orderProfiles'
         }
       ]
     });

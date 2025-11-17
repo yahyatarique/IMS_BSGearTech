@@ -27,7 +27,7 @@ export async function MaterialsAndProfiles() {
         title="Materials"
         description="Raw material inventory overview"
         icon={Package}
-        gradient="from-green-500 to-emerald-500"
+        gradient="from-green-500 to-emerald-500  dark:from-green-500/30 dark:to-emerald-500/30"
         action={
           <Link
             href="/inventory?tab=materials"
@@ -73,7 +73,8 @@ export async function MaterialsAndProfiles() {
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 pt-1">
-                  {material.profileCount} {material.profileCount === 1 ? 'profile' : 'profiles'} using this material
+                  {material.profileCount} {material.profileCount === 1 ? 'profile' : 'profiles'}{' '}
+                  using this material
                 </p>
               </div>
             </div>
@@ -85,7 +86,7 @@ export async function MaterialsAndProfiles() {
         title="Profile Types"
         description="Product profiles and gears"
         icon={Layers}
-        gradient="from-orange-500 to-red-500"
+        gradient="from-orange-500 to-red-500  dark:from-orange-500/30 dark:to-red-500/30"
         action={
           <Link
             href="/inventory?tab=profiles"

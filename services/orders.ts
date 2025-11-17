@@ -1,8 +1,22 @@
 import axiosInstance from '@/axios';
 import { CreateOrderInput, UpdateOrderInput } from '@/schemas/order.schema';
-import { OrdersListResponse, OrderResponse, OrderStatusUpdateRequest, OrderStatusUpdateResponse } from './types/orders.api.type';
+import {
+  OrdersListResponse,
+  OrderResponse,
+  OrderStatusUpdateRequest,
+  OrderStatusUpdateResponse
+} from './types/orders.api.type';
 
 import { ORDER_STATUS } from '@/enums/orders.enum';
+import { AxiosResponse } from 'axios';
+
+
+const BASE_URL = '/orders';
+
+const endpoints = {
+  orders: `${BASE_URL}`,
+  orderById: (id: string) => `${BASE_URL}/${id}`,
+}
 
 export async function fetchOrders(params?: {
   page?: number;
@@ -15,27 +29,33 @@ export async function fetchOrders(params?: {
   return response.data;
 }
 
-export async function fetchOrderById(id: string): Promise<OrderResponse> {
-  const response = await axiosInstance.get(`/orders/${id}`);
-  return response.data;
+export async function fetchOrderById(id: string): Promise<AxiosResponse<OrderResponse>> {
+  const response: AxiosResponse<OrderResponse> = await axiosInstance.get(endpoints.orderById(id));
+  return response;
 }
 
-export async function createOrder(data: CreateOrderInput): Promise<OrderResponse> {
-  const response = await axiosInstance.post('/orders', data);
-  return response.data;
+export async function createOrder(data: CreateOrderInput): Promise<AxiosResponse<OrderResponse>> {
+  const response: AxiosResponse<OrderResponse> = await axiosInstance.post(endpoints.orders, data);
+  return response;
 }
 
-export async function updateOrder(id: string, data: UpdateOrderInput): Promise<OrderResponse> {
-  const response = await axiosInstance.put(`/orders/${id}`, data);
-  return response.data;
+export async function updateOrder(
+  id: string,
+  data: UpdateOrderInput
+): Promise<AxiosResponse<OrderResponse>> {
+  const response: AxiosResponse<OrderResponse> = await axiosInstance.put(endpoints.orderById(id), data);
+  return response;
 }
 
 export async function deleteOrder(id: string): Promise<{ success: boolean }> {
-  const response = await axiosInstance.delete(`/orders/${id}`);
+  const response = await axiosInstance.delete(endpoints.orderById(id));
   return response.data;
 }
 
-export async function updateOrderStatus(id: string, data: OrderStatusUpdateRequest): Promise<OrderStatusUpdateResponse> {
-  const response = await axiosInstance.patch(`/orders/${id}`, data);
+export async function updateOrderStatus(
+  id: string,
+  data: OrderStatusUpdateRequest
+): Promise<OrderStatusUpdateResponse> {
+  const response = await axiosInstance.patch(endpoints.orderById(id), data);
   return response.data;
 }
