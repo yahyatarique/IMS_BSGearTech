@@ -72,10 +72,6 @@ export async function MaterialsAndProfiles() {
                     Weight: {material.weight} {material.unit}
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 pt-1">
-                  {material.profileCount} {material.profileCount === 1 ? 'profile' : 'profiles'}{' '}
-                  using this material
-                </p>
               </div>
             </div>
           ))}

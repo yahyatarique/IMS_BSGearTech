@@ -53,7 +53,7 @@ export const calculateHTCost = (weight: number, htRate: number): number => {
  * @param processes - Array of process objects with rate property
  * @returns Total order value in INR
  */
-export const caclculateProfileTotal = (
+export const calculateProfileTotal = (
   materialCost: number,
   teethCost: number | undefined,
   htCost: number,
@@ -81,6 +81,14 @@ export const calculateGrandTotal = (totalOrderValue: number, profitMargin: numbe
 };
 
 
+/**
+ * Calculate burning weight (5% of total weight)
+ * Formula: weight × 0.05
+ * @param weight - Total weight in kg
+ * - For Pinion burning weight is considered as 0% of total weight
+ * - For Gear burning weight is considered as 5% of total weight
+ * @returns Burning weight in kg
+ */
 export const calculateBurningWeight = (weight: number): number => {
   return weight * 0.05;
 };

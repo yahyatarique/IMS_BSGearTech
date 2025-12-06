@@ -22,19 +22,35 @@ export function BasicInformationSection({
 }: BasicInformationSectionProps) {
   return (
     <Section title="Basic Information" variant="default" className="p-4 bg-slate-100 shadow-none">
-      <FormField
-        control={control}
-        name="name"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Name</FormLabel>
-            <FormControl>
-              <Input placeholder="Enter profile name" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <div className="grid grid-cols-2 gap-4">
+        <FormField
+          control={control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Name</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter profile name" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={control}
+          name="group_by"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Key</FormLabel>
+              <FormControl>
+                <Input placeholder="HC-400 (optional)" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
 
       <div className="grid grid-cols-2 gap-4">
         <FormField

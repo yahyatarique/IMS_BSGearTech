@@ -18,9 +18,11 @@ import {
   MapPin,
   FileText,
   Calendar,
-  Activity
+  Activity,
+  ShoppingCart
 } from 'lucide-react';
 import { ChangeStatusDialog, StatusOption } from '@/components/ui/change-status-dialog';
+import { useRouter } from '@bprogress/next/app';
 
 const statusClasses: Record<BuyerRecord['status'], string> = {
   active: 'bg-green-500/10 text-green-700 dark:text-green-500 border-green-500/20',
@@ -69,6 +71,7 @@ export function BuyerDetailsDialog({
   onEdit
 }: BuyerDetailsDialogProps) {
   const [isChangeStatusOpen, setIsChangeStatusOpen] = useState(false);
+  const router = useRouter();
 
   if (!buyer) return null;
 
@@ -79,6 +82,11 @@ export function BuyerDetailsDialog({
 
   const handleEdit = () => {
     onEdit(buyer);
+  };
+
+  const handleViewOrders = () => {
+    router.push(`/orders?buyer_id=${buyer.id}`);
+    onClose();
   };
 
   return (
@@ -242,6 +250,10 @@ export function BuyerDetailsDialog({
 
           {/* Actions */}
           <div className="flex justify-end gap-2 pt-4 border-t">
+            <Button variant="outline" onClick={handleViewOrders} className="gap-2">
+              <ShoppingCart className="w-4 h-4" />
+              View Orders
+            </Button>
             <Button variant="outline" onClick={handleEdit}>
               Edit Buyer
             </Button>

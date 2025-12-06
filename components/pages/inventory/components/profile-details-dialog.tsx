@@ -53,7 +53,7 @@ export function ProfileDetailsDialog({
         open={open}
         onClose={() => onOpenChange(false)}
         isOperating={isDeleting}
-        leftSectionHeading={profile.name}
+        leftSectionHeading={`${profile.name} ${profile.group_by ? `(${profile.group_by})` : ''}`}
         header={{
           title: 'Profile Details',
           subtitle: 'View and manage profile information',

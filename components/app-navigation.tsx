@@ -127,7 +127,7 @@ export function AppNavigation() {
               })}
 
               {/* Admin-only navigation items */}
-              <AdminWrapper>
+              <AdminWrapper allowSuperAdminOnly={true}>
                 {adminNavItems.map((item) => {
                   const Icon = item.icon;
                   const active = isActive(item.href) || pathname.startsWith(item.href);
@@ -234,7 +234,7 @@ export function AppNavigation() {
               })}
 
               {/* Admin-only navigation items */}
-              <AdminWrapper>
+              <AdminWrapper allowSuperAdminOnly={true}>
                 {adminNavItems.map((item) => {
                   const Icon = item.icon;
                   const active = isActive(item.href) || pathname.startsWith(item.href);

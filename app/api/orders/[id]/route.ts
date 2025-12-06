@@ -33,7 +33,23 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return errorResponse('Order not found', 404);
     }
 
-    return sendResponse(order, 'Order retrieved successfully');
+    // Calculate burning wastage in kg from profiles
+    const orderData = order.toJSON();
+    let burningWastageKg = 0;
+    
+    if (orderData.orderProfiles && orderData.orderProfiles.length > 0) {
+      burningWastageKg = orderData.orderProfiles.reduce((sum, profile) => {
+        return sum + (Number(profile.burning_weight) || 0);
+      }, 0);
+    }
+
+    // Add calculated burning wastage to response
+    const responseData = {
+      ...orderData,
+      burning_wastage_kg: burningWastageKg
+    };
+
+    return sendResponse(responseData, 'Order retrieved successfully');
   } catch (error: any) {
     return errorResponse(error.message || 'Failed to fetch order', 500);
   }

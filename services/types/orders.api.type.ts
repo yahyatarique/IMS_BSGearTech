@@ -14,6 +14,7 @@ export type OrderRecord = {
   total_order_value: string;
   profit_margin: string;
   burning_wastage_percent: string;
+  burning_wastage_kg?: number;
   user_id?: string;
   buyer?: {
     id: string;

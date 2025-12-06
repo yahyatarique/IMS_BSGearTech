@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { testConnection } from '@/db/connection';
 import Profiles from '@/db/models/Profiles';
-import {Inventory} from '@/db/models';
+import { Inventory } from '@/db/models';
 import { CreateProfileSchema, ProfileListQuerySchema } from '@/schemas/profile.schema';
 import { errorResponse, sendResponse } from '@/utils/api-response';
 import sequelize from '@/db/connection';
@@ -38,7 +38,10 @@ export async function GET(request: NextRequest) {
       }
 
       if (search) {
-        whereClause[Op.or] = [{ name: { [Op.iLike]: `%${search}%` } }];
+        whereClause[Op.or] = [
+          { name: { [Op.iLike]: `%${search}%` } },
+          { group_by: { [Op.iLike]: `%${search}%` } }
+        ];
       }
     }
 
@@ -48,12 +51,14 @@ export async function GET(request: NextRequest) {
       where: whereClause,
       limit,
       offset,
-      order: [['name', 'ASC']],
-      include: [{
-        model: Inventory,
-        as : 'inventory',
-        attributes: ['id', 'material_type', 'rate', 'material_weight', 'outer_diameter', 'length']
-      }]
+      order: [['created_at', 'ASC']],
+      include: [
+        {
+          model: Inventory,
+          as: 'inventory',
+          attributes: ['id', 'material_type', 'rate', 'material_weight', 'outer_diameter', 'length']
+        }
+      ]
     });
 
     const totalPages = Math.ceil(total / limit);
