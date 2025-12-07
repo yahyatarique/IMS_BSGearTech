@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { LoginSchema } from '@/schemas/user.schema';
@@ -23,6 +22,7 @@ import { InlineErrorMessage } from '@/components/ui/error-message';
 import Image from 'next/image';
 import { success } from '../../../hooks/use-toast';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useRouter } from '@bprogress/next/app';
 
 function getCookie(name: string): string | null {
   const value = `; ${document.cookie}`;
