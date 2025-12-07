@@ -19,29 +19,29 @@ export const Processes = z.object({
 // Create profile schema
 export const CreateProfileSchema = z.object({
   //when updating, id is required
-  id: z.string().uuid().optional(),
+  id: z.uuid().optional(),
   name: z.string().min(1, 'Name is required').max(255, 'Name is too long'),
   type: ProfileTypeEnum,
   material: ProfileMaterialEnum,
   materialTypeString: z
     .string()
-    .min(1, 'Material type string is required')
+    .min(1, 'Material is required')
+    .min(1, 'Material is required')
     .max(255, 'Material type string is too long'),
-  no_of_teeth: z.number().int().nonnegative('Number of teeth must be non-negative'),
-  rate: z.number().nonnegative('Rate must be non-negative').max(99999999.99, 'Rate is too large'),
-  face: z.number().nonnegative('Face must be non-negative').max(9999999.999, 'Face is too large'),
-  module: z
-    .number()
-    .nonnegative('Module must be non-negative')
-    .max(9999999.999, 'Module is too large'),
-  finish_size: z.string().optional(),
+  no_of_teeth: z.number().int().positive('Number of teeth must be positive'),
+  rate: z.number().positive('Rate must be positive').max(99999999.99, 'Rate is too large'),
+  face: z.number().positive('Face must be positive').max(9999999.999, 'Face is too large'),
+  module: z.number().positive('Module must be positive').max(9999999.999, 'Module is too large'),
+  finish_size: z.string().min(1, 'Finish size is required').max(255, 'Finish size is too long'),
   burning_weight: z
     .number()
-    .nonnegative('Burning weight must be non-negative')
+    .positive('Burning weight must be positive')
+    .positive('Burning weight must be positive')
     .max(99999999.99, 'Burning weight is too large'),
   total_weight: z
     .number()
-    .nonnegative('Total weight must be non-negative')
+    .positive('Total weight must be positive')
+    .positive('Total weight must be positive')
     .max(99999999.99, 'Total weight is too large'),
   ht_cost: z
     .number()
@@ -65,8 +65,13 @@ export const CreateProfileSchema = z.object({
     .nonnegative('Teeth cutting and grinding cost must be non-negative')
     .max(99999999.99, 'Teeth cutting and grinding cost is too large')
     .optional(),
-  inventory_id: z.uuid().optional(),
-  group_by: z.string().max(100, 'Key is too long').optional()
+  inventory_id: z.uuid('Material is required'),
+  group_by: z.string().max(100, 'Key is too long').optional().nullable(),
+  burning_wastage_percentage: z
+    .number()
+    .max(100, 'Burning wastage percentage cannot exceed 100')
+    .optional()
+    .nullable()
 });
 
 // Update profile schema (all fields optional)

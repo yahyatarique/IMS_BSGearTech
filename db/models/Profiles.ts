@@ -20,6 +20,7 @@ interface ProfilesAttributes {
   total: number;
   inventory_id?: string;
   group_by?: string;
+  burning_wastage_percentage?: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -45,6 +46,7 @@ class Profiles extends Model<ProfilesAttributes, ProfilesCreationAttributes> imp
   declare total: number;
   declare inventory_id?: string;
   declare group_by?: string;
+  declare burning_wastage_percentage?: number;
   declare readonly created_at: Date;
   declare readonly updated_at: Date;
 
@@ -145,6 +147,10 @@ Profiles.init(
     },
     group_by: {
       type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    burning_wastage_percentage: {
+      type: DataTypes.DECIMAL(5, 2),
       allowNull: true,
     },
     created_at: {

@@ -14,7 +14,6 @@ import {
   Building2,
   Mail,
   Phone,
-  Smartphone,
   MapPin,
   FileText,
   Calendar,
@@ -90,7 +89,7 @@ export function BuyerDetailsDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(newOpen) => onClose()}>
+    <Dialog open={open} onOpenChange={() => onClose()}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">Buyer Details</DialogTitle>
@@ -254,7 +253,7 @@ export function BuyerDetailsDialog({
               <ShoppingCart className="w-4 h-4" />
               View Orders
             </Button>
-            <Button variant="outline" onClick={handleEdit}>
+            <Button variant="secondary" onClick={handleEdit}>
               Edit Buyer
             </Button>
             <Button variant="outline" onClick={() => setIsChangeStatusOpen(true)}>

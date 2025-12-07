@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { fetchOrderById } from '@/services/orders';
 import type { OrderRecord } from '@/services/types/orders.api.type';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { cn, formatDateTime } from '@/lib/utils';
 import {
   Building2,
   User,
@@ -52,6 +52,7 @@ interface OrderDetailsPageContentProps {
 export function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
   const [order, setOrder] = useState<OrderRecord | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleteLoading, setIsDeleteLoading] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const router = useRouter();
@@ -107,13 +108,14 @@ export function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProp
   };
 
   const handleEdit = () => {
-    router.push(`/orders/${orderId}/edit`);
+    router.push(`/orders/details/${orderId}/edit`);
   };
 
   const handleDelete = async () => {
     if (!order) return;
 
     try {
+      setIsDeleteLoading(true);
       const response = await deleteOrder(order.id);
       if (response.success) {
         successToast({
@@ -129,6 +131,7 @@ export function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProp
       });
     } finally {
       setIsDeleteDialogOpen(false);
+      setIsDeleteLoading(false);
     }
   };
 
@@ -168,8 +171,8 @@ export function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProp
     <div className="space-y-6">
       {/* Header Section */}
       <div className="flex items-start justify-between pb-4 border-b">
-        <div>
-          <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
+        <div className="p-6 rounded-lg bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+          <h3 className="text-xl font-bold text-green-700 dark:text-green-300">
             {order.order_number}
           </h3>
           {order.order_name && (
@@ -179,7 +182,11 @@ export function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProp
           )}
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
             <Calendar className="w-4 h-4" />
-            Created: {new Date(order.created_at).toLocaleString()}
+            Created: {formatDateTime(order.created_at)}
+          </p>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
+            <Calendar className="w-4 h-4" />
+            Updated: {formatDateTime(order.updated_at)}
           </p>
         </div>
 
@@ -235,7 +242,7 @@ export function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProp
 
       {/* Order Details & Buyer Information */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
+        <div className="rounded-lg px-4 py-3 bg-slate-100 dark:bg-slate-900">
           <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
             <List className="w-4 h-4" />
             Order Details
@@ -251,7 +258,7 @@ export function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProp
         </div>
 
         {order.buyer && (
-          <div>
+          <div className="rounded-lg px-4 py-3 bg-slate-100 dark:bg-slate-900">
             <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
               <Building2 className="w-4 h-4" />
               Buyer Information
@@ -353,7 +360,7 @@ export function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProp
               </div>
               {order.burning_wastage_kg !== undefined && (
                 <p className="text-lg font-bold text-orange-700 dark:text-orange-300">
-                  {Number(order.burning_wastage_kg).toFixed(2)} kg {' '}
+                  {Number(order.burning_wastage_kg).toFixed(2)} kg{' '}
                   <span className="text-sm text-orange-600 dark:text-orange-400 mt-1">
                     ({Number(order.burning_wastage_percent).toFixed(2)}%)
                   </span>
@@ -388,13 +395,17 @@ export function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProp
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <h5 className="font-semibold text-slate-900 dark:text-white">
-                        {profile.name}
-                      </h5>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                        {profile.type === '0' ? 'Internal' : 'External'} | {profile.material}
-                      </p>
+                      <div className="flex gap-2 items-start justify-center">
+                        <h5 className="font-semibold text-slate-900 dark:text-white">
+                          {profile.name} {profile.group_by ? `(${profile.group_by})` : ''}
+                        </h5>
+
+                        <span className="text-slate-700 border-slate-500/20 text-sm px-2 bg-blue-500/10 dark:text-blue-400 rounded-lg">
+                          {profile.material}
+                        </span>
+                      </div>
                     </div>
+
                     <Badge variant="secondary" className="text-xs">
                       Profile #{index + 1}
                     </Badge>
@@ -515,7 +526,8 @@ export function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProp
         onConfirm={handleDelete}
         title="Delete Order"
         description="Are you sure you want to delete this order? This action cannot be undone."
-        cancelLabel="Delete"
+        cancelLabel="Cancel"
+        confirmLabel={isDeleteLoading ? 'Deleting...' : "Delete"}
         variant="destructive"
       />
     </div>

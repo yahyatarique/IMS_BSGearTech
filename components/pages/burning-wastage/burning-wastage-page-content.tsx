@@ -196,7 +196,7 @@ export function BurningWastagePageContent() {
                           />
                         </FormControl>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                          Enter negative value only (e.g., -5 to remove 5 kg)
+                          Enter value only (e.g., 5 to remove 5 kg)
                         </p>
                         <FormMessage />
                       </FormItem>

@@ -160,7 +160,7 @@ export function LoginForm() {
 
         <Card className="w-full max-w-md relative z-10 shadow-2xl">
           <CardHeader className="space-y-1">
-            <div className="flex justify-center mb-6 lg:hidden">
+            <div className="flex justify-center py-2 rounded-lg bg-slate-600 dark:bg-slate-900  mb-6 lg:hidden">
               <Image
                 src="/images/logo/bs_geartech_logo.png"
                 alt="BS GearTech Logo"

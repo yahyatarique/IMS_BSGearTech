@@ -7,7 +7,14 @@ import { InventoryRecord } from '@/services/types/inventory.api.type';
 import { Section } from '@/components/ui/section';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import { BURNING_WASTAGE_PERCENTAGES } from '@/utils/constants';
 
 interface BasicInformationSectionProps {
   control: Control<CreateProfileInput & { inventory_id?: string }>;
@@ -20,6 +27,17 @@ export function BasicInformationSection({
   setValue,
   inventoryItems
 }: BasicInformationSectionProps) {
+  const onTypeChange = (type: string) => {
+    setValue('type', type as CreateProfileInput['type']);
+
+    if (type === '1') {
+      setValue('burning_weight', 0);
+      setValue('burning_wastage_percentage', 0);
+    } else {
+      setValue('burning_wastage_percentage', 5);
+    }
+  };
+
   return (
     <Section title="Basic Information" variant="default" className="p-4 bg-slate-100 shadow-none">
       <div className="grid grid-cols-2 gap-4">
@@ -52,6 +70,34 @@ export function BasicInformationSection({
         />
       </div>
 
+      <FormField
+        control={control}
+        name="burning_wastage_percentage"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Burning Wastage %</FormLabel>
+            <Select
+              value={field.value?.toString()}
+              onValueChange={(value) => field.onChange(Number(value))}
+            >
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select burning wastage percentage" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {BURNING_WASTAGE_PERCENTAGES.map((percentage) => (
+                  <SelectItem key={percentage} value={percentage.toString()}>
+                    {percentage}%
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
       <div className="grid grid-cols-2 gap-4">
         <FormField
           control={control}
@@ -59,7 +105,13 @@ export function BasicInformationSection({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Type</FormLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
+              <Select
+                value={field.value}
+                onValueChange={(value) => {
+                  field.onChange(Number(value));
+                  onTypeChange(value);
+                }}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select type" />

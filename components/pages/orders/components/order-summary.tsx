@@ -23,7 +23,7 @@ export const OrderSummary = memo(
     const calculations = useMemo(() => {
       const mergedProfiles = [...selectedProfiles, ...orderProfiles];
       const profilesTotal = mergedProfiles.reduce((sum, p) => sum + p.total, 0) || 0;
-      const total = profilesTotal  * (quantity || 1);
+      const total = profilesTotal  * (quantity || 0);
       const grandTotal = total + (total * (profit || 0)) / 100;
       const burningWeightTotal = mergedProfiles.reduce((sum, p) => sum + p.burning_weight, 0);
       const totalWeightSum = mergedProfiles.reduce((sum, p) => sum + p.total_weight, 0);
@@ -65,7 +65,7 @@ export const OrderSummary = memo(
               </div>
             )}
 
-            {orderName && (
+            {orderName.trim() && (
               <div>
                 <p className="text-xs uppercase text-muted-foreground font-semibold tracking-wide">
                   Order Name
@@ -80,7 +80,7 @@ export const OrderSummary = memo(
                   Profiles
                 </p>
                 <p className="text-sm font-medium mt-1">
-                  {selectedProfiles.length} profile(s) selected
+                  {selectedProfiles?.length} profile(s) selected
                 </p>
               </div>
             )}
@@ -94,7 +94,7 @@ export const OrderSummary = memo(
 
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Quantity</span>
-              <span className="font-semibold">{quantity || 1}</span>
+              <span className="font-semibold">{quantity || 0}</span>
             </div>
 
             <div className="pt-3 border-t flex justify-between items-center">

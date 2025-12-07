@@ -36,7 +36,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     // Calculate burning wastage in kg from profiles
     const orderData = order.toJSON();
     let burningWastageKg = 0;
-    
+
     if (orderData.orderProfiles && orderData.orderProfiles.length > 0) {
       burningWastageKg = orderData.orderProfiles.reduce((sum, profile) => {
         return sum + (Number(profile.burning_weight) || 0);
@@ -100,7 +100,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       // Separate profiles into delete, update, and new categories
       const profilesToDeleteIds = oldProfileIds.filter((id) => !orderProfileIds.includes(id));
 
-      const profilesToUpdate = validatedData.profiles.filter((p) => !p.isNew && p.id);
+      // const profilesToUpdate = validatedData.profiles.filter((p) => !p.isNew && p.id);
       const profilesToCreateIds =
         validatedData.profiles.filter((p) => !p.profile_id && p.id && p.isNew).map((p) => p.id) ||
         [];
@@ -113,76 +113,77 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         });
       }
 
+      //Updating profile with new data concept does not exist for now.
       // Update existing profiles
-      for (const profileUpdate of profilesToUpdate) {
-        if (!profileUpdate.id) continue;
+      // for (const profileUpdate of profilesToUpdate) {
+      //   if (!profileUpdate.id) continue;
 
-        const existingProfile = await OrderProfile.findOne({
-          where: { id: profileUpdate.id, order_id: order.id },
-          transaction
-        });
+      //   const existingProfile = await OrderProfile.findOne({
+      //     where: { id: profileUpdate.id, order_id: order.id },
+      //     transaction
+      //   });
 
-        if (existingProfile) {
-          // Fetch the profile details from Profiles table
-          const profile = await Profiles.findByPk(profileUpdate.profile_id, {
-            include: [{ model: Inventory, as: 'inventory', required: false }],
-            transaction
-          });
+      //   if (existingProfile) {
+      //     // Fetch the profile details from Profiles table
+      //     const profile = await Profiles.findByPk(profileUpdate.profile_id, {
+      //       include: [{ model: Inventory, as: 'inventory', required: false }],
+      //       transaction
+      //     });
 
-          if (!profile) {
-            throw new Error(`Profile ${profileUpdate.profile_id} not found`);
-          }
+      //     if (!profile) {
+      //       throw new Error(`Profile ${profileUpdate.profile_id} not found`);
+      //     }
 
-          // Update OrderProfile with latest data from Profiles
-          await existingProfile.update(
-            {
-              profile_id: profile.id,
-              name: profile.name,
-              type: profile.type,
-              material: profile.material,
-              no_of_teeth: profile.no_of_teeth,
-              rate: Number(profile.rate),
-              face: Number(profile.face),
-              module: Number(profile.module),
-              finish_size: profile.finish_size || '',
-              burning_weight: Number(profile.burning_weight),
-              total_weight: Number(profile.total_weight),
-              ht_cost: Number(profile.ht_cost),
-              ht_rate: Number(profile.ht_rate),
-              processes: profile.processes,
-              cyn_grinding: Number(profile.cyn_grinding),
-              total: Number(profile.total)
-            },
-            { transaction }
-          );
+      //     // Update OrderProfile with latest data from Profiles
+      //     await existingProfile.update(
+      //       {
+      //         profile_id: profile.id,
+      //         name: profile.name,
+      //         type: profile.type,
+      //         material: profile.material,
+      //         no_of_teeth: profile.no_of_teeth,
+      //         rate: Number(profile.rate),
+      //         face: Number(profile.face),
+      //         module: Number(profile.module),
+      //         finish_size: profile.finish_size || '',
+      //         burning_weight: Number(profile.burning_weight),
+      //         total_weight: Number(profile.total_weight),
+      //         ht_cost: Number(profile.ht_cost),
+      //         ht_rate: Number(profile.ht_rate),
+      //         processes: profile.processes,
+      //         cyn_grinding: Number(profile.cyn_grinding),
+      //         total: Number(profile.total)
+      //       },
+      //       { transaction }
+      //     );
 
-          // Update or create associated inventory if profile has inventory
-          if (profile.inventory_id) {
-            const inventory = (profile as any).inventory;
-            const existingInventory = await OrderInventory.findOne({
-              where: { order_profile_id: existingProfile.id },
-              transaction
-            });
+      //     // Update or create associated inventory if profile has inventory
+      //     if (profile.inventory_id) {
+      //       const inventory = (profile as any).inventory;
+      //       const existingInventory = await OrderInventory.findOne({
+      //         where: { order_profile_id: existingProfile.id },
+      //         transaction
+      //       });
 
-            const inventoryData = {
-              order_id: order.id,
-              order_profile_id: existingProfile.id,
-              inventory_id: profile.inventory_id,
-              material_type: inventory?.material_type || profile.material,
-              material_weight: Number(inventory?.material_weight || 0),
-              outer_diameter: Number(inventory?.outer_diameter || 0),
-              length: Number(inventory?.length || 0),
-              rate: Number(inventory?.rate || 0)
-            };
+      //       const inventoryData = {
+      //         order_id: order.id,
+      //         order_profile_id: existingProfile.id,
+      //         inventory_id: profile.inventory_id,
+      //         material_type: inventory?.material_type || profile.material,
+      //         material_weight: Number(inventory?.material_weight || 0),
+      //         outer_diameter: Number(inventory?.outer_diameter || 0),
+      //         length: Number(inventory?.length || 0),
+      //         rate: Number(inventory?.rate || 0)
+      //       };
 
-            if (existingInventory) {
-              await existingInventory.update(inventoryData, { transaction });
-            } else {
-              await OrderInventory.create(inventoryData, { transaction });
-            }
-          }
-        }
-      }
+      //       if (existingInventory) {
+      //         await existingInventory.update(inventoryData, { transaction });
+      //       } else {
+      //         await OrderInventory.create(inventoryData, { transaction });
+      //       }
+      //     }
+      //   }
+      // }
 
       // Create new profiles
       if (profilesToCreateIds.length > 0) {
@@ -214,7 +215,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
           ht_rate: Number(profile.ht_rate),
           processes: profile.processes,
           cyn_grinding: Number(profile.cyn_grinding),
-          total: Number(profile.total)
+          total: Number(profile.total),
+          group_by: profile.group_by || undefined,
+          burning_wastage_percentage: profile.burning_wastage_percentage || 0
         }));
 
         const createdProfiles = await OrderProfile.bulkCreate(orderProfilesData, {

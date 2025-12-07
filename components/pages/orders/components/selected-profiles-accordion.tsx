@@ -19,7 +19,8 @@ export function SelectedProfilesAccordion({
   selectedProfiles,
   profiles
 }: SelectedProfilesAccordionProps) {
-  if (selectedProfiles.length === 0) return null;
+
+  if (selectedProfiles.length === 0 && profiles.length === 0) return null;
 
   const mergedProfiles = [...selectedProfiles, ...profiles];
 
@@ -29,16 +30,10 @@ export function SelectedProfilesAccordion({
       <Accordion type="multiple" className="space-y-2">
         {mergedProfiles.map((profile) => (
           <AccordionItem key={profile.id} value={profile?.id || ''}>
-            <AccordionTrigger className="text-sm font-medium">{profile.name}</AccordionTrigger>
+            <AccordionTrigger className="text-sm font-medium">{profile.name} {profile.group_by ? `(${profile.group_by})` : ''}</AccordionTrigger>
             <AccordionContent>
               <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-4 space-y-4">
                 <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-1">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                      Type
-                    </p>
-                    <p className="text-sm font-medium">{profile.type}</p>
-                  </div>
                   <div className="space-y-1">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                       Material
@@ -77,7 +72,7 @@ export function SelectedProfilesAccordion({
                   </div>
                   <div className="space-y-1">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                      Total Weight
+                      Total Weight (B.W + M.W)
                     </p>
                     <p className="text-sm font-medium">{profile.total_weight} kg</p>
                   </div>
@@ -122,6 +117,48 @@ export function SelectedProfilesAccordion({
                     </p>
                   </div>
                 </div>
+
+                {/* Inventory Details Section */}
+                {profile.inventory && (
+                  <div className="pt-3 border-t border-slate-200 dark:border-slate-700">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                      Inventory Details
+                    </p>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-1">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          Material Type
+                        </p>
+                        <p className="text-sm font-medium">{profile.inventory.material_type}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          Material Weight
+                        </p>
+                        <p className="text-sm font-medium">{profile.inventory.material_weight} kg</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          Dimensions
+                        </p>
+                        <p className="text-sm font-medium">{profile.inventory.outer_diameter} mm x {profile.inventory.length} mm</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          Rate
+                        </p>
+                        <p className="text-sm font-medium">₹{profile.inventory.rate}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          Total Cost
+                        </p>
+                        <p className="text-sm font-medium">₹{(profile.inventory.material_weight * profile.inventory.rate).toFixed(2)}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {profile.finish_size && (
                   <div className="pt-3 border-t border-slate-200 dark:border-slate-700 space-y-1">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
@@ -130,19 +167,17 @@ export function SelectedProfilesAccordion({
                     <p className="text-sm font-medium">{profile.finish_size}</p>
                   </div>
                 )}
+
+                {/* Additional Processes inline with grid */}
                 {profile.processes && profile.processes.length > 0 && (
-                  <div className="pt-3 border-t border-slate-200 dark:border-slate-700 space-y-2">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                      Processes
-                    </p>
-                    <div className="space-y-1">
+                  <div className="pt-3 border-t border-slate-200 dark:border-slate-700">
+                    <div className="grid grid-cols-3 gap-4">
                       {profile.processes.map((p, i) => (
-                        <div
-                          key={i}
-                          className="flex justify-between text-sm bg-white dark:bg-slate-900 rounded px-3 py-2"
-                        >
-                          <span>{p.name}</span>
-                          <span className="font-medium">₹{p.cost}</span>
+                        <div key={i} className="space-y-1">
+                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                            {p.name}
+                          </p>
+                          <p className="text-sm font-medium">₹{p.cost}</p>
                         </div>
                       ))}
                     </div>

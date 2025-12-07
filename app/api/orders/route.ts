@@ -1,5 +1,14 @@
 import { NextRequest } from 'next/server';
-import { Inventory, OrderInventory, OrderProfile, Orders, OrderSequence, Profiles, Buyer, User } from '@/db/models';
+import {
+  Inventory,
+  OrderInventory,
+  OrderProfile,
+  Orders,
+  OrderSequence,
+  Profiles,
+  Buyer,
+  User
+} from '@/db/models';
 import { CreateOrderFormSchema } from '@/schemas/create-order.schema';
 import { ORDER_STATUS } from '@/enums/orders.enum';
 import sequelize, { testConnection } from '@/db/connection';
@@ -32,11 +41,13 @@ export async function POST(request: NextRequest) {
     // Fetch all selected profiles with their inventory
     const profiles = await Profiles.findAll({
       where: { id: validatedData.profile_ids },
-      include: [{ 
-        model: Inventory, 
-        as: 'inventory',
-        required: false 
-      }],
+      include: [
+        {
+          model: Inventory,
+          as: 'inventory',
+          required: false
+        }
+      ],
       transaction
     });
 
@@ -48,10 +59,10 @@ export async function POST(request: NextRequest) {
     // Calculate order totals
     const totalOrderValue = profiles.reduce((total, profile) => {
       const profileTotal = Number(profile.total || 0);
-      return total + (profileTotal * validatedData.quantity);
+      return total + profileTotal * validatedData.quantity;
     }, 0);
 
-    const grandTotal = totalOrderValue + (totalOrderValue * validatedData.profit / 100);
+    const grandTotal = totalOrderValue + (totalOrderValue * validatedData.profit) / 100;
 
     // Create the order
     const order = await Orders.create(
@@ -70,7 +81,7 @@ export async function POST(request: NextRequest) {
     );
 
     // Prepare OrderProfile records for bulk creation
-    const orderProfilesData = profiles.map(profile => ({
+    const orderProfilesData = profiles.map((profile) => ({
       order_id: order.id,
       profile_id: profile.id,
       name: profile.name,
@@ -88,6 +99,8 @@ export async function POST(request: NextRequest) {
       processes: profile.processes,
       cyn_grinding: Number(profile.cyn_grinding),
       total: Number(profile.total),
+      group_by: profile.group_by || undefined,
+      burning_wastage_percentage: profile.burning_wastage_percentage || 0
     }));
 
     // BulkCreate OrderProfile records
@@ -95,8 +108,8 @@ export async function POST(request: NextRequest) {
 
     // Prepare OrderInventory records for profiles that have inventory
     const orderInventoryData = profiles
-      .filter(profile => profile.inventory_id)
-      .map(profile => {
+      .filter((profile) => profile.inventory_id)
+      .map((profile) => {
         const inventory = (profile as any).inventory; // Type assertion for associated data
         return {
           order_id: order.id,
@@ -198,26 +211,7 @@ export async function GET(request: NextRequest) {
         },
         {
           model: OrderProfile,
-          as: 'orderProfiles',
-          attributes: [
-            'id',
-            'profile_id',
-            'name',
-            'type',
-            'material',
-            'no_of_teeth',
-            'rate',
-            'face',
-            'module',
-            'finish_size',
-            'burning_weight',
-            'total_weight',
-            'ht_cost',
-            'ht_rate',
-            'processes',
-            'cyn_grinding',
-            'total',
-          ]
+          as: 'orderProfiles'
         }
       ],
       order: [['created_at', 'DESC']]

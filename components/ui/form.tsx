@@ -14,6 +14,7 @@ import {
 
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
+import { formatErrorMessage } from "@/lib/error-formatter"
 
 const Form = FormProvider
 
@@ -95,7 +96,7 @@ const FormLabel = React.forwardRef<
   return (
     <Label
       ref={ref}
-      className={cn(error && "text-destructive", className)}
+      className={cn(error && "text-red-600 dark:text-red-400", className)}
       htmlFor={formItemId}
       {...props}
     />
@@ -147,7 +148,8 @@ const FormMessage = React.forwardRef<
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, children, ...props }, ref) => {
   const { error, formMessageId } = useFormField()
-  const body = error ? String(error?.message ?? "") : children
+  const rawMessage = error ? String(error?.message ?? "") : children
+  const body = rawMessage ? formatErrorMessage(String(rawMessage)) : null
 
   if (!body) {
     return null
@@ -157,7 +159,7 @@ const FormMessage = React.forwardRef<
     <p
       ref={ref}
       id={formMessageId}
-      className={cn("text-[0.8rem] font-medium text-destructive", className)}
+      className={cn("text-[0.8rem] font-medium text-red-600 dark:text-red-400", className)}
       {...props}
     >
       {body}

@@ -125,11 +125,11 @@ export function ProfileDetailsDialog({
           >
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-muted-foreground">Burning Weight (kg)</p>
+                <p className="text-sm text-muted-foreground">Burning Weight (kg) </p>
                 <p className="text-base font-medium">{Number(profile.burning_weight).toFixed(2)}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Weight (kg)</p>
+                <p className="text-sm text-muted-foreground">Total Weight (kg) (Material + B.W)</p>
                 <p className="text-base font-medium">{Number(profile.total_weight).toFixed(2)}</p>
               </div>
             </div>

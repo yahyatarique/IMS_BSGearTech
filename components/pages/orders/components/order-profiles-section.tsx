@@ -6,7 +6,7 @@ import { OrderProfilesRecord } from '../../../../schemas/create-order.schema';
 
 interface OrderProfilesSectionProps {
   selectedProfiles: OrderProfilesRecord[];
-  onRemoveProfile: (profileId: string) => void;
+  onRemoveProfile?: (profileId: string) => void;
 }
 
 export const OrderProfilesSection = memo(
@@ -32,7 +32,7 @@ export const OrderProfilesSection = memo(
                 <span>{profile?.name}</span>
                 <button
                   type="button"
-                  onClick={() => onRemoveProfile(profile.id!)}
+                  onClick={() => onRemoveProfile?.(profile.id!)}
                   className="hover:bg-destructive/20 rounded-full text-red-700 dark:text-red-400 p-0.5 transition-colors"
                   aria-label={`Remove ${profile.name}`}
                 >

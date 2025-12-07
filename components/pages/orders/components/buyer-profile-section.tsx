@@ -18,7 +18,7 @@ interface BuyerProfileSectionProps {
   control: Control<CreateOrderFormInput>;
   buyers: BuyerRecord[];
   isLoading: boolean;
-  onProfilesLoad: (profiles: OrderProfilesRecord[]) => void;
+  onProfilesLoad?: (profiles: OrderProfilesRecord[]) => void;
 }
 
 export const BuyerProfileSection = memo(
