@@ -4,8 +4,7 @@ import { InventoryRecord } from '../services/types/inventory.api.type';
 
 export const OrderProfileSchema = CreateProfileSchema.extend({
   profile_id: z.uuid(),
-  created_at: z.union([z.date(), z.string()]).optional(),
-  updated_at: z.union([z.date(), z.string()]).optional()
+  group_by: z.string().max(100, 'Key is too long').optional().nullable()
 })
   .omit({
     inventory_id: true

@@ -62,7 +62,7 @@ export function BasicInformationSection({
             <FormItem>
               <FormLabel>Key</FormLabel>
               <FormControl>
-                <Input placeholder="HC-400 (optional)" {...field} />
+                <Input placeholder="HC-400 (optional)" {...field} value={field.value || ''} />
               </FormControl>
               <FormMessage />
             </FormItem>

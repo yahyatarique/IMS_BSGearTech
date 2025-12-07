@@ -10,7 +10,7 @@ import { OrdersCardGrid } from './components/orders-card-grid';
 import { FILTER_VALUES, ORDER_STATUS, ORDER_STATUS_LABELS } from '@/enums/orders.enum';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, ShoppingCart } from 'lucide-react';
+import { Plus, Search, ShoppingCart, Loader2 } from 'lucide-react';
 import { error as errorToast } from '@/hooks/use-toast';
 import { PageWrapper } from '@/components/ui/page-wrapper';
 import { GradientBorderCard } from '@/components/ui/gradient-border-card';
@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useRouter } from '@bprogress/next/app';
+import { useInfinitePagination } from '@/hooks/use-infinite-pagination';
 
 export default function OrdersPage() {
   const searchParams = useSearchParams();
@@ -29,12 +30,23 @@ export default function OrdersPage() {
   
   const [buyers, setBuyers] = useState<BuyerRecord[]>([]);
   const [selectedBuyerId, setSelectedBuyerId] = useState<string>(FILTER_VALUES.ALL_BUYERS);
-  const [orders, setOrders] = useState<OrderRecord[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [isBuyersLoading, setIsBuyersLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [deferredSearchQuery, setDeferredSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<ORDER_STATUS | FILTER_VALUES>(FILTER_VALUES.ALL_STATUS);
+
+  const {
+    items: orders,
+    isLoading,
+    isLoadingMore,
+    hasMore,
+    observerTarget,
+    reset
+  } = useInfinitePagination<OrderRecord, any>({
+    fetchFn: fetchOrders,
+    dataKey: 'orders',
+    limit: 10
+  });
 
   // Initialize buyer filter from query parameter
   useEffect(() => {
@@ -74,30 +86,13 @@ export default function OrdersPage() {
   }, [searchQuery]);
 
   useEffect(() => {
-    const loadOrders = async () => {
-      try {
-        setIsLoading(true);
-      const response = await fetchOrders({
-        page: 1,
-        limit: 10,
-        buyer_id: selectedBuyerId === FILTER_VALUES.ALL_BUYERS ? undefined : selectedBuyerId,
-        status: statusFilter === FILTER_VALUES.ALL_STATUS ? undefined : statusFilter as ORDER_STATUS,
-        search: deferredSearchQuery || undefined
-      });        if (response.success && response.data) {
-          setOrders(response.data.orders);
-        }
-      } catch (error: any) {
-        errorToast({
-          title: 'Error',
-          description: error.message || 'Failed to load orders'
-        });
-      } finally {
-        setIsLoading(false);
-      }
+    const params: any = {
+      buyer_id: selectedBuyerId === FILTER_VALUES.ALL_BUYERS ? undefined : selectedBuyerId,
+      status: statusFilter === FILTER_VALUES.ALL_STATUS ? undefined : statusFilter as ORDER_STATUS,
+      search: deferredSearchQuery || undefined
     };
-
-    loadOrders();
-  }, [selectedBuyerId, statusFilter, deferredSearchQuery]);
+    reset(params);
+  }, [selectedBuyerId, statusFilter, deferredSearchQuery, reset]);
 
   const navigateToCreateOrder = () => {
     router.push('/orders/create');
@@ -181,10 +176,24 @@ export default function OrdersPage() {
           ))}
         </div>
       ) : orders.length > 0 ? (
-        <OrdersCardGrid 
-          orders={orders} 
-          isLoading={false}
-        />
+        <>
+          <OrdersCardGrid 
+            orders={orders} 
+            isLoading={false}
+          />
+          
+          {/* Loading more indicator */}
+          {hasMore && (
+            <div ref={observerTarget} className="flex justify-center py-8">
+              {isLoadingMore && (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span>Loading more orders...</span>
+                </div>
+              )}
+            </div>
+          )}
+        </>
       ) : (
         <GradientBorderCard className="text-center">
           <div className="py-12 text-center">

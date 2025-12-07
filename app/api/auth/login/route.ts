@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     const userId = String(user.id);
     const role = user.role as UserType['role'];
 
-    // Access token (15 minutes)
+    // Access token (1 day)
     const accessToken = await new SignJWT({
       userId,
       role
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
       .setSubject(userId)
-      .setExpirationTime('1m')
+      .setExpirationTime('1d')
       .sign(secret);
 
     // Refresh token (20 days or 30 days if "remember me")

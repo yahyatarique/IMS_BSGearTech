@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { InventoryRecord } from '@/services/types/inventory.api.type';
 import {
   fetchInventory,
@@ -10,7 +10,7 @@ import {
 } from '@/services/inventory';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Package, Ruler, Eye, Weight, IndianRupee } from 'lucide-react';
+import { Plus, Search, Package, Ruler, Eye, Weight, IndianRupee, Loader2 } from 'lucide-react';
 import { error as errorToast, success as successToast } from '@/hooks/use-toast';
 import { Section } from '@/components/ui/section';
 import { GradientBorderCard } from '@/components/ui/gradient-border-card';
@@ -31,48 +31,40 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { INVENTORY_ITEMS_TYPES } from '../../../../utils/constants';
+import { useInfinitePagination } from '@/hooks/use-infinite-pagination';
 
 export function InventoryTab() {
-  const [inventoryItems, setInventoryItems] = useState<InventoryRecord[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedInventory, setSelectedInventory] = useState<InventoryRecord | null>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [editingInventory, setEditingInventory] = useState<InventoryRecord | null>(null);
   const [materialFilter, setMaterialFilter] = useState<'all' | 'CR-5' | 'EN-9'>('all');
-  // const [statsKey, setStatsKey] = useState(0);
 
-  // Fetch all inventory items
-  const loadInventoryItems = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetchInventory({
-        material_type: materialFilter,
-        limit: 100,
-        page: 1,
-        search: searchQuery
-      });
+  const {
+    items: inventoryItems,
+    isLoading,
+    isLoadingMore,
+    hasMore,
+    observerTarget,
+    reset
+  } = useInfinitePagination<InventoryRecord, any>({
+    fetchFn: fetchInventory,
+    dataKey: 'inventory',
+    limit: 5
+  });
 
-      if (response.success && response.data) {
-        setInventoryItems(response.data.inventory);
-      }
-    } catch (error: any) {
-      errorToast({
-        title: 'Error',
-        description: error.message || 'Failed to load inventory items'
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [materialFilter, searchQuery]);
-
+  // Reset on filter/search change
   useEffect(() => {
     const timeout = setTimeout(() => {
-      loadInventoryItems();
+      const params: any = {
+        material_type: materialFilter === 'all' ? undefined : materialFilter,
+        search: searchQuery || undefined
+      };
+      reset(params);
     }, 300);
     return () => clearTimeout(timeout);
-  }, [loadInventoryItems]);
+  }, [materialFilter, searchQuery, reset]);
 
   // Handle inventory item click
   const handleInventoryItemClick = (item: InventoryRecord) => {
@@ -97,7 +89,11 @@ export function InventoryTab() {
           description: 'Inventory item deleted successfully'
         });
         setIsDetailsDialogOpen(false);
-        loadInventoryItems();
+        const params: any = {
+          material_type: materialFilter === 'all' ? undefined : materialFilter,
+          search: searchQuery || undefined
+        };
+        await reset(params);
       }
     } catch (error: any) {
       errorToast({
@@ -135,8 +131,11 @@ export function InventoryTab() {
 
       setIsFormDialogOpen(false);
       setEditingInventory(null);
-      loadInventoryItems();
-      // setStatsKey((prev) => prev + 1);
+      const params: any = {
+        material_type: materialFilter === 'all' ? undefined : materialFilter,
+        search: searchQuery || undefined
+      };
+      await reset(params);
     } catch (error: any) {
       errorToast({
         title: 'Error',
@@ -293,6 +292,18 @@ export function InventoryTab() {
                 </div>
               </GradientBorderCard>
             ))}
+          </div>
+        )}
+
+        {/* Loading more indicator */}
+        {!isLoading && hasMore && (
+          <div ref={observerTarget} className="flex justify-center py-8">
+            {isLoadingMore && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Loading more profiles...</span>
+              </div>
+            )}
           </div>
         )}
       </Section>

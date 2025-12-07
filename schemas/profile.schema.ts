@@ -66,12 +66,11 @@ export const CreateProfileSchema = z.object({
     .max(99999999.99, 'Teeth cutting and grinding cost is too large')
     .optional(),
   inventory_id: z.uuid('Material is required'),
-  group_by: z.string().max(100, 'Key is too long').optional().nullable(),
+  group_by: z.string().max(100, 'Key is too long').optional(),
   burning_wastage_percentage: z
     .number()
     .max(100, 'Burning wastage percentage cannot exceed 100')
     .optional()
-    .nullable()
 });
 
 // Update profile schema (all fields optional)

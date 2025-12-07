@@ -6,14 +6,15 @@ import { CreateProfileInput, UpdateProfileInput } from '@/schemas/profile.schema
 import { fetchProfiles, createProfile, updateProfile, deleteProfile } from '@/services/profiles';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, IndianRupee, Eye, Layers, Calendar } from 'lucide-react';
+import { Plus, Search, IndianRupee, Eye, Layers, Calendar, Loader2 } from 'lucide-react';
 import { success, error as errorToast } from '@/hooks/use-toast';
+import { useInfinitePagination } from '@/hooks/use-infinite-pagination';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select';
 import { GradientBorderCard } from '@/components/ui/gradient-border-card';
 import { Badge } from '@/components/ui/badge';
@@ -25,48 +26,38 @@ import { Section } from '@/components/ui/section';
 import { formatDate } from '../../../../lib/utils';
 
 export function ProfilesTab() {
-  const [profiles, setProfiles] = useState<ProfileRecord[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<ProfileRecord | null>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
 
-  // Fetch profiles
-  const loadProfiles = async () => {
-    try {
-      setIsLoading(true);
+  const {
+    items: profiles,
+    isLoading,
+    isLoadingMore,
+    hasMore,
+    observerTarget,
+    reset
+  } = useInfinitePagination<ProfileRecord, any>({
+    fetchFn: fetchProfiles,
+    dataKey: 'profiles',
+    limit: 10
+  });
+
+  // Reset on filter/search change
+  useEffect(() => {
+    const timeout = setTimeout(() => {
       const params: any = {
-        page: 1,
-        limit: 100,
         search: searchQuery || undefined
       };
       if (typeFilter !== 'all') {
         params.type = typeFilter;
       }
-      const response = await fetchProfiles(params);
-
-      if (response.success && response.data) {
-        setProfiles(response.data.profiles);
-      }
-    } catch (error: any) {
-      errorToast({
-        title: 'Error',
-        description: error.message || 'Failed to load profiles'
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      loadProfiles();
+      reset(params);
     }, 300);
     return () => clearTimeout(timeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [typeFilter, searchQuery]);
+  }, [typeFilter, searchQuery, reset]);
 
   // Handle card click
   const handleCardClick = (profile: ProfileRecord) => {
@@ -84,7 +75,9 @@ export function ProfilesTab() {
         await createProfile(data as CreateProfileInput);
         success({ title: 'Success', description: 'Profile created successfully' });
       }
-      await loadProfiles();
+      const params: any = { search: searchQuery || undefined };
+      if (typeFilter !== 'all') params.type = typeFilter;
+      await reset(params);
       setIsDialogOpen(false);
       setSelectedProfile(null);
     } catch (error: any) {
@@ -97,7 +90,9 @@ export function ProfilesTab() {
     try {
       await deleteProfile(id);
       success({ title: 'Success', description: 'Profile deleted successfully' });
-      await loadProfiles();
+      const params: any = { search: searchQuery || undefined };
+      if (typeFilter !== 'all') params.type = typeFilter;
+      await reset(params);
       setIsDetailsDialogOpen(false);
       setSelectedProfile(null);
     } catch (error: any) {
@@ -230,7 +225,7 @@ export function ProfilesTab() {
                         Created
                       </span>
                       <span className="text-gray-600 dark:text-gray-300">
-                        {formatDate(new Date(profile.created_at))}
+                        {formatDate(profile!.created_at)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
@@ -239,7 +234,7 @@ export function ProfilesTab() {
                         Updated
                       </span>
                       <span className="text-gray-600 dark:text-gray-300">
-                        {formatDate(new Date(profile.updated_at))}
+                        {formatDate(profile.updated_at)}
                       </span>
                     </div>
                   </div>
@@ -247,15 +242,27 @@ export function ProfilesTab() {
 
                 {/* View Details - Bottom Right */}
                 <div className="flex justify-end pt-2 border-t border-gray-200 dark:border-gray-700">
-                  <Button className='group' variant={'ghost'}>
-                  <span className="text-xs text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
-                    <Eye className="h-3.5 w-3.5" />
-                    View Details
-                  </span>
-                </Button>
+                  <Button className="group" variant={'ghost'}>
+                    <span className="text-xs text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
+                      <Eye className="h-3.5 w-3.5" />
+                      View Details
+                    </span>
+                  </Button>
                 </div>
               </GradientBorderCard>
             ))}
+          </div>
+        )}
+
+        {/* Loading more indicator */}
+        {!isLoading && hasMore && (
+          <div ref={observerTarget} className="flex justify-center py-8">
+            {isLoadingMore && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Loading more profiles...</span>
+              </div>
+            )}
           </div>
         )}
       </Section>

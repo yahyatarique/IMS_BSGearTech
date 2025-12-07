@@ -171,7 +171,7 @@ export function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProp
     <div className="space-y-6">
       {/* Header Section */}
       <div className="flex items-start justify-between pb-4 border-b">
-        <div className="p-6 rounded-lg bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+        <div className="p-6 rounded-lg bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800  border border-green-200 dark:border-green-800">
           <h3 className="text-xl font-bold text-green-700 dark:text-green-300">
             {order.order_number}
           </h3>
@@ -221,7 +221,7 @@ export function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProp
           <div className="flex items-center gap-3">
             {canEdit && (
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={handleEdit} className="gap-2">
+                <Button variant="secondary" size="sm" onClick={handleEdit} className="gap-2">
                   <Edit className="w-4 h-4" />
                   Edit
                 </Button>
@@ -318,8 +318,8 @@ export function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProp
           Financial Details
         </h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
-            <p className="text-xs font-medium text-green-600 dark:text-green-400 uppercase tracking-wide">
+          <div className="bg-green-50 dark:bg-green-900/20 p-4  border border-green-200 dark:border-green-800 rounded-lg">
+            <p className="text-xs font-medium text-green-600 dark:text-green-400 uppercase tracking-wide ">
               Total Order Value
             </p>
             <p className="text-lg font-semibold text-green-700 dark:text-green-300 mt-1">
@@ -329,9 +329,9 @@ export function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProp
               })}
             </p>
           </div>
-          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 border border-blue-200 dark:border-blue-800 rounded-lg">
             <p className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">
-              Grand Total
+              Grand Total (Total + Profit Margin)
             </p>
             <p className="text-lg font-semibold text-blue-700 dark:text-blue-300 mt-1">
               ₹{Number(order.grand_total).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
@@ -378,7 +378,7 @@ export function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProp
             <Package className="w-4 h-4" />
             Profiles ({order.orderProfiles.length})
           </h4>
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fit,_minmax(500px,_2fr))] gap-6">
             {order.orderProfiles.map((profile, index) => {
               // Calculate TC+TG cost for each profile
               const tcTgCost = calculateTeethCost(
@@ -391,7 +391,7 @@ export function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProp
               return (
                 <div
                   key={profile.id}
-                  className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700"
+                  className="bg-slate-50 dark:bg-slate-800 p-4 w-full h-full rounded-lg border border-slate-200 dark:border-slate-700"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div>

@@ -2,7 +2,7 @@ import { OrderProfilesRecord } from '@/schemas/create-order.schema';
 import { BaseResponse } from './base.api.type';
 
 // Profile record structure matching DB model
-export type ProfileRecord = OrderProfilesRecord & {inventory_id?: string};
+export type ProfileRecord = OrderProfilesRecord & {inventory_id?: string, updated_at: string; created_at: string;};
 
 
 // Profile list metadata structure

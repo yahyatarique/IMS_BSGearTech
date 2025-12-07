@@ -1,4 +1,4 @@
-import { BaseResponse } from './base.api.type';
+import { BasePaginatedResponse, BaseResponse } from './base.api.type';
 import { ContactDetails } from '@/schemas/buyer.schema';
 
 // Buyer record structure matching DB model
@@ -27,9 +27,8 @@ export type BuyersListMeta = {
 };
 
 // API Response Types
-export type GetBuyersResponse = BaseResponse<{
+export type GetBuyersResponse = BasePaginatedResponse<{
   buyers: BuyerRecord[];
-  meta: BuyersListMeta;
 }>;
 
 export type GetBuyerResponse = BaseResponse<BuyerRecord>;
