@@ -1,10 +1,11 @@
 import { Badge } from '@/components/ui/badge';
 import { GradientBorderCard } from '@/components/ui/gradient-border-card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { OrderRecord } from '@/services/types/orders.api.type';
-import { ShoppingCart, User, Building2, Calendar,  Edit, Trash2 } from 'lucide-react';
+import { ShoppingCart, User, Building2, Calendar, Eye } from 'lucide-react';
+import { useRouter } from '@bprogress/next/app';
+import { Button } from '../../../ui/button';
 
 const statusClasses: Record<OrderRecord['status'], string> = {
   '0': 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-500 border-yellow-500/20',
@@ -21,9 +22,6 @@ const statusLabels: Record<OrderRecord['status'], string> = {
 interface OrdersCardGridProps {
   orders: OrderRecord[];
   isLoading: boolean;
-  onCardClick: (order: OrderRecord) => void;
-  onEdit: (orderId: string) => void;
-  onDelete: (orderId: string) => void;
 }
 
 function CardSkeleton() {
@@ -46,18 +44,11 @@ function CardSkeleton() {
   );
 }
 
-export function OrdersCardGrid({ orders, isLoading, onCardClick, onEdit, onDelete }: OrdersCardGridProps) {
-  const handleGridClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    if ((event.target as HTMLElement).closest('button')) return;
-    
-    const cardElement = (event.target as HTMLElement).closest('[data-order-id]');
-    if (!cardElement) return;
+export function OrdersCardGrid({ orders, isLoading }: OrdersCardGridProps) {
+  const router = useRouter();
 
-    const orderId = cardElement.getAttribute('data-order-id');
-    const order = orders.find((o) => o.id === orderId);
-    if (order) {
-      onCardClick(order);
-    }
+  const handleViewDetails = (orderId: string) => {
+    router.push(`/orders/details/${orderId}`);
   };
 
   if (isLoading && orders.length === 0) {
@@ -88,16 +79,9 @@ export function OrdersCardGrid({ orders, isLoading, onCardClick, onEdit, onDelet
 
   return (
     <div className="space-y-6">
-      <div
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6"
-        onClick={handleGridClick}
-      >
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
         {orders.map((order) => (
-          <GradientBorderCard
-            key={order.id}
-            data-order-id={order.id}
-            className="cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02]"
-          >
+          <GradientBorderCard key={order.id} data-order-id={order.id}>
             <div className="space-y-4 p-6">
               {/* Header */}
               <div className="flex items-start justify-between">
@@ -145,13 +129,19 @@ export function OrdersCardGrid({ orders, isLoading, onCardClick, onEdit, onDelet
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-slate-500 dark:text-slate-400">Grand Total:</span>
                     <span className="font-semibold text-slate-900 dark:text-white">
-                      ₹{Number(order.grand_total).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      ₹
+                      {Number(order.grand_total).toLocaleString('en-IN', {
+                        minimumFractionDigits: 2
+                      })}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-slate-500 dark:text-slate-400">Total Value:</span>
                     <span className="font-semibold text-slate-900 dark:text-white">
-                      ₹{Number(order.total_order_value).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      ₹
+                      {Number(order.total_order_value).toLocaleString('en-IN', {
+                        minimumFractionDigits: 2
+                      })}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
@@ -164,28 +154,12 @@ export function OrdersCardGrid({ orders, isLoading, onCardClick, onEdit, onDelet
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-2 pt-4 border-t border-slate-200 dark:border-slate-700">
-                <Button
-                  variant="outline"
-                  className="flex-1 py-3 text-base font-medium"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(order.id);
-                  }}
-                >
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit
-                </Button>
-                <Button
-                  variant="destructive"
-                  className="flex-1 py-3 text-base font-medium"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(order.id);
-                  }}
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete
+              <div className="flex justify-end pt-2 border-t border-gray-200 dark:border-gray-700">
+                <Button className='group' onClick={handleViewDetails.bind(null, order.id)} variant={'ghost'}>
+                  <span className="text-xs text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
+                    <Eye className="h-3.5 w-3.5" />
+                    View Details
+                  </span>
                 </Button>
               </div>
             </div>

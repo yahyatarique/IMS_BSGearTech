@@ -1,9 +1,10 @@
 import { NextRequest } from 'next/server';
 import { testConnection } from '@/db/connection';
-import { Buyer, Orders, Inventory } from '@/db/models';
+import { Buyer, Orders, OrderProfile } from '@/db/models';
 import { errorResponse, sendResponse } from '@/utils/api-response';
 import { Op } from 'sequelize';
 import { DashboardStatsQuerySchema } from '@/schemas/dashboard.schema';
+import sequelize from 'sequelize';
 
 export async function GET(request: NextRequest) {
   try {
@@ -77,28 +78,58 @@ export async function GET(request: NextRequest) {
       ? (currentMonthBuyers > 0 ? 100 : 0)
       : ((currentMonthBuyers - previousMonthBuyers) / previousMonthBuyers) * 100;
 
-    // Total Products (calculated from inventory)
-    const [totalProducts, currentMonthProducts, previousMonthProducts] = await Promise.all([
-      Inventory.count(),
-      Inventory.count({
-        where: {
-          created_at: {
-            [Op.gte]: currentMonthStart
-          }
-        }
+    // Total Burning Wastage (from completed orders only)
+    // Calculate sum of burning_weight from all order profiles in completed orders
+    const [totalBurningWastageResult, currentMonthBurningResult, previousMonthBurningResult] = await Promise.all([
+      OrderProfile.findOne({
+        attributes: [[sequelize.fn('SUM', sequelize.col('burning_weight')), 'total']],
+        include: [{
+          model: Orders,
+          as: 'order',
+          where: { status: '2' }, // Only completed orders
+          attributes: []
+        }],
+        raw: true
       }),
-      Inventory.count({
-        where: {
-          created_at: {
-            [Op.between]: [previousMonthStart, previousMonthEnd]
-          }
-        }
+      OrderProfile.findOne({
+        attributes: [[sequelize.fn('SUM', sequelize.col('burning_weight')), 'total']],
+        include: [{
+          model: Orders,
+          as: 'order',
+          where: {
+            status: '2',
+            created_at: {
+              [Op.gte]: currentMonthStart
+            }
+          },
+          attributes: []
+        }],
+        raw: true
+      }),
+      OrderProfile.findOne({
+        attributes: [[sequelize.fn('SUM', sequelize.col('burning_weight')), 'total']],
+        include: [{
+          model: Orders,
+          as: 'order',
+          where: {
+            status: '2',
+            created_at: {
+              [Op.between]: [previousMonthStart, previousMonthEnd]
+            }
+          },
+          attributes: []
+        }],
+        raw: true
       })
     ]);
 
-    const productsPercentageChange = previousMonthProducts === 0
-      ? (currentMonthProducts > 0 ? 100 : 0)
-      : ((currentMonthProducts - previousMonthProducts) / previousMonthProducts) * 100;
+    const totalBurningWastage = Number((totalBurningWastageResult as any)?.total || 0);
+    const currentMonthBurningWastage = Number((currentMonthBurningResult as any)?.total || 0);
+    const previousMonthBurningWastage = Number((previousMonthBurningResult as any)?.total || 0);
+
+    const burningWastagePercentageChange = previousMonthBurningWastage === 0
+      ? (currentMonthBurningWastage > 0 ? 100 : 0)
+      : ((currentMonthBurningWastage - previousMonthBurningWastage) / previousMonthBurningWastage) * 100;
 
     const stats = {
       orders: {
@@ -115,12 +146,12 @@ export async function GET(request: NextRequest) {
         currentMonth: currentMonthBuyers,
         previousMonth: previousMonthBuyers
       },
-      products: {
-        total: totalProducts,
-        percentageChange: parseFloat(productsPercentageChange.toFixed(1)),
-        isPositive: productsPercentageChange >= 0,
-        currentMonth: currentMonthProducts,
-        previousMonth: previousMonthProducts
+      burningWastage: {
+        total: parseFloat(totalBurningWastage.toFixed(2)),
+        percentageChange: parseFloat(burningWastagePercentageChange.toFixed(1)),
+        isPositive: burningWastagePercentageChange >= 0,
+        currentMonth: parseFloat(currentMonthBurningWastage.toFixed(2)),
+        previousMonth: parseFloat(previousMonthBurningWastage.toFixed(2))
       }
     };
 

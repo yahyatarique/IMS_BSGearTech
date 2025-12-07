@@ -11,7 +11,7 @@ export type DashboardStatSummary = {
 export type DashboardStatsData = {
   orders: DashboardStatSummary;
   buyers: DashboardStatSummary;
-  products: DashboardStatSummary;
+  burningWastage: DashboardStatSummary;
 };
 
 export type DashboardRecentOrderBuyer = {

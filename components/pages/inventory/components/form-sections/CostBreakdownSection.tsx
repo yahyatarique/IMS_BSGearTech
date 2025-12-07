@@ -20,7 +20,7 @@ export function CostBreakdownSection({ control, setValue, selectedInventory }: C
   const burningWeight = useWatch({ control, name: 'burning_weight' });
   const totalWeight = useWatch({ control, name: 'total_weight' });
   const htRate = useWatch({ control, name: 'ht_rate' });
-  const teeths = useWatch({ control, name: 'no_of_teeth' });
+  const teeth = useWatch({ control, name: 'no_of_teeth' });
   const modules = useWatch({ control, name: 'module' });
   const faces = useWatch({ control, name: 'face' });
   const teethRate = useWatch({ control, name: 'rate' });
@@ -52,13 +52,13 @@ export function CostBreakdownSection({ control, setValue, selectedInventory }: C
 
   useEffect(() => {
     const tcTgCost = calculateTeethCost(
-      Number(teeths) || 0,
+      Number(teeth) || 0,
       Number(modules) || 0,
       Number(faces) || 0,
       Number(teethRate) || 0
     );
     setValue('tcTGCost', Number(tcTgCost));
-  }, [teeths, modules, faces, teethRate, setValue]);
+  }, [teeth, modules, faces, teethRate, setValue]);
 
   return (
     <Section title="Cost Breakdown" variant="default" className="p-4 bg-slate-100 shadow-none">

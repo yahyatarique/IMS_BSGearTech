@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState, } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AxiosError } from 'axios';
 import { useToast } from '@/hooks/use-toast';
@@ -13,8 +13,10 @@ import { UserDetailsDialog } from '@/components/pages/users/components/user-deta
 // import { UserFormDialog } from '@/components/pages/users/components/user-form-dialog';
 import { PageWrapper } from '@/components/ui/page-wrapper';
 // import { Button } from '@/components/ui/button';
-import {  UserCircle } from 'lucide-react';
+import { UserCircle } from 'lucide-react';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import { UserFormDialog } from './components/user-form-dialog';
+import { AdminWrapper } from '@/components/wrappers';
 
 const USERS_PAGE_SIZE = 10;
 
@@ -270,9 +272,9 @@ export default function UsersPage() {
           }
         };
       });
-      
+
       setUserToDelete(null);
-      
+
       toast({
         title: 'User deleted',
         description: 'The user account has been removed.',
@@ -345,26 +347,31 @@ export default function UsersPage() {
       title="User Management"
       subtitle="Manage system users and their permissions"
       icon={UserCircle}
-      // headerActions={
-      //   <>
-      //     <Button
-      //       variant="outline"
-      //       className="gap-2"
-      //       onClick={handleRefresh}
-      //       disabled={isRefreshing}
-      //     >
-      //       <RefreshCw className="h-4 w-4" />
-      //       {isRefreshing ? 'Refreshing' : 'Refresh'}
-      //     </Button>
-      //     {/* <UserFormDialog onSuccess={() => loadUsers({ page: 1, silent: true })} /> */}
-      //   </>
-      // }
+      headerActions={
+        <>
+          <AdminWrapper allowSuperAdminOnly={true}>
+            <UserFormDialog onSuccess={() => loadUsers({ page: 1, silent: true })} />
+          </AdminWrapper>
+
+          {/* <Button
+            variant="outline"
+            className="gap-2"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className="h-4 w-4" />
+            {isRefreshing ? 'Refreshing' : 'Refresh'}
+          </Button> */}
+        </>
+      }
     >
       <div className="space-y-8">
         <section className="rounded-xl bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-100 dark:from-slate-900 dark:to-slate-800 p-6 shadow-lg">
           <div className="mb-6">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Overview</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Quick statistics about your users</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Quick statistics about your users
+            </p>
           </div>
           <UsersStats
             total={stats.total}
@@ -377,7 +384,9 @@ export default function UsersPage() {
         <section className="rounded-xl bg-white dark:bg-slate-900 p-6 shadow-lg">
           <div className="mb-6">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">All Users</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Browse and manage user accounts</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Browse and manage user accounts
+            </p>
           </div>
           <UsersCardGrid
             users={users}

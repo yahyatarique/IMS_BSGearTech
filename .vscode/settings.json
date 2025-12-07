@@ -1,3 +1,8 @@
 {
-    "gitConfigUser.selectedProfile": "Personal"
+    "gitConfigUser.selectedProfile": "Personal",
+    "typescript.tsdk": "node_modules\\typescript\\lib",
+    "cSpell.words": [
+        "bprogress",
+        "BSGPL"
+    ]
 }

@@ -112,7 +112,7 @@ export function ProfileMultiSelect({ value, onChange, onProfilesLoad, profiles: 
               <div className={cn('w-4 h-4 border rounded flex items-center justify-center', value.includes(profile.id!) && 'bg-primary border-primary')}>
                 {value.includes(profile.id!) && <Check className="w-3 h-3 text-white" />}
               </div>
-              <span className="text-sm">{profile.name}</span>
+              <span className="text-sm">{profile.name} {profile.group_by ? `(${profile.group_by})` : ''}</span>
             </div>
           ))}
           {hasMore && <div ref={observerTarget} className="h-8 flex items-center justify-center text-sm text-muted-foreground">{loading ? 'Loading...' : ''}</div>}

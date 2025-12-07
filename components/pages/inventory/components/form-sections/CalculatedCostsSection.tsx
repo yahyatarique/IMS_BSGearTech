@@ -5,7 +5,7 @@ import { useEffect, useTransition } from 'react';
 import { CreateProfileInput } from '@/schemas/profile.schema';
 import { InventoryRecord } from '@/services/types/inventory.api.type';
 import { Section } from '@/components/ui/section';
-import { caclculateProfileTotal, calculateMaterialCost } from '@/utils/calculationHelper';
+import { calculateProfileTotal, calculateMaterialCost } from '@/utils/calculationHelper';
 
 interface CalculatedCostsSectionProps {
   control: Control<CreateProfileInput & { inventory_id?: string }>;
@@ -25,10 +25,11 @@ export function CalculatedCostsSection({
   const cyn_grinding = useWatch({ control, name: 'cyn_grinding' });
   const total = useWatch({ control, name: 'total' });
   const processes = useWatch({ control, name: 'processes' });
+  const burning_weight = useWatch({ control, name: 'burning_weight' });
 
   useEffect(() => {
     const totalMaterialCost = calculateMaterialCost(totalWeight, selectedInventory?.rate || 0);
-    const totalCost = caclculateProfileTotal(
+    const totalCost = calculateProfileTotal(
       totalMaterialCost,
       tcTgCost,
       htCost,
@@ -52,7 +53,7 @@ export function CalculatedCostsSection({
         <div>
           <p className="text-sm font-medium mb-2">Burning Weight (kg)</p>
           <p className="text-base font-semibold">
-            {Number(useWatch({ control, name: 'burning_weight' })).toFixed(2)}
+            {Number(burning_weight).toFixed(2)}
           </p>
         </div>
 

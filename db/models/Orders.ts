@@ -8,6 +8,7 @@ interface OrdersAttributes {
   order_name?: string;
   quantity: number;
   created_at: Date;
+  updated_at: Date;
   buyer_id?: string;
   status: '0' | '1' | '2';
   grand_total: number;
@@ -23,6 +24,7 @@ interface OrdersCreationAttributes
     OrdersAttributes,
     | 'id'
     | 'created_at'
+    | 'updated_at'
     | 'status'
     | 'grand_total'
     | 'total_order_value'
@@ -37,6 +39,7 @@ class Orders extends Model<OrdersAttributes, OrdersCreationAttributes> implement
   declare order_name?: string;
   declare quantity: number;
   declare readonly created_at: Date;
+  declare readonly updated_at: Date;
   declare buyer_id?: string;
   declare status: '0' | '1' | '2';
   declare grand_total: number;
@@ -104,6 +107,11 @@ Orders.init(
       allowNull: false,
       defaultValue: DataTypes.NOW
     },
+    updated_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW
+    },
     buyer_id: {
       type: DataTypes.UUID,
       allowNull: true,
@@ -150,7 +158,9 @@ Orders.init(
     sequelize,
     tableName: 'orders',
     modelName: 'Orders',
-    timestamps: false
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
   }
 );
 

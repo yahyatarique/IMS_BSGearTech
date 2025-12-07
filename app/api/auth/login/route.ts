@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
       .setSubject(userId)
-      .setExpirationTime('2m')
+      .setExpirationTime('1d')
       .sign(secret);
 
     // Refresh token (20 days or 30 days if "remember me")

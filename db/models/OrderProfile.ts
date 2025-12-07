@@ -20,6 +20,7 @@ interface OrderProfileAttributes {
   processes?: any;
   cyn_grinding: number;
   total: number;
+  group_by?: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -45,6 +46,7 @@ class OrderProfile extends Model<OrderProfileAttributes, OrderProfileCreationAtt
   declare processes?: any;
   declare cyn_grinding: number;
   declare total: number;
+  declare group_by?: string;
   declare readonly created_at: Date;
   declare readonly updated_at: Date;
 
@@ -163,6 +165,10 @@ OrderProfile.init(
       type: DataTypes.DECIMAL(14, 2),
       allowNull: false,
       defaultValue: 0,
+    },
+    group_by: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
     },
 
     created_at: {
