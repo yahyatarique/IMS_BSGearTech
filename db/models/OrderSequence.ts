@@ -4,13 +4,15 @@ import sequelize from '../connection';
 interface OrderSequenceAttributes {
   id: number;
   current_number: number;
+  created_at: Date;
   updated_at: Date;
 }
 
 class OrderSequence extends Model<OrderSequenceAttributes> implements OrderSequenceAttributes {
   declare id: number;
   declare current_number: number;
-  declare updated_at: Date;
+  declare readonly created_at: Date;
+  declare readonly updated_at: Date;
 
   static async getNextNumber(): Promise<string> {
     const sequence = await OrderSequence.findOne({ where: { id: 1 } });
@@ -18,22 +20,16 @@ class OrderSequence extends Model<OrderSequenceAttributes> implements OrderSeque
 
     if(!sequence) {
       
-    const now = new Date();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const year = now.getFullYear();
     const paddedNumber = String(1).padStart(4, '0');
 
-    return `BSGPL/${month}/${year}/${paddedNumber}`;
+    return `BSGPL-${paddedNumber}`;
     }
 
     const nextNumber = (sequence?.current_number || 0) + 1;
 
-    const now = new Date();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const year = now.getFullYear();
     const paddedNumber = String(nextNumber).padStart(4, '0');
 
-    return `BSGPL/${month}/${year}/${paddedNumber}`;
+    return `BSGPL-${paddedNumber}`;
   }
 
   static async incrementNumber(): Promise<void> {
@@ -56,6 +52,11 @@ OrderSequence.init(
       allowNull: false,
       defaultValue: 0
     },
+    created_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW
+    },
     updated_at: {
       type: DataTypes.DATE,
       allowNull: false,
@@ -66,7 +67,9 @@ OrderSequence.init(
     sequelize,
     tableName: 'order_sequence',
     modelName: 'OrderSequence',
-    timestamps: false
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
   }
 );
 

@@ -18,7 +18,19 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { InventoryDetailsDialog } from './inventory-details-dialog';
 import { InventoryFormDialog } from './inventory-form-dialog';
-import { CreateInventoryInput, UpdateInventoryInput } from '@/schemas/inventory.schema';
+import {
+  CreateInventoryInput,
+  MaterialType,
+  UpdateInventoryInput
+} from '@/schemas/inventory.schema';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import { INVENTORY_ITEMS_TYPES } from '../../../../utils/constants';
 
 export function InventoryTab() {
   const [inventoryItems, setInventoryItems] = useState<InventoryRecord[]>([]);
@@ -140,29 +152,6 @@ export function InventoryTab() {
       {/* Filters and Search */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div className="flex flex-1 items-center gap-4">
-          <div className="flex gap-2">
-            <Button
-              variant={materialFilter === 'all' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setMaterialFilter('all')}
-            >
-              All
-            </Button>
-            <Button
-              variant={materialFilter === 'CR-5' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setMaterialFilter('CR-5')}
-            >
-              CR-5
-            </Button>
-            <Button
-              variant={materialFilter === 'EN-9' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setMaterialFilter('EN-9')}
-            >
-              EN-9
-            </Button>
-          </div>
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -171,6 +160,23 @@ export function InventoryTab() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
             />
+          </div>
+          <div>
+            <Select
+              value={materialFilter}
+              onValueChange={(value: MaterialType) => setMaterialFilter(value)}
+            >
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Filter by type" />
+              </SelectTrigger>
+              <SelectContent>
+                {INVENTORY_ITEMS_TYPES.map((type) => (
+                  <SelectItem key={type.value} value={type.value}>
+                    {type.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
         <Button
@@ -278,10 +284,12 @@ export function InventoryTab() {
 
                 {/* View Details - Bottom Right */}
                 <div className="flex justify-end pt-2 border-t border-gray-200 dark:border-gray-700">
-                  <span className="text-xs text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
-                    <Eye className="h-3.5 w-3.5" />
-                    View Details
-                  </span>
+                  <Button className="group" variant={'ghost'}>
+                    <span className="text-xs text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
+                      <Eye className="h-3.5 w-3.5" />
+                      View Details
+                    </span>
+                  </Button>
                 </div>
               </GradientBorderCard>
             ))}

@@ -5,7 +5,7 @@ export enum ORDER_STATUS {
 }
 
 export const ORDER_STATUS_LABELS: Record<ORDER_STATUS, string> = {
-  [ORDER_STATUS.PENDING]: 'Pending',
+  [ORDER_STATUS.PENDING]: 'Quotation',
   [ORDER_STATUS.PROCESSING]: 'Processing',
   [ORDER_STATUS.COMPLETED]: 'Completed'
 };

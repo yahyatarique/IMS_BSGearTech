@@ -1,18 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { OrderRecord } from '@/services/types/orders.api.type';
 import { BuyerRecord } from '@/services/types/buyer.api.type';
 import { fetchOrders } from '@/services/orders';
 import { fetchBuyers } from '@/services/buyers';
 import { OrdersCardGrid } from './components/orders-card-grid';
-import { OrderDetailsDialog } from './components/order-details-dialog';
 import { FILTER_VALUES, ORDER_STATUS, ORDER_STATUS_LABELS } from '@/enums/orders.enum';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Search, ShoppingCart } from 'lucide-react';
-import { error as errorToast, success as successToast } from '@/hooks/use-toast';
-import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import { error as errorToast } from '@/hooks/use-toast';
 import { PageWrapper } from '@/components/ui/page-wrapper';
 import { GradientBorderCard } from '@/components/ui/gradient-border-card';
 import {
@@ -25,19 +24,25 @@ import {
 import { useRouter } from '@bprogress/next/app';
 
 export default function OrdersPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  
   const [buyers, setBuyers] = useState<BuyerRecord[]>([]);
   const [selectedBuyerId, setSelectedBuyerId] = useState<string>(FILTER_VALUES.ALL_BUYERS);
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isBuyersLoading, setIsBuyersLoading] = useState(true);
-  const [selectedOrder, setSelectedOrder] = useState<OrderRecord | null>(null);
-  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [deferredSearchQuery, setDeferredSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<ORDER_STATUS | FILTER_VALUES>(FILTER_VALUES.ALL_STATUS);
-  const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null);
 
-  const router = useRouter();
+  // Initialize buyer filter from query parameter
+  useEffect(() => {
+    const buyerIdFromUrl = searchParams.get('buyer_id');
+    if (buyerIdFromUrl) {
+      setSelectedBuyerId(buyerIdFromUrl);
+    }
+  }, [searchParams]);
 
   const loadBuyers = async () => {
     try {
@@ -94,61 +99,8 @@ export default function OrdersPage() {
     loadOrders();
   }, [selectedBuyerId, statusFilter, deferredSearchQuery]);
 
-  const handleCardClick = (order: OrderRecord) => {
-    setSelectedOrder(order);
-    setIsDetailsDialogOpen(true);
-  };
-
   const navigateToCreateOrder = () => {
     router.push('/orders/create');
-  };
-
-  const handleEdit = (orderId: string) => {
-    router.push(`/orders/${orderId}`);
-  };
-
-  const handleDeleteClick = (orderId: string) => {
-    setDeleteOrderId(orderId);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!deleteOrderId) return;
-
-    try {
-      const response = await fetch(`/api/orders/${deleteOrderId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete order');
-      }
-
-      successToast({
-        title: 'Success',
-        description: 'Order deleted successfully'
-      });
-
-      setOrders(orders.filter(order => order.id !== deleteOrderId));
-    } catch (error: any) {
-      errorToast({
-        title: 'Error',
-        description: error.message || 'Failed to delete order'
-      });
-    }
-  };
-
-  const handleStatusUpdate = (orderId: string, newStatus: '0' | '1' | '2') => {
-    // Update the order in the local state
-    setOrders(prevOrders =>
-      prevOrders.map(order =>
-        order.id === orderId ? { ...order, status: newStatus as ORDER_STATUS } : order
-      )
-    );
-
-    // Update the selected order if it's the one being updated
-    if (selectedOrder && selectedOrder.id === orderId) {
-      setSelectedOrder(prev => prev ? { ...prev, status: newStatus as ORDER_STATUS } : null);
-    }
   };
 
   return (
@@ -231,10 +183,7 @@ export default function OrdersPage() {
       ) : orders.length > 0 ? (
         <OrdersCardGrid 
           orders={orders} 
-          isLoading={false} 
-          onCardClick={handleCardClick}
-          onEdit={handleEdit}
-          onDelete={handleDeleteClick}
+          isLoading={false}
         />
       ) : (
         <GradientBorderCard className="text-center">
@@ -251,28 +200,6 @@ export default function OrdersPage() {
           </div>
         </GradientBorderCard>
       )}
-
-      {/* Details Dialog */}
-      <OrderDetailsDialog
-        order={selectedOrder}
-        open={isDetailsDialogOpen}
-        onClose={() => {
-          setIsDetailsDialogOpen(false);
-          setSelectedOrder(null);
-        }}
-        onStatusUpdate={handleStatusUpdate}
-      />
-
-      {/* Delete Confirmation Dialog */}
-      <ConfirmationDialog
-        open={!!deleteOrderId}
-        onOpenChange={() => setDeleteOrderId(null)}
-        title="Delete Order"
-        description="Are you sure you want to delete this order? This action cannot be undone."
-        confirmLabel="Delete"
-        onConfirm={handleDeleteConfirm}
-        variant="destructive"
-      />
     </PageWrapper>
   );
 }

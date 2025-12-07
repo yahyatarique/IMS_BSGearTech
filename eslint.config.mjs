@@ -6,7 +6,8 @@ const eslintConfig = defineConfig([
   {
     rules: {
       '@typescript-eslint/no-unused-vars': 'error',
-      'no-unused-vars': 'error'
+      'no-unused-vars': 'error',
+      "react/jsx-key": "error",
     }
   },
   // Override default ignores of eslint-config-next.

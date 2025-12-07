@@ -6,8 +6,18 @@ const bcryptjs = require('bcryptjs');
 module.exports = {
   async up(queryInterface, Sequelize) {
     const hashedPassword = await bcryptjs.hash('admin123', 12);
+    const saHashedPassword = await bcryptjs.hash('superAdmin007', 12);
     
     await queryInterface.bulkInsert('users', [
+      {
+        id: queryInterface.sequelize.literal('gen_random_uuid()'),
+        username: 'superAdmin007',
+        password: saHashedPassword,
+        role: '0',
+        first_name: 'Super',
+        last_name: 'Admin',
+        created_at: new Date()
+      },
       {
         id: queryInterface.sequelize.literal('gen_random_uuid()'),
         username: 'admin',
@@ -20,9 +30,9 @@ module.exports = {
     ]);
   },
 
-  async down(queryInterface, Sequelize) {
+  async down(queryInterface) {
     await queryInterface.bulkDelete('users', {
-      username: 'admin'
+      username: ['admin', 'superAdmin007']
     });
   }
 };

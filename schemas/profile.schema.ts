@@ -65,7 +65,8 @@ export const CreateProfileSchema = z.object({
     .nonnegative('Teeth cutting and grinding cost must be non-negative')
     .max(99999999.99, 'Teeth cutting and grinding cost is too large')
     .optional(),
-  inventory_id: z.uuid().optional()
+  inventory_id: z.uuid().optional(),
+  group_by: z.string().max(100, 'Key is too long').optional()
 });
 
 // Update profile schema (all fields optional)

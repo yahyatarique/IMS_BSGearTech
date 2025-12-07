@@ -2,7 +2,11 @@ import { z } from 'zod';
 import { CreateProfileSchema } from './profile.schema';
 import { InventoryRecord } from '../services/types/inventory.api.type';
 
-export const OrderProfileSchema = CreateProfileSchema.extend({ profile_id: z.uuid() }).omit({
+export const OrderProfileSchema = CreateProfileSchema.extend({
+  profile_id: z.uuid(),
+  created_at: z.date(),
+  updated_at: z.date()
+}).omit({
   inventory_id: true
 });
 

@@ -23,9 +23,10 @@ interface UserAttributes {
   last_name: string;
   status: 'active' | 'inactive' | 'suspended';
   created_at: Date;
+  updated_at: Date;
 }
 
-interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'created_at' | 'role' | 'status'> {}
+interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'created_at' | 'updated_at' | 'role' | 'status'> {}
 
 class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
   declare id: string;
@@ -36,6 +37,7 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   declare last_name: string;
   declare status: 'active' | 'inactive' | 'suspended';
   declare readonly created_at: Date;
+  declare readonly updated_at: Date;
 
   // Instance methods
   public static async comparePassword(candidatePassword: string, userPassword: string): Promise<boolean> {
@@ -99,12 +101,19 @@ User.init(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+    updated_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
   },
   {
     sequelize,
     tableName: 'users',
     modelName: 'User',
-    timestamps: false,
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
     hooks: {
       beforeCreate: async (user: User) => {
         if (user.password) {

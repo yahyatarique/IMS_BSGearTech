@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import StatsSection from '@/components/pages/dashboard/components/stats-section';
 import StatsSectionSkeleton from '@/components/pages/dashboard/components/stats-section-skeleton';
@@ -8,11 +9,14 @@ import { RecentOrdersBoundary } from '@/components/pages/dashboard/components/re
 import { RecentBuyers } from '@/components/pages/dashboard/components/recent-buyers';
 import RecentBuyersSkeleton from '@/components/pages/dashboard/components/recent-buyers-skeleton';
 import { RecentBuyersBoundary } from '@/components/pages/dashboard/components/recent-buyers-boundary';
-import { MaterialsAndProfiles } from '@/components/pages/dashboard/components/materials-and-profiles';
-import { MaterialsAndProfilesBoundary } from '../components/pages/dashboard/components/materials-and-profiles-boundary';
 
 // Force dynamic rendering to prevent prerendering during build
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: 'BSGearTech IMS - Dashboard',
+  description: 'Dashboard for BS GearTech',
+};
 
 export default function Home() {
   return (
@@ -52,9 +56,9 @@ export default function Home() {
         </div>
 
         {/* Materials and Profiles Section */}
-        <MaterialsAndProfilesBoundary>
+        {/* <MaterialsAndProfilesBoundary>
           <MaterialsAndProfiles />
-        </MaterialsAndProfilesBoundary>
+        </MaterialsAndProfilesBoundary> */}
       </main>
     </div>
   );

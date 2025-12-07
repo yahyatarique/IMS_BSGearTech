@@ -398,7 +398,7 @@ export function OrderDetailsDialog({ order, open, onClose, onStatusUpdate }: Ord
 
                     <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center">
                       <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                        Profile Total
+                        Total
                       </span>
                       <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
                         ₹{Number(profile.total).toFixed(2)}

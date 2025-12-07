@@ -46,6 +46,7 @@ export function ProfileFormDialog({
     resolver: zodResolver(CreateProfileSchema),
     defaultValues: {
       name: '',
+      group_by: '',
       type: '0',
       material: undefined,
       no_of_teeth: 0,
@@ -86,6 +87,7 @@ export function ProfileFormDialog({
     if (profile && isEditMode) {
       form.reset({
         name: profile.name,
+        group_by: profile.group_by || '',
         type: profile.type,
         material: profile.material,
         materialTypeString: `${profile.material}/${profile.inventory_id}`,
@@ -140,22 +142,27 @@ export function ProfileFormDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+
             <BasicInformationSection
               control={form.control}
               setValue={form.setValue}
               inventoryItems={inventoryItems}
             />
+
             <GearSpecificationsSection control={form.control} />
+
             <CostBreakdownSection
               control={form.control}
               setValue={form.setValue}
               selectedInventory={selectedInventory}
             />
+
             <ProcessesSection
               control={form.control}
               getValues={form.getValues}
               setValue={form.setValue}
             />
+            
             <CalculatedCostsSection
               control={form.control}
               setValue={form.setValue}

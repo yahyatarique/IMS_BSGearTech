@@ -1,4 +1,4 @@
-import { ShoppingCart, Users, Package } from 'lucide-react';
+import { ShoppingCart, Users, Flame } from 'lucide-react';
 import { fetchDashboardStats } from '@/services/dashboard';
 import { DashboardCard } from '@/components/pages/dashboard/components/dashboard-card';
 
@@ -22,7 +22,7 @@ export default async function StatsSection() {
     return null;
   }
   
-  const { orders, buyers, products } = response.data.data;
+  const { orders, buyers, burningWastage } = response.data.data;
 
   const cards = [
     {
@@ -44,13 +44,13 @@ export default async function StatsSection() {
       Icon: Users,
     },
     {
-      title: 'Total Products',
-      value: products.total,
-      gradient: 'from-green-500 to-emerald-500  dark:from-green-500/30 dark:to-emerald-500/30',
-      trend: products.percentageChange,
-      isPositive: products.isPositive,
-      description: 'Tracked order profiles',
-      Icon: Package,
+      title: 'Total Burning Wastage',
+      value: burningWastage.total,
+      gradient: 'from-orange-500 to-red-500  dark:from-orange-500/30 dark:to-red-500/30',
+      trend: burningWastage.percentageChange,
+      isPositive: burningWastage.isPositive,
+      description: 'From completed orders (kg)',
+      Icon: Flame,
     },
   ];
 
