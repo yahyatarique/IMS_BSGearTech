@@ -1,0 +1,171 @@
+import { Badge } from '@/components/ui/badge';
+import { GradientBorderCard } from '@/components/ui/gradient-border-card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
+import type { OrderRecord } from '@/services/types/orders.api.type';
+import { ShoppingCart, User, Building2, Calendar, Eye } from 'lucide-react';
+import { useRouter } from '@bprogress/next/app';
+import { Button } from '../../../ui/button';
+
+const statusClasses: Record<OrderRecord['status'], string> = {
+  '0': 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-500 border-yellow-500/20',
+  '1': 'bg-blue-500/10 text-blue-700 dark:text-blue-500 border-blue-500/20',
+  '2': 'bg-green-500/10 text-green-700 dark:text-green-500 border-green-500/20'
+};
+
+const statusLabels: Record<OrderRecord['status'], string> = {
+  '0': 'Pending',
+  '1': 'Processing',
+  '2': 'Completed'
+};
+
+interface OrdersCardGridProps {
+  orders: OrderRecord[];
+  isLoading: boolean;
+}
+
+function CardSkeleton() {
+  return (
+    <GradientBorderCard>
+      <div className="space-y-4 p-6">
+        <div className="flex items-start justify-between">
+          <div className="space-y-2 flex-1">
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+          <Skeleton className="h-6 w-16" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-3/4" />
+        </div>
+      </div>
+    </GradientBorderCard>
+  );
+}
+
+export function OrdersCardGrid({ orders, isLoading }: OrdersCardGridProps) {
+  const router = useRouter();
+
+  const handleViewDetails = (orderId: string) => {
+    router.push(`/orders/details/${orderId}`);
+  };
+
+  if (isLoading && orders.length === 0) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <CardSkeleton key={index} />
+        ))}
+      </div>
+    );
+  }
+
+  if (orders.length === 0) {
+    return (
+      <GradientBorderCard className="text-center">
+        <div className="py-12 text-center">
+          <ShoppingCart className="w-12 h-12 mx-auto text-slate-400 mb-4" />
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+            No Orders Found
+          </h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            There are no orders to display. Create your first order to get started.
+          </p>
+        </div>
+      </GradientBorderCard>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+        {orders.map((order) => (
+          <GradientBorderCard key={order.id} data-order-id={order.id}>
+            <div className="space-y-4 p-6">
+              {/* Header */}
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white truncate">
+                    {order.order_number}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    {new Date(order.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+                <Badge
+                  variant="outline"
+                  className={cn('border ml-2 flex-shrink-0', statusClasses[order.status])}
+                >
+                  {statusLabels[order.status]}
+                </Badge>
+              </div>
+
+              {/* Details */}
+              <div className="space-y-3">
+                {/* Buyer Info */}
+                {order.buyer && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Building2 className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                    <span className="text-slate-600 dark:text-slate-300 truncate">
+                      {order.buyer.name}
+                    </span>
+                  </div>
+                )}
+
+                {/* User Info */}
+                {order.user && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <User className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                    <span className="text-slate-600 dark:text-slate-300 truncate">
+                      {order.user.first_name} {order.user.last_name}
+                    </span>
+                  </div>
+                )}
+
+                {/* Financial Info */}
+                <div className="pt-2 border-t border-slate-200 dark:border-slate-700 space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-500 dark:text-slate-400">Grand Total:</span>
+                    <span className="font-semibold text-slate-900 dark:text-white">
+                      ₹
+                      {Number(order.grand_total).toLocaleString('en-IN', {
+                        minimumFractionDigits: 2
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-500 dark:text-slate-400">Total Value:</span>
+                    <span className="font-semibold text-slate-900 dark:text-white">
+                      ₹
+                      {Number(order.total_order_value).toLocaleString('en-IN', {
+                        minimumFractionDigits: 2
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-500 dark:text-slate-400">Profit Margin:</span>
+                    <span className="font-semibold text-green-600 dark:text-green-500">
+                      {Number(order.profit_margin).toFixed(2)}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end pt-2 border-t border-gray-200 dark:border-gray-700">
+                <Button className='group' onClick={handleViewDetails.bind(null, order.id)} variant={'ghost'}>
+                  <span className="text-xs text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
+                    <Eye className="h-3.5 w-3.5" />
+                    View Details
+                  </span>
+                </Button>
+              </div>
+            </div>
+          </GradientBorderCard>
+        ))}
+      </div>
+    </div>
+  );
+}

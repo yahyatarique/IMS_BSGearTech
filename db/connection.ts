@@ -1,0 +1,41 @@
+import dotenv from 'dotenv';;
+import pg from 'pg'
+
+const nodeEnv = process.env.NODE_ENV || 'development';
+const envFile = nodeEnv === 'production' ? '.env' : `.env.${nodeEnv}`;
+
+dotenv.config({ path: envFile });
+dotenv.config();
+
+import { Sequelize } from 'sequelize';
+
+const sequelize = new Sequelize(process.env.DATABASE_URL!, {
+  dialect: 'postgres',
+  dialectModule: pg,
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false
+    }
+  },
+  logging: process.env.NODE_ENV === 'development' ? console.log : false,
+  pool: {
+    max: 5,
+    min: 0,
+    acquire: 30000,
+    idle: 10000
+  }
+});
+
+export const testConnection = async () => {
+  try {
+    await sequelize.authenticate();
+    console.log('Database connection has been established successfully.');
+    return true;
+  } catch (error) {
+    console.error('Unable to connect to the database:', error);
+    return false;
+  }
+};
+
+export default sequelize;
