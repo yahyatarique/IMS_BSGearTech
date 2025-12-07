@@ -1,5 +1,4 @@
 import axiosInstance from '@/axios';
-import { CreateOrderInput, UpdateOrderInput } from '@/schemas/order.schema';
 import {
   OrdersListResponse,
   OrderResponse,
@@ -9,6 +8,7 @@ import {
 
 import { ORDER_STATUS } from '@/enums/orders.enum';
 import { AxiosResponse } from 'axios';
+import { CreateOrderFormInput, UpdateOrderFormInput } from '@/schemas/create-order.schema';
 
 
 const BASE_URL = '/orders';
@@ -34,14 +34,14 @@ export async function fetchOrderById(id: string): Promise<AxiosResponse<OrderRes
   return response;
 }
 
-export async function createOrder(data: CreateOrderInput): Promise<AxiosResponse<OrderResponse>> {
+export async function createOrder(data: CreateOrderFormInput): Promise<AxiosResponse<OrderResponse>> {
   const response: AxiosResponse<OrderResponse> = await axiosInstance.post(endpoints.orders, data);
   return response;
 }
 
 export async function updateOrder(
   id: string,
-  data: UpdateOrderInput
+  data: UpdateOrderFormInput
 ): Promise<AxiosResponse<OrderResponse>> {
   const response: AxiosResponse<OrderResponse> = await axiosInstance.put(endpoints.orderById(id), data);
   return response;
@@ -58,4 +58,9 @@ export async function updateOrderStatus(
 ): Promise<OrderStatusUpdateResponse> {
   const response = await axiosInstance.patch(endpoints.orderById(id), data);
   return response.data;
+}
+
+export async function fetchNextOrderNumber(): Promise<{ order_number: string }> {
+  const response = await axiosInstance.get('/orders', { params: { action: 'next-number' } });
+  return response.data.data;
 }

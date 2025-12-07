@@ -19,28 +19,32 @@ export async function GET(request: NextRequest) {
     const { rows: wastageEntries, count: totalItems } = await BurningWastage.findAndCountAll({
       order: [['date', 'DESC']],
       limit,
-      offset,
+      offset
     });
 
     // Calculate total burning wastage from completed orders
     const orderBurningWastageResult = await OrderProfile.findOne({
       attributes: [[sequelize.fn('SUM', sequelize.col('burning_weight')), 'total']],
-      include: [{
-        model: Orders,
-        as: 'order',
-        where: { status: '2' }, // Only completed orders
-        attributes: []
-      }],
+      include: [
+        {
+          model: Orders,
+          as: 'order',
+          where: { status: '2' }, // Only completed orders
+          attributes: []
+        }
+      ],
       raw: true
     });
 
     const orderBurningWastage = Number((orderBurningWastageResult as any)?.total || 0);
 
     // Calculate manual adjustments (positive = added, negative = disposed/sold)
-    const manualAdjustments = await BurningWastage.sum('wastage_kg') || 0;
-    
+    const manualAdjustments = (await BurningWastage.sum('wastage_kg')) || 0;
+
     // Total = wastage from orders + manual adjustments (can be negative if disposed)
     const totalWastage = orderBurningWastage - Number(manualAdjustments);
+
+    const totalPages = Math.ceil(totalItems / limit);
 
     return sendResponse(
       {
@@ -49,11 +53,13 @@ export async function GET(request: NextRequest) {
           page,
           limit,
           totalItems,
-          totalPages: Math.ceil(totalItems / limit),
+          totalPages: totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
           totalWastage: Number(totalWastage.toFixed(2)),
           orderBurningWastage: Number(orderBurningWastage.toFixed(2)),
-          manualAdjustments: Number(manualAdjustments.toFixed(2)),
-        },
+          manualAdjustments: Number(manualAdjustments.toFixed(2))
+        }
       },
       'Burning wastage entries retrieved successfully'
     );
@@ -66,7 +72,7 @@ export async function GET(request: NextRequest) {
 // POST - Create a new burning wastage entry
 export async function POST(request: NextRequest) {
   const transaction = await sequelize.transaction();
-  
+
   try {
     await testConnection();
 
@@ -77,7 +83,7 @@ export async function POST(request: NextRequest) {
       {
         wastage_kg: validatedData.wastage_kg,
         date: validatedData.date ? new Date(validatedData.date) : new Date(),
-        notes: validatedData.notes,
+        notes: validatedData.notes
       },
       { transaction }
     );
@@ -88,11 +94,11 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     await transaction.rollback();
     console.error('Error creating burning wastage entry:', error);
-    
+
     if (error.name === 'ZodError') {
       return errorResponse(error.errors[0].message, 400);
     }
-    
+
     return errorResponse(error.message || 'Failed to create burning wastage entry', 500);
   }
 }
@@ -100,7 +106,7 @@ export async function POST(request: NextRequest) {
 // DELETE - Delete a burning wastage entry
 export async function DELETE(request: NextRequest) {
   const transaction = await sequelize.transaction();
-  
+
   try {
     await testConnection();
 

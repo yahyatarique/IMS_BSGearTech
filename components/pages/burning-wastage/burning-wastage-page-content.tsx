@@ -6,7 +6,10 @@ import {
   createBurningWastage,
   deleteBurningWastage
 } from '@/services/burning-wastage';
-import type { BurningWastageRecord } from '@/services/types/burning-wastage.api.type';
+import type {
+  BurningWastageListResponse,
+  BurningWastageRecord
+} from '@/services/types/burning-wastage.api.type';
 import { GradientBorderCard } from '@/components/ui/gradient-border-card';
 import { GradientText } from '@/components/ui/gradient-text';
 import { Button } from '@/components/ui/button';
@@ -28,7 +31,7 @@ import {
   TableRow
 } from '@/components/ui/table';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
-import { Flame, Trash2, Calendar } from 'lucide-react';
+import { Flame, Trash2, Calendar, Loader2 } from 'lucide-react';
 import { success as successToast, error as errorToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useForm } from 'react-hook-form';
@@ -43,19 +46,26 @@ import {
   FormMessage
 } from '@/components/ui/form';
 import { formatDate } from '@/lib/utils';
-
-
-
+import { useInfinitePagination } from '../../../hooks/use-infinite-pagination';
 
 export function BurningWastagePageContent() {
-  const [wastageEntries, setWastageEntries] = useState<BurningWastageRecord[]>([]);
-  const [totalWastage, setTotalWastage] = useState<number>(0);
-  const [orderBurningWastage, setOrderBurningWastage] = useState<number>(0);
-  const [manualAdjustments, setManualAdjustments] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const {
+    items: wastageEntries,
+    isLoading,
+    isLoadingMore,
+    hasMore,
+    meta,
+    observerTarget,
+    reset
+  } = useInfinitePagination<BurningWastageRecord, BurningWastageListResponse['data']['meta']>({
+    fetchFn: fetchBurningWastage,
+    dataKey: 'wastageEntries',
+    limit: 10
+  });
 
   const form = useForm({
     resolver: zodResolver(CreateBurningWastageSchema),
@@ -65,30 +75,13 @@ export function BurningWastagePageContent() {
     }
   });
 
-  const loadWastageData = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetchBurningWastage(1, 100); // Load more entries
-      if (response.success && response.data) {
-        setWastageEntries(response.data.wastageEntries);
-        setTotalWastage(response.data.meta.totalWastage);
-        setOrderBurningWastage(response.data.meta.orderBurningWastage || 0);
-        setManualAdjustments(response.data.meta.manualAdjustments || 0);
-      }
-    } catch (error: any) {
-      errorToast({
-        title: 'Error',
-        description: error.message || 'Failed to load burning wastage data'
-      });
-      console.error('Error loading wastage:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  // Reset on filter/search change
   useEffect(() => {
-    loadWastageData();
-  }, []);
+    const timeout = setTimeout(() => {
+      reset();
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [reset]);
 
   const handleSubmit = async (values: any) => {
     try {
@@ -105,7 +98,7 @@ export function BurningWastagePageContent() {
       });
       form.reset();
       setIsDialogOpen(false);
-      loadWastageData();
+      reset();
     } catch (error: any) {
       errorToast(error.response?.data?.message || 'Failed to add wastage entry');
       console.error('Error creating wastage:', error);
@@ -124,7 +117,7 @@ export function BurningWastagePageContent() {
         description: 'Wastage entry deleted successfully'
       });
       setDeleteId(null);
-      loadWastageData();
+      reset();
     } catch (error: any) {
       errorToast(error.response?.data?.message || 'Failed to delete wastage entry');
       console.error('Error deleting wastage:', error);
@@ -154,11 +147,21 @@ export function BurningWastagePageContent() {
                 Total Burning Wastage
               </p>
               <GradientText gradient="orange" className="text-3xl font-bold">
-                {totalWastage.toFixed(2)} kg
+                {meta?.totalWastage.toFixed(2)} kg
               </GradientText>
               <div className="mt-2 space-y-1 text-xs text-slate-600 dark:text-slate-400">
-                <p>From Completed Orders: <span className="font-semibold text-orange-600 dark:text-orange-400">{orderBurningWastage.toFixed(2)} kg</span></p>
-                <p>Disposed/Sold: <span className="font-semibold text-green-600 dark:text-green-400">{manualAdjustments.toFixed(2)} kg</span></p>
+                <p>
+                  From Completed Orders:{' '}
+                  <span className="font-semibold text-orange-600 dark:text-orange-400">
+                    {meta?.orderBurningWastage.toFixed(2)} kg
+                  </span>
+                </p>
+                <p>
+                  Disposed/Sold:{' '}
+                  <span className="font-semibold text-green-600 dark:text-green-400">
+                    {meta?.manualAdjustments.toFixed(2)} kg
+                  </span>
+                </p>
               </div>
             </div>
           </div>
@@ -196,7 +199,7 @@ export function BurningWastagePageContent() {
                           />
                         </FormControl>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                          Enter negative value only (e.g., -5 to remove 5 kg)
+                          Enter value only (e.g., 5 to remove 5 kg)
                         </p>
                         <FormMessage />
                       </FormItem>
@@ -210,7 +213,10 @@ export function BurningWastagePageContent() {
                       <FormItem>
                         <FormLabel>Notes (Optional)</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g., Sold to scrap dealer, Disposed, etc." {...field} />
+                          <Input
+                            placeholder="e.g., Sold to scrap dealer, Disposed, etc."
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -289,6 +295,18 @@ export function BurningWastagePageContent() {
                   })}
                 </TableBody>
               </Table>
+            </div>
+          )}
+
+          {/* Loading more indicator */}
+          {!isLoading && hasMore && (
+            <div ref={observerTarget} className="flex justify-center py-8">
+              {isLoadingMore && (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span>Loading more profiles...</span>
+                </div>
+              )}
             </div>
           )}
         </div>

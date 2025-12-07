@@ -80,6 +80,7 @@ export function BuyerFormDialog({
       form.reset();
       onClose();
     } catch (error) {
+      console.log("handleSubmit ~ error:", error)
       // Error is handled by parent component
       // Don't close dialog on error
     }

@@ -8,6 +8,7 @@ export type OrderRecord = {
   order_name?: string;
   quantity: number;
   created_at: string;
+  updated_at: string;
   buyer_id?: string;
   status: ORDER_STATUS;
   grand_total: string;

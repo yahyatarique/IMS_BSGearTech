@@ -15,6 +15,8 @@ export type BurningWastageListResponse = BaseResponse<{
     page: number;
     limit: number;
     totalItems: number;
+    hasNext: boolean;
+    hasPrev: boolean;
     totalPages: number;
     totalWastage: number;
     orderBurningWastage: number;

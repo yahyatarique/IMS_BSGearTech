@@ -18,6 +18,7 @@ interface CostBreakdownSectionProps {
 export function CostBreakdownSection({ control, setValue, selectedInventory }: CostBreakdownSectionProps) {
   const profileType = useWatch({ control, name: 'type' });
   const burningWeight = useWatch({ control, name: 'burning_weight' });
+  const burningPercent = useWatch({ control, name: 'burning_wastage_percentage' });
   const totalWeight = useWatch({ control, name: 'total_weight' });
   const htRate = useWatch({ control, name: 'ht_rate' });
   const teeth = useWatch({ control, name: 'no_of_teeth' });
@@ -26,14 +27,15 @@ export function CostBreakdownSection({ control, setValue, selectedInventory }: C
   const teethRate = useWatch({ control, name: 'rate' });
 
   useEffect(() => {
+    // Calculate burning weight only for type '0'(Gears) profiles
     if (selectedInventory && profileType === '0') {
       const materialWeight = Number(selectedInventory.material_weight);
-      const burning = calculateBurningWeight(materialWeight);
+      const burning = calculateBurningWeight(materialWeight, burningPercent);
       setValue('burning_weight', Number(burning));
     } else {
       setValue('burning_weight', 0);
     }
-  }, [selectedInventory, profileType, setValue]);
+  }, [selectedInventory, profileType, setValue, burningPercent]);
 
   useEffect(() => {
     if (selectedInventory) {

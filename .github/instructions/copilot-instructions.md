@@ -46,7 +46,10 @@ Short, focused instructions to help an AI code agent be productive in this repos
 - **Service Layer Type Safety**:
   - ALWAYS use `BaseResponse<T>` from `services/types/base.api.type.ts` when creating API response types.
   - Define response types in `services/types/*.api.type.ts`.
-  - Example:
+  - **CRITICAL: NEVER use the native `fetch` API directly in client-side code. ALWAYS use `axiosInstance` from `axios/index.ts`.**
+  - All API calls from client components MUST go through service layer functions defined in `services/` folder.
+  - Service functions should use `axiosInstance` for all HTTP requests to ensure proper error handling, token refresh, and cookie management.
+  - Example service layer pattern:
     ```typescript
     // types/users.api.type.ts
     import { BaseResponse } from './base.api.type';
@@ -65,11 +68,27 @@ Short, focused instructions to help an AI code agent be productive in this repos
     }>;
 
     // services/users.ts
+    import axiosInstance from '@/axios';
+    
     export async function fetchUsers(): Promise<UsersResponse> {
       const response = await axiosInstance.get('/users');
       return response.data;
     }
+    
+    // ✅ Good - using service layer in components
+    import { fetchUsers } from '@/services/users';
+    const data = await fetchUsers();
+    
+    // ❌ Bad - using fetch directly
+    const response = await fetch('/api/users');
+    const data = await response.json();
     ```
+  - When creating new service functions, follow the pattern from `services/auth.ts`, `services/buyers.ts`, or `services/orders.ts`:
+    1. Import `axiosInstance` from `@/axios`
+    2. Define BASE_URL and endpoints constants
+    3. Export async functions that use `axiosInstance.get/post/put/patch/delete`
+    4. Return either `response.data` (for unwrapped data) or full `AxiosResponse<T>` (when you need response metadata)
+    5. Use try-catch blocks only if you need custom error handling; otherwise let errors propagate
 
 - Role values are string enums: `'0'` = super/admin, `'1'` = admin/manager, `'2'` = user. See `enums/users.enum.ts`.
 - Passwords are hashed inside the Sequelize model via `beforeCreate` / `beforeUpdate` hooks (see `db/models/User.ts`). Password validation uses an alphanumeric regex in `schemas/user.schema.ts`. Note: Model-level password validation was removed to allow bcrypt hashed passwords (which contain special characters).

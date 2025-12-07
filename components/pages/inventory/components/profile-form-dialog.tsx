@@ -62,7 +62,8 @@ export function ProfileFormDialog({
       cyn_grinding: 0,
       total: 0,
       inventory_id: undefined,
-      tcTGCost: 0
+      tcTGCost: 0,
+      burning_wastage_percentage: 5
     }
   });
 
@@ -104,10 +105,13 @@ export function ProfileFormDialog({
         cyn_grinding: Number(profile.cyn_grinding),
         total: Number(profile.total),
         tcTGCost: 0,
-        inventory_id: profile.inventory_id
+        inventory_id: profile.inventory_id,
+        burning_wastage_percentage: profile.burning_wastage_percentage ? Number(profile.burning_wastage_percentage) : 0
       });
     }
   }, [profile, form, isEditMode]);
+
+
 
   const handleSubmit = async (data: CreateProfileInput & { inventory_id?: string }) => {
     try {

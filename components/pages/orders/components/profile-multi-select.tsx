@@ -75,9 +75,10 @@ export function ProfileMultiSelect({ value, onChange, onProfilesLoad, profiles: 
   }, [page]);
 
   const toggleProfile = (profileId: string) => {
-    const newValue = value.includes(profileId)
-      ? value.filter((id) => id !== profileId)
-      : [...value, profileId];
+    const currentValue = value || [];
+    const newValue = currentValue.includes(profileId)
+      ? currentValue.filter((id) => id !== profileId)
+      : [...currentValue, profileId];
     onChange(newValue);
   };
 
@@ -85,7 +86,7 @@ export function ProfileMultiSelect({ value, onChange, onProfilesLoad, profiles: 
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" className="w-full justify-start">
-          {value.length > 0 ? `${value.length} profile(s) selected` : 'Select profiles'}
+          {value?.length > 0 ? `${value?.length} profile(s) selected` : 'Select profiles'}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="start">
@@ -100,21 +101,24 @@ export function ProfileMultiSelect({ value, onChange, onProfilesLoad, profiles: 
           />
         </div>
         <div className="max-h-64 overflow-y-auto">
-          {profiles.map((profile) => (
-            <div
-              key={profile.id}
-              className={cn(
-                'flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent',
-                value.includes(profile.id!) && 'bg-accent'
-              )}
-              onClick={() => toggleProfile(profile.id!)}
-            >
-              <div className={cn('w-4 h-4 border rounded flex items-center justify-center', value.includes(profile.id!) && 'bg-primary border-primary')}>
-                {value.includes(profile.id!) && <Check className="w-3 h-3 text-white" />}
+          {profiles.map((profile) => {
+            const isSelected = value?.includes(profile.id!) || false;
+            return (
+              <div
+                key={profile.id}
+                className={cn(
+                  'flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent',
+                  isSelected && 'bg-accent'
+                )}
+                onClick={() => toggleProfile(profile.id!)}
+              >
+                <div className={cn('w-4 h-4 border rounded flex items-center justify-center', isSelected && 'bg-primary border-primary')}>
+                  {isSelected && <Check className="w-3 h-3 text-white" />}
+                </div>
+                <span className="text-sm">{profile.name} {profile.group_by ? `(${profile.group_by})` : ''}</span>
               </div>
-              <span className="text-sm">{profile.name} {profile.group_by ? `(${profile.group_by})` : ''}</span>
-            </div>
-          ))}
+            );
+          })}
           {hasMore && <div ref={observerTarget} className="h-8 flex items-center justify-center text-sm text-muted-foreground">{loading ? 'Loading...' : ''}</div>}
         </div>
       </PopoverContent>

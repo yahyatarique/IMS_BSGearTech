@@ -56,6 +56,7 @@ export function ChangeStatusDialog({
       await onConfirm(selectedStatus);
       onClose();
     } catch (error) {
+      console.log('handleConfirm ~ error:', error);
       // Error is handled by parent component
     } finally {
       setIsSubmitting(false);

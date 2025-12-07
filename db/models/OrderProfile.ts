@@ -21,6 +21,7 @@ interface OrderProfileAttributes {
   cyn_grinding: number;
   total: number;
   group_by?: string;
+  burning_wastage_percentage?: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -47,6 +48,7 @@ class OrderProfile extends Model<OrderProfileAttributes, OrderProfileCreationAtt
   declare cyn_grinding: number;
   declare total: number;
   declare group_by?: string;
+  declare burning_wastage_percentage?: number;
   declare readonly created_at: Date;
   declare readonly updated_at: Date;
 
@@ -168,6 +170,10 @@ OrderProfile.init(
     },
     group_by: {
       type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    burning_wastage_percentage: {
+      type: DataTypes.DECIMAL(5, 2),
       allowNull: true,
     },
 

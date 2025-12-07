@@ -14,13 +14,12 @@ import { BuyerDetailsDialog } from './components/buyer-details-dialog';
 import { BuyerFormDialog } from './components/buyer-form-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Users } from 'lucide-react';
+import { Plus, Search, Users, Loader2 } from 'lucide-react';
 import { success, error as errorToast } from '@/hooks/use-toast';
 import { PageWrapper } from '@/components/ui/page-wrapper';
+import { useInfinitePagination } from '@/hooks/use-infinite-pagination';
 
 export default function BuyersPage() {
-  const [buyers, setBuyers] = useState<BuyerRecord[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedBuyer, setSelectedBuyer] = useState<BuyerRecord | null>(null);
@@ -31,29 +30,18 @@ export default function BuyersPage() {
     'all'
   );
 
-  // Fetch buyers
-  const loadBuyers = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetchBuyers({
-        page: 1,
-        limit: 10,
-        status: statusFilter,
-        search: deferredSearchQuery || undefined
-      });
-
-      if (response.success && response.data) {
-        setBuyers(response.data.buyers);
-      }
-    } catch (error: any) {
-      errorToast({
-        title: 'Error',
-        description: error.message || 'Failed to load buyers'
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const {
+    items: buyers,
+    isLoading,
+    isLoadingMore,
+    hasMore,
+    observerTarget,
+    reset,
+  } = useInfinitePagination<BuyerRecord, any>({
+    fetchFn: fetchBuyers,
+    dataKey: 'buyers',
+    limit: 10
+  });
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -64,8 +52,12 @@ export default function BuyersPage() {
   }, [searchQuery]);
 
   useEffect(() => {
-    loadBuyers();
-  }, [statusFilter, deferredSearchQuery]);
+    const params: any = {
+      status: statusFilter === 'all' ? undefined : statusFilter,
+      search: deferredSearchQuery || undefined
+    };
+    reset(params);
+  }, [statusFilter, deferredSearchQuery, reset]);
 
   // Handle create/update buyer
   const handleSubmit = async (data: CreateBuyerInput | UpdateBuyerInput) => {
@@ -84,7 +76,11 @@ export default function BuyersPage() {
           description: 'Buyer created successfully'
         });
       }
-      await loadBuyers();
+      const params: any = {
+        status: statusFilter === 'all' ? undefined : statusFilter,
+        search: deferredSearchQuery || undefined
+      };
+      await reset(params);
       setIsDialogOpen(false);
       setSelectedBuyer(null);
     } catch (error: any) {
@@ -105,7 +101,11 @@ export default function BuyersPage() {
         title: 'Success',
         description: 'Buyer status updated successfully'
       });
-      await loadBuyers();
+      const params: any = {
+        status: statusFilter === 'all' ? undefined : statusFilter,
+        search: deferredSearchQuery || undefined
+      };
+      await reset(params);
     } catch (error: any) {
       errorToast({
         title: 'Error',
@@ -188,6 +188,18 @@ export default function BuyersPage() {
 
       {/* Buyers Card Grid */}
       <BuyersCardGrid buyers={buyers} isLoading={isLoading} onCardClick={handleCardClick} />
+
+      {/* Loading more indicator */}
+      {!isLoading && hasMore && (
+        <div ref={observerTarget} className="flex justify-center py-8">
+          {isLoadingMore && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <span>Loading more buyers...</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Details Dialog */}
       <BuyerDetailsDialog

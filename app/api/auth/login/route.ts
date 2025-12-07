@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     const userId = String(user.id);
     const role = user.role as UserType['role'];
 
-    // Access token (15 minutes)
+    // Access token (1 day)
     const accessToken = await new SignJWT({
       userId,
       role
