@@ -2,6 +2,7 @@ export enum USER_ROLES  {
     SUPER_ADMIN = '0',
     ADMIN = '1',
     USER = '2',
+    SUPE_OPS = '3',
 }
 
 
