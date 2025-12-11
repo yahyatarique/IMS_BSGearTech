@@ -32,7 +32,7 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   declare id: string;
   declare username: string;
   declare password: string;
-  declare role: '0' | '1' | '2';
+  declare role: '0' | '1' | '2' | '3';
   declare first_name: string;
   declare last_name: string;
   declare status: 'active' | 'inactive' | 'suspended';
@@ -79,7 +79,7 @@ User.init(
       allowNull: false,
     },
     role: {
-      type: DataTypes.ENUM('0', '1', '2'),
+      type: DataTypes.ENUM('0', '1', '2', '3'),
       allowNull: false,
       defaultValue: '2',
     },

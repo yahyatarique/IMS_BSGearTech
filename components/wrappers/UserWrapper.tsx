@@ -54,7 +54,7 @@ export function UserWrapper({ children, fallback = null, allowAdmins = false }: 
   }
 
   // Check if user is a regular user
-  const isRegularUser = userInfo?.role === USER_ROLES.USER
+  const isRegularUser = userInfo?.role === USER_ROLES.USER || userInfo?.role === USER_ROLES.SUPE_OPS
   const isAdmin = userInfo?.role === USER_ROLES.SUPER_ADMIN || userInfo?.role === USER_ROLES.ADMIN
 
   if (isRegularUser || (allowAdmins && isAdmin)) {

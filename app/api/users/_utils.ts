@@ -68,11 +68,18 @@ export function assertRoleAssignmentPermission(actorRole: string, desiredRole?: 
     throw new HttpError(403, 'Only super admins can assign the super admin role');
   }
 
-  if (
+    if (
     desiredRole === USER_ROLES.ADMIN &&
     actorRole !== USER_ROLES.SUPER_ADMIN
   ) {
     throw new HttpError(403, 'Only super admins can assign the admin role');
+  }
+
+  if (
+    desiredRole === USER_ROLES.SUPE_OPS &&
+    (actorRole !== USER_ROLES.SUPER_ADMIN && actorRole !== USER_ROLES.ADMIN)
+  ) {
+    throw new HttpError(403, 'Only admins can assign the SupeOps role');
   }
 }
 
@@ -82,6 +89,13 @@ export function ensureCanManageTarget(actorRole: string, targetRole: string) {
     actorRole !== USER_ROLES.SUPER_ADMIN
   ) {
     throw new HttpError(403, 'Forbidden: Cannot manage super admin accounts');
+  }
+
+  if (
+    targetRole === USER_ROLES.ADMIN &&
+    actorRole !== USER_ROLES.SUPER_ADMIN
+  ) {
+    throw new HttpError(403, 'Forbidden: Cannot manage admin accounts');
   }
 }
 

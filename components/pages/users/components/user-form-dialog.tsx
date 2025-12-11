@@ -11,6 +11,14 @@ import { USER_ROLES } from '@/enums/users.enum';
 import { createUser, updateUser } from '@/services/users';
 import { Button } from '@/components/ui/button';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import { AdminWrapper } from '@/components/wrappers';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -53,7 +61,8 @@ export function UserFormDialog({ user, onSuccess, disabled, trigger }: UserFormD
       password: '',
       confirmPassword: '',
       firstName: user?.first_name || '',
-      lastName: user?.last_name || ''
+      lastName: user?.last_name || '',
+      role: user?.role || USER_ROLES.USER
     }
   });
 
@@ -64,7 +73,8 @@ export function UserFormDialog({ user, onSuccess, disabled, trigger }: UserFormD
         password: '',
         confirmPassword: '',
         firstName: user?.first_name || '',
-        lastName: user?.last_name || ''
+        lastName: user?.last_name || '',
+        role: user?.role || USER_ROLES.USER
       });
     }
   }, [open, user, form]);
@@ -76,7 +86,8 @@ export function UserFormDialog({ user, onSuccess, disabled, trigger }: UserFormD
       if (isEditMode) {
         await updateUser(user.id, {
           firstName: data.firstName,
-          lastName: data.lastName
+          lastName: data.lastName,
+          role: data.role as any
         });
         success({
           title: 'Success!',
@@ -88,7 +99,7 @@ export function UserFormDialog({ user, onSuccess, disabled, trigger }: UserFormD
           password: data.password!,
           firstName: data.firstName,
           lastName: data.lastName,
-          role: USER_ROLES.USER
+          role: (data.role as any) || USER_ROLES.USER
         });
         success({
           title: 'Success!',
@@ -238,6 +249,38 @@ export function UserFormDialog({ user, onSuccess, disabled, trigger }: UserFormD
               <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                 Personal Information
               </h3>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="role"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Role</FormLabel>
+                      <Select
+                        disabled={isLoading}
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a role" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value={USER_ROLES.USER}>User</SelectItem>
+                          <SelectItem value={USER_ROLES.SUPE_OPS}>SupeOps</SelectItem>
+                          <SelectItem value={USER_ROLES.ADMIN}>Admin</SelectItem>
+                          <AdminWrapper allowSuperAdminOnly>
+                            <SelectItem value={USER_ROLES.SUPER_ADMIN}>Super Admin</SelectItem>
+                          </AdminWrapper>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <div className="grid gap-4 md:grid-cols-2">
                 <FormField

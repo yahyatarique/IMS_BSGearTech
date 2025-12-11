@@ -10,7 +10,8 @@ import { UserCircle, Shield, Activity } from 'lucide-react';
 const ROLE_LABELS: Record<string, string> = {
   [USER_ROLES.SUPER_ADMIN]: 'Super Admin',
   [USER_ROLES.ADMIN]: 'Admin',
-  [USER_ROLES.USER]: 'User'
+  [USER_ROLES.USER]: 'User',
+  [USER_ROLES.SUPE_OPS]: 'Supe Ops'
 };
 
 const statusClasses: Record<string, string> = {

@@ -69,6 +69,8 @@ export function AppNavigation() {
         return 'Admin';
       case USER_ROLES.USER:
         return 'User';
+      case USER_ROLES.SUPE_OPS:
+        return 'Supe Ops';
       default:
         return 'Unknown';
     }
