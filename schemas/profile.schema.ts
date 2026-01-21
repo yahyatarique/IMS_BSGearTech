@@ -35,13 +35,11 @@ export const CreateProfileSchema = z.object({
   finish_size: z.string().min(1, 'Finish size is required').max(255, 'Finish size is too long'),
   burning_weight: z
     .number()
-    .positive('Burning weight must be positive')
-    .positive('Burning weight must be positive')
+    .nonnegative('Burning weight must be non-negative')
     .max(99999999.99, 'Burning weight is too large'),
   total_weight: z
     .number()
-    .positive('Total weight must be positive')
-    .positive('Total weight must be positive')
+    .nonnegative('Total weight must be non-negative')
     .max(99999999.99, 'Total weight is too large'),
   ht_cost: z
     .number()
