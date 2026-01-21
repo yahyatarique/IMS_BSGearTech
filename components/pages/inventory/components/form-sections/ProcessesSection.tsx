@@ -66,7 +66,11 @@ export function ProcessesSection({ control, getValues, setValue }: ProcessesSect
                     type="number"
                     step="0.01"
                     {...field}
-                    onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                    value={field.value || ''}
+                    onChange={(e) => {
+                      const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                      field.onChange(isNaN(value) ? 0 : value);
+                    }}
                   />
                 </FormControl>
                 <FormMessage />

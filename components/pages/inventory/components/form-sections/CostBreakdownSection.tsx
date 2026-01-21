@@ -76,7 +76,11 @@ export function CostBreakdownSection({ control, setValue, selectedInventory }: C
                   type="number"
                   step="0.01"
                   {...field}
-                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                  value={field.value || ''}
+                  onChange={(e) => {
+                    const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                    field.onChange(isNaN(value) ? 0 : value);
+                  }}
                 />
               </FormControl>
               <FormMessage />
@@ -94,7 +98,11 @@ export function CostBreakdownSection({ control, setValue, selectedInventory }: C
                   type="number"
                   step="0.01"
                   {...field}
-                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                  value={field.value || ''}
+                  onChange={(e) => {
+                    const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                    field.onChange(isNaN(value) ? 0 : value);
+                  }}
                 />
               </FormControl>
               <FormMessage />

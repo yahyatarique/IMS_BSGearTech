@@ -24,7 +24,11 @@ export function GearSpecificationsSection({ control }: GearSpecificationsSection
                 <Input
                   type="number"
                   {...field}
-                  onChange={(e) => field.onChange(parseInt(e.target.value))}
+                  value={field.value || ''}
+                  onChange={(e) => {
+                    const value = e.target.value === '' ? 0 : parseInt(e.target.value);
+                    field.onChange(isNaN(value) ? 0 : value);
+                  }}
                 />
               </FormControl>
               <FormMessage />
@@ -42,7 +46,11 @@ export function GearSpecificationsSection({ control }: GearSpecificationsSection
                   type="number"
                   step="0.001"
                   {...field}
-                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                  value={field.value || ''}
+                  onChange={(e) => {
+                    const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                    field.onChange(isNaN(value) ? 0 : value);
+                  }}
                 />
               </FormControl>
               <FormMessage />
@@ -60,7 +68,11 @@ export function GearSpecificationsSection({ control }: GearSpecificationsSection
                   type="number"
                   step="0.001"
                   {...field}
-                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                  value={field.value || ''}
+                  onChange={(e) => {
+                    const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                    field.onChange(isNaN(value) ? 0 : value);
+                  }}
                 />
               </FormControl>
               <FormMessage />
@@ -94,7 +106,11 @@ export function GearSpecificationsSection({ control }: GearSpecificationsSection
                   type="number"
                   step="0.01"
                   {...field}
-                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                  value={field.value || ''}
+                  onChange={(e) => {
+                    const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                    field.onChange(isNaN(value) ? 0 : value);
+                  }}
                 />
               </FormControl>
               <FormMessage />

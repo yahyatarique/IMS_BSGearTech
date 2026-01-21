@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
       where: whereClause,
       limit,
       offset,
-      order: [['created_at', 'ASC']],
+      order: [['created_at', 'DESC']],
       include: [
         {
           model: Inventory,
